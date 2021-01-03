@@ -1,0 +1,9 @@
+# ignore vscode setting file
+.vscode/
+
+# ignore idea setting file
+.idea/
+__pycache__/
+
+# ignore private profiles
+config.py
