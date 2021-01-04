@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'a40-1+lm4!ydzf_0%fye_s!+&pk0+c7@t78$oe$--0op_(onv5'
+SECRET_KEY = DJANGO_SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -59,12 +59,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'uestcmsc_webapp_backend.urls'
-
-# REST_FRAMEWORK = {
-#     'DEFAULT_PERMISSION_CLASSES': [
-#         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-#     ]
-# }
 
 TEMPLATES = [
     {
