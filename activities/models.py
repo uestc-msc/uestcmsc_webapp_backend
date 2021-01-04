@@ -11,6 +11,7 @@ class Activity(models.Model):
     datetime = models.DateTimeField('日期时间')
     location = models.CharField('地点', max_length=50)
     title = models.CharField('主题', max_length=150)
+    check_in_code = models.CharField('签到码', max_length=10)
     attach_link = models.CharField('相关链接', max_length=2000, blank=True)
 
     def __str__(self):

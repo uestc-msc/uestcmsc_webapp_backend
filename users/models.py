@@ -12,7 +12,6 @@ User._meta.get_field('first_name')._Blank = False
 # 参考 https://www.dusaiphoto.com/article/91/ 使用外链可扩展方式
 class UserProfile(models.Model):
     """
-    models.User 类：https://docs.djangoproject.com/en/3.1/ref/contrib/auth/#fields
     本模型为 User 模型的拓展。使用了 User 模型的：
     username（用户名）
     first_name（姓名）
@@ -21,6 +20,7 @@ class UserProfile(models.Model):
     is_active（未被删除）
     is_staff（管理员）
     is_superuser（超级管理员）
+    models.User 类：https://docs.djangoproject.com/en/3.1/ref/contrib/auth/#fields
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="用户名")
     experience = models.IntegerField("经验值", default=0)
@@ -39,3 +39,12 @@ class UserProfile(models.Model):
     class Meta:
         verbose_name = '用户其他信息'
         verbose_name_plural = '用户其他信息'
+
+
+class ResetPasswordRequest(models.Model):
+    """
+    本模型存储了申请重置密码的用户信息
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="用户名")
+    token = models.CharField(max_length=32)
+    request_time = models.DateTimeField(auto_now_add=True) # 请求重置密码的时间
