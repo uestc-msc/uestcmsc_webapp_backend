@@ -14,7 +14,7 @@ from utils import *
 def signup(request):
     """
     用户注册，必需参数：
-    username（非空，不含 @，数据库中不存在重复）
+    username（非空，只包含数字字母 '_' '-'，数据库中不存在重复）
     password（不少于 6 位）
     first_name（非空）
     email（邮件格式，数据库中不存在重复）
@@ -28,8 +28,8 @@ def signup(request):
 
     if 'username' not in data or len(data['username']) == 0:
         errmsg += "username should not be empty.\n"
-    elif data['username'].find("@") != -1:
-        errmsg += "username should not contain '@'.\n"
+    elif not is_valid_username(data['username']):
+        errmsg += "username should only contain alphas, numbers and _-\n"
     elif User.objects.filter(username=data['username']).count() > 0:
         errmsg += "username already exists.\n"
     else:
@@ -86,7 +86,7 @@ def login(request):
         user = authenticate(request, username=username_or_email, password=password)
         django_login(request, user)
         return Response(status=status.HTTP_200_OK)
-    except IntegrityError:
+    except IntegrityError or KeyError:
         return Response(data="username or password incorrect.", status=status.HTTP_401_UNAUTHORIZED)
 
 

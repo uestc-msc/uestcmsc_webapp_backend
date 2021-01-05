@@ -12,18 +12,12 @@ User._meta.get_field('first_name')._Blank = False
 # 参考 https://www.dusaiphoto.com/article/91/ 使用外链可扩展方式
 class UserProfile(models.Model):
     """
-    本模型为 User 模型的拓展。使用了 User 模型的：
-    username（用户名）
-    first_name（姓名）
-    email（邮箱）
-    password（密码）
-    is_active（未被删除）
-    is_staff（管理员）
-    is_superuser（超级管理员）
-    models.User 类：https://docs.djangoproject.com/en/3.1/ref/contrib/auth/#fields
+    本模型为 django.contrib.auth.models.User 模型的拓展。
+    文档：/docs/develop.md#用户模型-userprofile
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="用户名")
-    experience = models.IntegerField("经验值", default=0)
+    email_public = models.BooleanField(default=False, verbose_name="将邮箱设为公开")
+    experience = models.IntegerField("经验", default=0)
     student_id = models.CharField("学号", max_length=20, unique=True)
 
     def __str__(self):

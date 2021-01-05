@@ -12,3 +12,8 @@ def is_number(string: str) -> bool:
         return True
     except ValueError:
         return False
+
+
+def is_valid_username(string: str) -> bool:
+    valid_username_re = r'^[a-zA-Z0-9-_]+$'
+    return bool(re.match(valid_username_re, string))
