@@ -1,3 +1,6 @@
+# 本 API 的版本号
+APP_VERSION = "v1.0.0"
+
 # DJANGO_SECRET_KEY，见 https://docs.djangoproject.com/en/3.1/ref/settings/#std:setting-SECRET_KEY
 DJANGO_SECRET_KEY="23333333333333333333333333333333333333333333333333"
 

@@ -1,4 +1,4 @@
-# 后端
+# 阮薇薇点名啦 后端
 
 ## 环境配置
 
@@ -29,6 +29,12 @@ sudo apt install caddy
 cp Caddyfile /etc/caddy
 ```
 
+## 文档
+
+API 文档见：`/docs/`
+
 ## to-do
 
-评论
+* 限制频繁尝试登录
+* 限制频繁找回邮件
+* 评论

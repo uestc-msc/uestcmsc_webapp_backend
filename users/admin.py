@@ -10,7 +10,7 @@ class UserProfileInline(admin.StackedInline):
 
 class UserAdmin(admin.ModelAdmin):
     readonly_fields = ('last_login', 'date_joined')
-    fields = ('first_name', 'last_name', 'email',
+    fields = ('username', 'first_name', 'last_name', 'email',
               'is_staff', 'is_superuser',
               'last_login', 'date_joined')
     inlines = [UserProfileInline]

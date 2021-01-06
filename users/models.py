@@ -3,8 +3,7 @@ from django.contrib.auth.models import User
 import hashlib
 import urllib
 
-# 将 django.contrib.auth.models.User 的 email 成员设为唯一、first_name 设为必填
-User._meta.get_field('email')._unique = True
+# 将 django.contrib.auth.models.User 的 first_name 设为必填
 User._meta.get_field('first_name')._Blank = False
 
 
@@ -12,13 +11,14 @@ User._meta.get_field('first_name')._Blank = False
 # 参考 https://www.dusaiphoto.com/article/91/ 使用外链可扩展方式
 class UserProfile(models.Model):
     """
-    本模型为 django.contrib.auth.models.User 模型的拓展。
-    文档：/docs/develop.md#用户模型-userprofile
+    本模型为 django.contrib.auth.models.User 模型的拓展：https://docs.djangoproject.com/en/3.1/ref/contrib/auth/#user-model
+    文档：https://github.com/uestc-msc/uestcmsc_webapp_backend/blob/master/docs/develop.md#用户模型-userprofile
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="用户名")
     email_public = models.BooleanField(default=False, verbose_name="将邮箱设为公开")
     experience = models.IntegerField("经验", default=0)
     student_id = models.CharField("学号", max_length=20, unique=True)
+    about = models.TextField("个性签名", max_length=256, default='')
 
     def __str__(self):
         return self.user.username + ' ' + self.student_id
