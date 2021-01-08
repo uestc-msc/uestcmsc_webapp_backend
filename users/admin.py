@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User, Group
-from .models import UserProfile
+from .models import *
 
 
 class UserProfileInline(admin.StackedInline):
@@ -10,7 +10,7 @@ class UserProfileInline(admin.StackedInline):
 
 class UserAdmin(admin.ModelAdmin):
     readonly_fields = ('last_login', 'date_joined')
-    fields = ('username', 'first_name', 'last_name', 'email',
+    fields = ('username', 'first_name', 'last_name',
               'is_staff', 'is_superuser',
               'last_login', 'date_joined')
     inlines = [UserProfileInline]
@@ -20,3 +20,4 @@ class UserAdmin(admin.ModelAdmin):
 admin.site.unregister(User)
 admin.site.unregister(Group)
 admin.site.register(User, UserAdmin)
+admin.site.register(ResetPasswordRequest)
