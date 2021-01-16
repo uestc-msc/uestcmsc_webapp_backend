@@ -1,5 +1,6 @@
 import re
 import uuid
+from random import randrange
 
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -30,6 +31,15 @@ def generate_uuid() -> str:
     return str(uuid.uuid1()).replace('-', '')
 
 
+# 生成一个由 5 位大写字母组成的随机字符串
+def generate_check_in_code():
+    code = ''
+    lb = ord('A')
+    ub = ord('Z') + 1
+    for i in range(5):
+        code += chr(randrange(lb, ub))
+    return code
+
 # 基于 Django REST Framework 的分页器
 class MyPagination(PageNumberPagination):
     # 指定每一页的个数，默认为配置文件里面的PAGE_SIZE
@@ -45,3 +55,4 @@ class MyPagination(PageNumberPagination):
     def get_paginated_response(self, data):
         from collections import OrderedDict
         return Response(OrderedDict([('count', self.page.paginator.count), ('results',data)]))
+

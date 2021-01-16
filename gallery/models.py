@@ -10,7 +10,7 @@ class Picture(models.Model):
         verbose_name_plural = '图片'
 
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE, verbose_name="相关活动")
-    uploader = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="上传者")
+    uploader = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="上传者", blank=True)
     url = models.CharField("图片链接", max_length=2000, blank=True)
 
     def __str__(self):

@@ -25,9 +25,3 @@ MAILBOX_USE_SSL=False
 
 # 前端的 URL，用于生成签到二维码、邮箱网址等等
 FRONTEND_URL="https://app.uestc-msc.com"
-
-# 云盘的链接
-# 公开云盘链接（展示给所有用户，包括管理员）
-CLOUD_LINK_PUBLIC=""
-# 私有云盘链接（展示给管理员）
-CLOUD_LINK_ADMIN=""
