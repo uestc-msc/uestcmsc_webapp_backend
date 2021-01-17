@@ -8,7 +8,7 @@ API_VERSION = "v0.1.0 α"
 # DJANGO_SECRET_KEY，见 https://docs.djangoproject.com/en/3.1/ref/settings/#std:setting-SECRET_KEY
 DJANGO_SECRET_KEY = "23333333333333333333333333333333333333333333333333"
 DJANGO_DEBUGGING_MODE = True
-DJANGO_SERVER_HOSTNAME = ['localhost', '127.0.0.1', 'api.uestc-msc.com', 'app.uestc-msc.com']
+DJANGO_SERVER_HOSTNAME = ['localhost', '127.0.0.1', 'app.uestc-msc.com']
 
 # 数据库的相关配置
 MYSQL_HOST = "127.0.0.1"

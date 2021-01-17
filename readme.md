@@ -1,4 +1,8 @@
-# 阮薇薇点名啦 后端
+# 阮薇薇点名啦 后端 
+
+![Django Test](https://github.com/uestc-msc/uestcmsc_webapp_backend/workflows/Django%20Test/badge.svg?branch=lyh543) ![Deploy To Server](https://github.com/uestc-msc/uestcmsc_webapp_backend/workflows/Deploy%20To%20Server/badge.svg)
+
+<a href="http://www.djangoproject.com/"><img src="https://www.djangoproject.com/m/img/badges/djangomade124x25.gif" border="0" alt="Made with Django." title="Made with Django." /></a>
 
 ## 环境配置
 
@@ -41,4 +45,4 @@ python3 manage.py runserver
 ## 文档
 
 * API 文档：`http://localhost:8000/docs/`
-* [数据模型文档](docs/model.md)
+* [数据模型文档](docs/models.md)

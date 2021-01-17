@@ -1,4 +1,4 @@
-name: Deploy Django Server
+name: Deploy To Server
 
 env:
   ACTION_DEPLOY_KEY: ${{ secrets.ACTION_DEPLOY_KEY }}
@@ -10,7 +10,7 @@ on:
     branches: [ master, lyh543 ]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:

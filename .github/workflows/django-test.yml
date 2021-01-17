@@ -1,4 +1,4 @@
-name: Django test CI
+name: Django Test
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ master, dev ]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     services:
