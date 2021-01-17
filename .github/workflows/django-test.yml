@@ -37,4 +37,8 @@ jobs:
         cp config.template.py config.py
     - name: Run Tests
       run: |
-        python manage.py test
+        coverage run --source=./ manage.py test --noinput
+    - name: Coverage Report
+      run: |
+        coverage report -m
+
