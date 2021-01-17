@@ -1,4 +1,4 @@
-name:  Deploy Django Server
+name: Deploy Django Server
 
 env:
   ACTION_DEPLOY_KEY: ${{ secrets.ACTION_DEPLOY_KEY }}
@@ -23,6 +23,4 @@ jobs:
 
     - name: Run SSH Command - git pull
       run: |
-      ssh ${SERVER_USERNAME}@${SERVER_DOMAIN} "cd /etc/uestcmsc_webapp/backend && \
-      git pull && \
-      python3 manage.py migrate"
+        ssh ${SERVER_USERNAME}@${SERVER_DOMAIN} "cd /etc/uestcmsc_webapp/backend && git pull && python3 manage.py migrate"
