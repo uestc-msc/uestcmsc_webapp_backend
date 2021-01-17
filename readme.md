@@ -2,9 +2,12 @@
 
 ## 环境配置
 
-部署环境：主流 Linux 或 Windows，尚未安装 Docker 和 Nginx/Apache/Caddy 等服务器。本文以 Ubuntu 20.04 LTS 为部署环境。
+部署环境：
 
-### Docker、MySQL 及 Caddy 配置
+* Ubuntu 18.04 / Windows 10, 
+* Python 3.6~3.9
+
+### Docker、MySQL 部署
 
 安装 Docker：
 
@@ -15,26 +18,27 @@ bash <(curl -s https://get.docker.com)
 安装 MySQL：
 
 ```sh
-docker run -dit --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=uestcmsc2021 --restart always mysql
+docker run -dit --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=testtest -e MYSQL_DATABASE=uestcmsc_webapp -v ~/mysql:/usr/lib/mysql --restart always mysql
 ```
 
-安装 Caddy 并把 Caddyfile 复制到 `/etc/caddy`：
+### Django 部署
 
+按自己的情况修改 `config.template.py`，并保存为 `config.py`。然后安装依赖库并初始化数据库：
+
+```sh
+pip3 install -r requirements.txt
+python3 manage.py migrate
 ```
-sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/cfg/gpg/gpg.155B6D79CA56EA34.key' | sudo apt-key add -
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/cfg/setup/config.deb.txt?distro=debian&version=any-version' | sudo tee -a /etc/apt/sources.list.d/caddy-stable.list
-sudo apt update
-sudo apt install caddy
-cp Caddyfile /etc/caddy
+
+运行 Django Server：
+
+```sh
+python3 manage.py runserver
 ```
+
+访问 `http://localhost:8000/` 即可。
 
 ## 文档
 
-API 文档见：`/docs/`
-
-## to-do
-
-* 限制频繁尝试登录
-* 限制频繁找回邮件
-* 评论
+* API 文档：`http://localhost:8000/docs/`
+* [数据模型文档](docs/model.md)

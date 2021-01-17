@@ -1,0 +1,28 @@
+name:  Deploy Django Server
+
+env:
+  ACTION_DEPLOY_KEY: ${{ secrets.ACTION_DEPLOY_KEY }}
+  SERVER_DOMAIN: app.uestc-msc.com
+  SERVER_USERNAME: lyh543
+
+on:
+  push:
+    branches: [ master, lyh543 ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Setup SSH Environment
+      run: |
+        mkdir -p ~/.ssh/
+        echo "$ACTION_DEPLOY_KEY" | tr -d '\r' > ~/.ssh/id_rsa # 配置秘钥
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan $SERVER_DOMAIN >> ~/.ssh/known_hosts
+
+    - name: Run SSH Command - git pull
+      run: |
+      ssh ${SERVER_USERNAME}@${SERVER_DOMAIN} "cd /etc/uestcmsc_webapp/backend && \
+        git pull && \
+        python3 manage.py migrate"

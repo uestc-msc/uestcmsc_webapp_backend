@@ -1,4 +1,5 @@
 from functools import reduce
+from typing import List
 
 from drf_yasg import openapi
 
@@ -7,7 +8,7 @@ from drf_yasg import openapi
 # drf_yasg 文档：https://drf-yasg.readthedocs.io/en/stable/index.html
 # 参考：https://zoejoyuliao.medium.com/自定義-drf-yasg-的-swagger-文檔-以-get-post-檔案上傳為例-eeecd922059b
 
-def Schema_object(*prop: list[dict]) -> openapi.Schema:
+def Schema_object(*prop: List[dict]) -> openapi.Schema:
     def merge_two_dict(x: dict, y: dict) -> dict:
         return {**x, **y}
     return openapi.Schema(type=openapi.TYPE_OBJECT, properties=reduce(merge_two_dict, prop))

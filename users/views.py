@@ -30,7 +30,8 @@ class UserView(APIView):
 
     @swagger_auto_schema(
         operation_summary='注册新用户',
-        operation_description='成功返回 201，失败（参数错误或不符合要求）返回 400',
+        operation_description='成功返回 201'
+                              '失败（参数错误或不符合要求）返回 400',
         request_body=UserRegisterSerializer,
         responses={200:None}
     )
@@ -45,7 +46,8 @@ class UserView(APIView):
 @swagger_auto_schema(
     method='POST',
     operation_summary='登录',
-    operation_description='成功返回 200，失败（账户或密码错误）返回 401。\n'
+    operation_description='成功返回 200'
+                          '失败（账户或密码错误）返回 401\n'
                           '注意一个已登录的用户 A 尝试 login 账户 B 失败后，仍具有账户 A 的凭证。',
     request_body=Schema_object(Schema_email, Schema_password),
     responses={200: None}
@@ -82,10 +84,10 @@ def logout(request: WSGIRequest) -> Response:
 @swagger_auto_schema(
     method='POST',
     operation_summary='忘记密码',
-    operation_description='服务器生成 token 并发送至用户邮箱，然后返回 202。\n'
-                          '若用户邮件不存在，服务器拒绝服务并返回 400。\n'
-                          '若用户操作过于频繁（同 IP 1 分钟内只能发送 1 封，24 小时内只能发送 10 封），服务器拒绝服务并返回 403。\n'
-                          '邮件发送失败，返回 500。\n'
+    operation_description='服务器生成 token 并发送至用户邮箱，然后返回 202\n'
+                          '若用户邮件不存在，服务器拒绝服务并返回 400 `{"message": "邮箱参数不存在或不正确"}`\n'
+                          '若用户操作过于频繁（同 IP 1 分钟内只能发送 1 封，24 小时内只能发送 10 封），服务器拒绝服务并返回 403 `{"message": "发送邮件过于频繁"}`\n'
+                          '邮件发送失败，返回 500 `{"message": "发送邮件失败"}`\n'
                           '注：token 24 小时有效，新 token 不会使旧 token 失效',
     request_body=Schema_object(Schema_email),
     responses={200: None}
@@ -131,10 +133,10 @@ def forget_password(request: WSGIRequest) -> Response:
 @swagger_auto_schema(
     method='POST',
     operation_summary='验证邮箱重置密码',
-    operation_description='若没有 token 参数，返回 400\n'
-                          '若参数 token 无效或已过期（24 小时），返回 403\n'
-                          '若参数 token 有效，且没有 new_password 参数，返回 200\n'
-                          '若参数 token 有效，且参数 new_password 不合法，返回 400\n'
+    operation_description='若没有 token 参数，返回 400 `{"message": "缺少 token 参数"}`\n'
+                          '若参数 token 无效或已过期（24 小时），返回 403 `{"message": "token 无效"}`\n'
+                          '若参数 token 有效，且没有 new_password 参数，返回 200 `{"message": "token 有效"}`\n'
+                          '若参数 token 有效，且参数 new_password 不合法，返回 400 `{"message": "新密码不合法"}`\n'
                           '若参数 token 有效，且参数 new_password 合法，修改密码、使用户下线并返回 204\n',
     request_body=Schema_object(Schema_token, Schema_new_password),
     responses={200: None}
@@ -162,11 +164,11 @@ def reset_password_by_token(request: WSGIRequest) -> Response:
 @swagger_auto_schema(
     method='POST',
     operation_summary='通过旧密码重置密码',
-    operation_description='若用户未登录，返回 401\n'
-                          '若登录用户和 \\<pk\\> 不同，返回 403\n'
-                          '若参数 old_password 和 new_password 不都存在，返回 400\n'
-                          '若 old_password 和原密码不同，返回 401\n'
-                          '若 new_password 不合法，返回 400\n'
+    operation_description='若用户未登录，返回 401 `{"message": "用户未登录"}`\n'
+                          '若登录用户和 `{id}` 不同，返回 403\n'
+                          '若参数 old_password 和 new_password 不都存在，返回 400 `{"message": "缺少参数 old_response 或 new_password"}`\n'
+                          '若 old_password 和原密码不同，返回 401 `{"message": "原密码不匹配"}`\n'
+                          '若 new_password 不合法，返回 400 `{"message": "新密码不合法"}`\n'
                           '若 old_password 和 new_password 均正确，修改密码、使用户下线并返回 204\n',
     request_body=Schema_object(Schema_old_password, Schema_new_password),
     responses={200: None}
