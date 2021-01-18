@@ -7,7 +7,7 @@ env:
 
 on:
   push:
-    branches: [ master, lyh543 ]
+    branches: [ master ]
 
 jobs:
   deploy:

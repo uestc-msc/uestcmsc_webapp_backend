@@ -10,3 +10,4 @@ config.py
 
 # ignore coverage file
 .coverage
+htmlcov/

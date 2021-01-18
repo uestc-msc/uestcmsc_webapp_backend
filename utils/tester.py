@@ -29,7 +29,7 @@ def tester_login(username: str = 'admin@example.com',
     """
     测试时用于登录一个默认账户。也可以用于给定参数登录指定账户
     """
-    return c.post('/users/login/', {
+    return c.post('/accounts/login/', {
         'username': username,
         'password': password
     })

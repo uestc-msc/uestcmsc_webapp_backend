@@ -7,6 +7,7 @@ import urllib
 User._meta.get_field('first_name')._Blank = False
 User.add_to_class("__str__", lambda u: u.first_name)
 
+
 # Create your models here.
 # 参考 https://www.dusaiphoto.com/article/91/ 使用外链可扩展方式
 class UserProfile(models.Model):
