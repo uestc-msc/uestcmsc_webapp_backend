@@ -42,10 +42,11 @@ INSTALLED_APPS = [
     "rest_framework",
     'drf_yasg', # API document generation
 
+    'accounts.apps.AccountsConfig',
     'activities.apps.ActivitiesConfig',
-    'users.apps.UsersConfig',
-    'gallery.apps.GalleryConfig',
     'cloud.apps.CloudConfig',
+    'gallery.apps.GalleryConfig',
+    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
