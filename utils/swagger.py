@@ -21,11 +21,11 @@ def Schema_object(*prop: dict) -> openapi.Schema:
     return openapi.Schema(type=openapi.TYPE_OBJECT, properties=reduce(merge_two_dict, prop))
 
 
-def Schema_pagination(serializer: Type[Serializer]) -> Type[Serializer]:
+def Schema_pagination(serializer: Type[Serializer]) -> Serializer:
     class PaginationSerializer(Serializer):
         count = CharField()
         results = serializer(many=True)
-    return PaginationSerializer
+    return PaginationSerializer()
 
 
 Schema_string = {"string": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL)}
@@ -36,10 +36,8 @@ Schema_old_password = {'old_password': openapi.Schema(type=openapi.TYPE_STRING, 
 Schema_new_password = {'new_password': openapi.Schema(type=openapi.TYPE_STRING, description='新密码')}
 Schema_count = {"count": openapi.Schema(type=openapi.TYPE_NUMBER, description="总数")}
 
-
-
-Param_keyword = openapi.Parameter("keyword", openapi.IN_QUERY, type=openapi.TYPE_STRING, description='关键字')
-Param_page = openapi.Parameter("page", openapi.IN_QUERY, type=openapi.TYPE_NUMBER, description='页数')
-Param_page_size = openapi.Parameter("page_size", openapi.IN_QUERY, type=openapi.TYPE_NUMBER, description='页大小')
+Param_search = openapi.Parameter("search", openapi.IN_QUERY, type=openapi.TYPE_STRING, description='搜索关键字（为空时表示不搜索）')
+Param_page = openapi.Parameter("page", openapi.IN_QUERY, type=openapi.TYPE_NUMBER, description='页数（不正确时返回 404）')
+Param_page_size = openapi.Parameter("page_size", openapi.IN_QUERY, type=openapi.TYPE_NUMBER, description='页大小（不为正数时表示不分页）')
 
 

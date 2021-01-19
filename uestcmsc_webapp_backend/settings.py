@@ -143,11 +143,11 @@ EMAIL_USE_TLS = MAILBOX_USE_TLS
 EMAIL_USE_SSL = MAILBOX_USE_SSL
 
 # REST_FRAMEWORK
-#
-# REST_FRAMEWORK = {
-#     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
-# }
 
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
+    'DEFAULT_PAGINATION_CLASS': 'utils.MyPagination',
+}
 
 # settings about Swagger
 SWAGGER_SETTINGS = {

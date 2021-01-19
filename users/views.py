@@ -1,36 +1,29 @@
-from django.contrib.auth.models import User
-from django.core.handlers.wsgi import WSGIRequest
-from django.http import Http404
+from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status, filters
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework import filters
+from rest_framework.generics import *
 
 from utils import MyPagination
-from utils.permissions import login_required, isOwnerOrAdmin
+from utils.permissions import *
 from utils.swagger import *
 from .serializer import UserRegisterSerializer, UserSerializer
 
 
-class UserListView(APIView):
-    @swagger_auto_schema(
-        operation_summary='获取用户信息的列表',
-        operation_description='获取用户信息的列表（以及总页数），可对姓名、邮箱、学号进行搜索，并可指定页码和每页大小\n'
-                              '注：需要登录',
-        manual_parameters=[Param_keyword, Param_page, Param_page_size],
-        responses={200: Schema_pagination(UserSerializer)},
-    )
-    @login_required
-    def get(self, request: WSGIRequest) -> Response:
-        pagination_class = MyPagination()
-        search_class = filters.SearchFilter()
-        self.search_fields = ['username', 'first_name', 'student_id']  # 需要搜索的字段
-        user_lists = User.objects.all().order_by('-userprofile__experience')  # 用户列表
-        queryset = search_class.filter_queryset(request, user_lists, self)  # 实例化搜索查询器
-        page_query = pagination_class.paginate_queryset(queryset=queryset, request=request, view=self)  # 实例化分页器
-        serializer = UserSerializer(page_query, many=True)  # 返回序列化
-        page_result = pagination_class.get_paginated_response(serializer.data)  # 分页返回
-        return page_result
+@method_decorator(name='get', decorator=swagger_auto_schema(
+    operation_summary='获取用户信息的列表',
+    operation_description='获取用户信息的列表（以及总页数），可对姓名、邮箱、学号进行搜索，并可指定页码和每页大小\n'
+                          '数据作为 list 返回在 `results` 中，返回值的 `count` 为搜索结果的总数'
+                          '注：如页码不正确或不存在，返回 404 `{"detail": "无效页面。"}`\n'
+                          '注：如无搜索结果，返回 200，其中 `results` 为空',
+    manual_parameters=[Param_search, Param_page, Param_page_size],
+))
+class UserListView(ListCreateAPIView):
+    permission_classes = (IsAuthenticatedOrPostOnly,)
+    queryset = User.objects.all().order_by("-userprofile__experience")
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username', 'first_name', 'last_name', 'userprofile__student_id')
+    pagination_class = MyPagination
+    serializer_class = UserSerializer
 
     @swagger_auto_schema(
         operation_summary='注册新用户',
@@ -39,7 +32,7 @@ class UserListView(APIView):
         request_body=UserRegisterSerializer,
         responses={200: None}
     )
-    def post(self, request: WSGIRequest) -> Response:
+    def post(self, request) -> Response:
         serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -47,40 +40,26 @@ class UserListView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserProfileView(APIView):
-    def get_object(self, pk: int) -> User:
-        try:
-            return User.objects.get(pk=pk)
-        except User.DoesNotExist:
-            raise Http404
-
-    @swagger_auto_schema(
+@method_decorator(name="get", decorator=swagger_auto_schema(
         operation_summary='获取用户信息',
         operation_description='获取用户信息\n'
                               '注：需要登录',
-        responses={200: UserSerializer},
-    )
-    @login_required
-    def get(self, request: WSGIRequest, pk: int) -> Response:
-        u = self.get_object(pk)
-        serializer = UserSerializer(u)  # 此处还没有做鉴权
-        return Response(serializer.data)
-
-    @swagger_auto_schema(
-        operation_summary='更新用户信息',
-        operation_description='更新用户信息，成功返回 201，如不存在，返回 404\n'
-                              '注：PATCH 只要求需要更新的信息'
-                              '注：需要是用户本人或管理员，否则返回 401（未登录）或 403（已登录的其他用户）',
-        request_body=UserSerializer,
-        responses={201: UserSerializer},
-    )
-    @login_required
-    def patch(self, request: WSGIRequest, pk: int) -> Response:
-        u = self.get_object(pk)
-        if not isOwnerOrAdmin(request, u):
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        serializer = UserSerializer(u, data=request.data, partial=True)  # 此处也没有做鉴权
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response({"message":"参数错误"}, status=status.HTTP_400_BAD_REQUEST)
+))
+@method_decorator(name="put", decorator=swagger_auto_schema(
+    operation_summary='更新用户信息',
+    operation_description='更新用户信息，成功返回 201\n'
+                          '如不存在，返回 404\n'
+                          '如更新的参数有错误，返回 400 `{"detail":"参数错误"}`\n'
+                          '注：需要是用户本人或管理员，否则返回 401（未登录）或 403（已登录的其他用户）',
+))
+@method_decorator(name="patch", decorator=swagger_auto_schema(
+    operation_summary='更新部分用户信息',
+    operation_description='更新部分用户信息，成功返回 201\n'
+                          '如不存在，返回 404\n'
+                          '如更新的参数有错误，返回 400 `{"detail":"参数错误"}`\n'
+                          '注：需要是用户本人或管理员，否则返回 401（未登录）或 403（已登录的其他用户）',
+))
+class UserProfileView(RetrieveUpdateAPIView):
+    permission_classes = (IsAuthenticated, IsSelfOrAdminOrReadOnly, )
+    queryset = User.objects.all()
+    serializer_class = UserSerializer

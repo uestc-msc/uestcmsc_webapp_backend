@@ -3,7 +3,6 @@ import uuid
 from random import randrange
 
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.response import Response
 
 
 # 判断字符串是否为邮箱
@@ -14,7 +13,7 @@ def is_email(string: str) -> bool:
 
 # 判断密码是否合法（依据文档：https://github.com/uestc-msc/uestcmsc_webapp_backend/blob/master/docs/develop.md#用户模型-userprofile）
 def is_valid_password(string: str)-> bool:
-    return  len(string) >= 6
+    return len(string) >= 6
 
 
 # 判断字符串是否为数字
@@ -43,17 +42,8 @@ def generate_check_in_code():
 
 # 基于 Django REST Framework 的分页器
 class MyPagination(PageNumberPagination):
-    # 指定每一页的个数，默认为配置文件里面的PAGE_SIZE
-    page_size = 15
+    page_size = 15                          # 默认页大小
+    page_size_query_param = 'page_size'     # 页大小的参数名
+    page_query_param = 'page'               # 页码数的参数名
 
-    # 可以让前端指定每页个数，默认为空，这里指定page_size去指定显示个数
-    page_size_query_param = 'page_size'
-
-    # 可以让前端指定页码数，默认就是page参数去接收
-    page_query_param = 'page'
-
-    # 指定返回格式，根据需求返回总页数 self.page.paginator.count，数据存在 results 字典里返回
-    def get_paginated_response(self, data):
-        from collections import OrderedDict
-        return Response(OrderedDict([('count', self.page.paginator.count), ('results', data)]))
 

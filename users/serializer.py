@@ -1,3 +1,5 @@
+from abc import ABC
+
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -16,14 +18,14 @@ class UserRegisterSerializer(serializers.Serializer):
     def validate_username(self, username):
         if not is_email(username):
             raise serializers.ValidationError("邮箱格式错误")
-        if User.objects.filter(username=username).count() > 0:
+        if User.objects.filter(username=username):
             raise serializers.ValidationError("邮箱已存在")
         return username
 
     def validate_student_id(self, student_id):
         if not is_number(student_id):
             raise serializers.ValidationError("学号格式错误")
-        if UserProfile.objects.filter(student_id=student_id).count() > 0:
+        if UserProfile.objects.filter(student_id=student_id):
             raise serializers.ValidationError("学号已存在")
         return student_id
 
@@ -40,14 +42,14 @@ class UserRegisterSerializer(serializers.Serializer):
 
 class UserSerializer(serializers.Serializer):
     # 要不是为了 Swagger 文档生成，我也不想写这么长
-    pk = serializers.ReadOnlyField()
-    username = serializers.ReadOnlyField()
+    pk = serializers.CharField(read_only=True)
+    username = serializers.CharField(read_only=True)
     first_name = serializers.CharField()
     last_name = serializers.CharField()
-    is_staff = serializers.ReadOnlyField()
-    is_superuser = serializers.ReadOnlyField()
-    last_login = serializers.ReadOnlyField()
-    date_joined = serializers.ReadOnlyField()
+    is_staff = serializers.CharField(read_only=True)
+    is_superuser = serializers.CharField(read_only=True)
+    last_login = serializers.DateTimeField(read_only=True)
+    date_joined = serializers.DateTimeField(read_only=True)
     student_id = serializers.CharField(source='userprofile.student_id',
                                        validators=[UniqueValidator(queryset=UserProfile.objects.all(), message="用户学号已存在")])
     experience = serializers.ReadOnlyField(source='userprofile.experience')

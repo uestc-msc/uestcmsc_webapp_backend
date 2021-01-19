@@ -4,6 +4,7 @@ from typing import Callable
 from django.contrib.auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
 from rest_framework import status
+from rest_framework.permissions import *
 from rest_framework.response import Response
 
 
@@ -46,3 +47,57 @@ def superuser_required(function: Callable = None):
     actual_decorator = __user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
     return actual_decorator(function)
 
+
+# 一系列 Django REST Framework 权限
+class IsAuthenticatedOrPostOnly(BasePermission):
+    def has_permission(self, request, view):
+        return bool(
+            request.method in ('POST', 'OPTION') or
+            request.user and
+            request.user.is_authenticated
+        )
+
+
+class IsOwnerOrReadOnly(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return bool(
+            request.method in SAFE_METHODS or
+            request.user and
+            obj.user == request.user
+        )
+
+
+class IsAdminOrReadOnly(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return bool(
+            request.method in SAFE_METHODS or
+            request.user and
+            (request.user.is_staff or request.user.is_superuser)
+        )
+
+
+class IsSuperuserOrReadOnly(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return bool(
+            request.method in SAFE_METHODS or
+            request.user and
+            request.user.is_superuser
+        )
+
+
+class IsOwnerOrAdminOrReadOnly(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return bool(
+            request.method in SAFE_METHODS or
+            request.user and
+            (obj.user == request.user or request.user.is_staff or request.user.is_superuser)
+        )
+
+
+class IsSelfOrAdminOrReadOnly(BasePermission):
+    def has_object_permission(self, request, view, user: User):
+        return bool(
+            request.method in SAFE_METHODS or
+            request.user and
+            user == request.user
+        )

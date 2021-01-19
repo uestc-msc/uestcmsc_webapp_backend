@@ -57,9 +57,9 @@ def logout(request: WSGIRequest) -> Response:
     method='POST',
     operation_summary='忘记密码',
     operation_description='服务器生成 token 并发送至用户邮箱，然后返回 202\n'
-                          '若用户邮件不存在，服务器拒绝服务并返回 400 `{"message": "邮箱参数不存在或不正确"}`\n'
-                          '若用户操作过于频繁（同 IP 1 分钟内只能发送 1 封，24 小时内只能发送 10 封），服务器拒绝服务并返回 403 `{"message": "发送邮件过于频繁"}`\n'
-                          '邮件发送失败，返回 500 `{"message": "发送邮件失败"}`\n'
+                          '若用户邮件不存在，服务器拒绝服务并返回 400 `{"detail": "邮箱参数不存在或不正确"}`\n'
+                          '若用户操作过于频繁（同 IP 1 分钟内只能发送 1 封，24 小时内只能发送 10 封），服务器拒绝服务并返回 403 `{"detail": "发送邮件过于频繁"}`\n'
+                          '邮件发送失败，返回 500 `{"detail": "发送邮件失败"}`\n'
                           '注：token 24 小时有效，新 token 不会使旧 token 失效',
     request_body=Schema_object(Schema_email),
     responses={200: None}
@@ -73,7 +73,7 @@ def forget_password(request: WSGIRequest) -> Response:
     ResetPasswordRequest.objects.filter(request_time__lt=one_day_ago).delete()  # 删除一天前的所有请求
     # 判断邮箱是否存在
     if 'email' not in request.POST or User.objects.filter(username=request.POST['email']).count() == 0:
-        return Response({"message": "邮箱参数不存在或不正确"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "邮箱参数不存在或不正确"}, status=status.HTTP_400_BAD_REQUEST)
     email = request.POST['email']
     user = User.objects.filter(username=email).first()
     # 获取 ip
@@ -89,7 +89,7 @@ def forget_password(request: WSGIRequest) -> Response:
             ResetPasswordRequest.objects \
                     .filter(ipv4addr=ipv4addr, request_time__gte=one_day_ago) \
                     .count() >= 10:
-        return Response({"message": "发送邮件过于频繁"}, status=status.HTTP_403_FORBIDDEN)
+        return Response({"detail": "发送邮件过于频繁"}, status=status.HTTP_403_FORBIDDEN)
     # 生成 token
     token = generate_uuid()
     # 发送邮件并存储记录
@@ -99,16 +99,16 @@ def forget_password(request: WSGIRequest) -> Response:
         reset_password_request.save()
         return Response(status=status.HTTP_202_ACCEPTED)
     else:
-        return Response({"message": "发送邮件失败"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({"detail": "发送邮件失败"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @swagger_auto_schema(
     method='POST',
     operation_summary='验证邮箱重置密码',
-    operation_description='若没有 token 参数，返回 400 `{"message": "缺少 token 参数"}`\n'
-                          '若参数 token 无效或已过期（24 小时），返回 403 `{"message": "token 无效"}`\n'
-                          '若参数 token 有效，且没有 new_password 参数，返回 200 `{"message": "token 有效"}`\n'
-                          '若参数 token 有效，且参数 new_password 不合法，返回 400 `{"message": "新密码不合法"}`\n'
+    operation_description='若没有 token 参数，返回 400 `{"detail": "缺少 token 参数"}`\n'
+                          '若参数 token 无效或已过期（24 小时），返回 403 `{"detail": "token 无效"}`\n'
+                          '若参数 token 有效，且没有 new_password 参数，返回 200 `{"detail": "token 有效"}`\n'
+                          '若参数 token 有效，且参数 new_password 不合法，返回 400 `{"detail": "新密码不合法"}`\n'
                           '若参数 token 有效，且参数 new_password 合法，修改密码、使用户下线并返回 204\n',
     request_body=Schema_object(Schema_token, Schema_new_password),
     responses={200: None}
@@ -117,16 +117,16 @@ def forget_password(request: WSGIRequest) -> Response:
 def reset_password(request: WSGIRequest) -> Response:
     current = now()
     if "token" not in request.POST:
-        return Response({"message": "缺少 token 参数"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "缺少 token 参数"}, status=status.HTTP_400_BAD_REQUEST)
     token = request.POST["token"]
     request_record = ResetPasswordRequest.objects.filter(token=token).first()
     if request_record is None or request_record.request_time + timedelta(days=1) < current:  # 若不存在，或在一天以前发出的
-        return Response({"message": "token 无效"}, status=status.HTTP_403_FORBIDDEN)
+        return Response({"detail": "token 无效"}, status=status.HTTP_403_FORBIDDEN)
     if "new_password" not in request.POST:
-        return Response({"message": "token 有效"}, status=status.HTTP_200_OK)
+        return Response({"detail": "token 有效"}, status=status.HTTP_200_OK)
     new_password = request.POST["new_password"]
     if not is_valid_password(new_password):
-        return Response({"message": "新密码不合法"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "新密码不合法"}, status=status.HTTP_400_BAD_REQUEST)
     request_record.user.set_password(new_password)
     request_record.user.save()
     request_record.delete()
@@ -138,9 +138,9 @@ def reset_password(request: WSGIRequest) -> Response:
     operation_summary='修改密码',
     operation_description='若用户未登录，返回 401\n'
                           '若登录用户和 `{id}` 不同，返回 403\n'
-                          '若参数 old_password 和 new_password 不都存在，返回 400 `{"message": "缺少参数 old_response 或 new_password"}`\n'
-                          '若 old_password 和原密码不同，返回 401 `{"message": "原密码不匹配"}`\n'
-                          '若 new_password 不合法，返回 400 `{"message": "新密码不合法"}`\n'
+                          '若参数 old_password 和 new_password 不都存在，返回 400 `{"detail": "缺少参数 old_response 或 new_password"}`\n'
+                          '若 old_password 和原密码不同，返回 401 `{"detail": "原密码不匹配"}`\n'
+                          '若 new_password 不合法，返回 400 `{"detail": "新密码不合法"}`\n'
                           '若 old_password 和 new_password 均正确，修改密码、使用户下线并返回 204\n',
     request_body=Schema_object(Schema_old_password, Schema_new_password),
     responses={200: None}
@@ -149,13 +149,13 @@ def reset_password(request: WSGIRequest) -> Response:
 @login_required
 def change_password(request: WSGIRequest) -> Response:
     if "old_password" not in request.POST or "new_password" not in request.POST:
-        return Response({"message": "缺少参数 old_response 或 new_password"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "缺少参数 old_response 或 new_password"}, status=status.HTTP_400_BAD_REQUEST)
     old_password = request.POST["old_password"]
     new_password = request.POST["new_password"]
     if not authenticate(request, username=request.user.username, password=old_password):
-        return Response({"message": "原密码不匹配"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({"detail": "原密码不匹配"}, status=status.HTTP_401_UNAUTHORIZED)
     if not is_valid_password(new_password):
-        return Response({"message": "新密码不合法"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"detail": "新密码不合法"}, status=status.HTTP_400_BAD_REQUEST)
     request.user.set_password(new_password)
     request.user.save()
     return Response(status=status.HTTP_204_NO_CONTENT)
