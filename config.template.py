@@ -15,7 +15,7 @@ MYSQL_HOST = "127.0.0.1"
 MYSQL_PORT = "3306"
 MYSQL_USERNAME = "root"
 MYSQL_PASSWORD = "testtest"
-MYSQL_DATABASE = "uestcmsc_webapp_backend"
+MYSQL_DATABASE = "uestcmsc_webapp"
 
 # 邮箱（用于发送验证邮件等）的相关配置
 MAILBOX_HOST = "smtp.office365.com"
