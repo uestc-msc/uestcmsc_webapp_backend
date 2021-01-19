@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set +x
-cd /etc/uestcmsc_webapp/backend || cd .
+cd /etc/uestcmsc_webapp/backend || return 1
 git pull
 python3 -m pip install --upgrade pip
 pip3 install -r requirements.txt
