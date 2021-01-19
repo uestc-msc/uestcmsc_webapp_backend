@@ -40,6 +40,7 @@ def generate_check_in_code():
         code += chr(randrange(lb, ub))
     return code
 
+
 # 基于 Django REST Framework 的分页器
 class MyPagination(PageNumberPagination):
     # 指定每一页的个数，默认为配置文件里面的PAGE_SIZE
@@ -51,8 +52,8 @@ class MyPagination(PageNumberPagination):
     # 可以让前端指定页码数，默认就是page参数去接收
     page_query_param = 'page'
 
-    # 指定返回格式，根据需求返回一个总页数，数据存在results字典里返回
+    # 指定返回格式，根据需求返回总页数 self.page.paginator.count，数据存在 results 字典里返回
     def get_paginated_response(self, data):
         from collections import OrderedDict
-        return Response(OrderedDict([('count', self.page.paginator.count), ('results',data)]))
+        return Response(OrderedDict([('count', self.page.paginator.count), ('results', data)]))
 

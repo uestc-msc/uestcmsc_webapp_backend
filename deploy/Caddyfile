@@ -1,0 +1,8 @@
+app.uestc-msc.com {
+    root * /etc/uestcmsc_webapp/frontend
+    file_server
+}
+
+api.uestc-msc.com {
+    reverse_proxy localhost:8000
+}

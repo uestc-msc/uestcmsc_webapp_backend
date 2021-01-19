@@ -1,0 +1,14 @@
+[Unit]
+Description=UESTC MSC Webapp Backend (Django)
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=lyh543
+ExecStart= /usr/bin/python3 /etc/uestcmsc_webapp/backend/manage.py runserver
+
+[Install]
+WantedBy=multi-user.target

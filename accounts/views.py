@@ -22,7 +22,7 @@ from users.models import ResetPasswordRequest
     operation_summary='登录',
     operation_description='成功返回 200'
                           '失败（账户或密码错误）返回 401\n'
-                          '注意一个已登录的用户 A 尝试 login 账户 B 失败后，仍具有账户 A 的凭证。',
+                          '注：一个已登录的用户 A 尝试 login 账户 B 失败后，仍具有账户 A 的凭证。',
     request_body=Schema_object(Schema_email, Schema_password),
     responses={200: None}
 )
@@ -135,8 +135,8 @@ def reset_password(request: WSGIRequest) -> Response:
 
 @swagger_auto_schema(
     method='POST',
-    operation_summary='通过旧密码重置密码',
-    operation_description='若用户未登录，返回 401 `{"message": "用户未登录"}`\n'
+    operation_summary='修改密码',
+    operation_description='若用户未登录，返回 401\n'
                           '若登录用户和 `{id}` 不同，返回 403\n'
                           '若参数 old_password 和 new_password 不都存在，返回 400 `{"message": "缺少参数 old_response 或 new_password"}`\n'
                           '若 old_password 和原密码不同，返回 401 `{"message": "原密码不匹配"}`\n'

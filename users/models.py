@@ -4,6 +4,8 @@ import hashlib
 import urllib
 
 # 将 django.contrib.auth.models.User 的 first_name 设为必填
+from libgravatar import Gravatar
+
 User._meta.get_field('first_name')._Blank = False
 User.add_to_class("__str__", lambda u: u.first_name)
 
@@ -25,10 +27,7 @@ class UserProfile(models.Model):
 
     # https://en.gravatar.com/site/implement/images/django/
     def get_avatar(self, size: int = 40) -> str:
-        email = self.user.email
-        default = "https://example.com/static/images/defaultavatar.jpg"
-        return "https://www.gravatar.com/avatar/%s?%s" % (
-            hashlib.md5(email.lower()).hexdigest(), urllib.urlencode({'d': default, 's': str(size)}))
+        return Gravatar(self.user.username).get_image()
 
     class Meta:
         verbose_name = '用户其他信息'
@@ -50,5 +49,3 @@ class ResetPasswordRequest(models.Model):
     class Meta:
         verbose_name = '重置密码申请'
         verbose_name_plural = '重置密码申请'
-
-

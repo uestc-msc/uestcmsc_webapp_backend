@@ -25,11 +25,11 @@ def tester_signup(username: str = "admin@example.com",
 
 def tester_login(username: str = 'admin@example.com',
                  password: str = "adminadmin",
-                 c: Client = Client(HTTP_USER_AGENT=HTTP_USER_AGENT)) -> response:
+                 client: Client = Client(HTTP_USER_AGENT=HTTP_USER_AGENT)) -> response:
     """
     测试时用于登录一个默认账户。也可以用于给定参数登录指定账户
     """
-    return c.post('/accounts/login/', {
+    return client.post('/accounts/login/', {
         'username': username,
         'password': password
     })

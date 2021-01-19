@@ -7,21 +7,11 @@ from utils import is_email, is_number
 
 
 class UserRegisterSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True,
-                                     max_length=150,
-                                     validators=[
-                                         UniqueValidator(queryset=User.objects.all(), message="用户邮箱已存在")
-                                     ])
-    password = serializers.CharField(required=True,
-                                     min_length=6,
-                                     max_length=256)
-    first_name = serializers.CharField(required=True,
-                                       max_length=150)
-    student_id = serializers.CharField(required=True,
-                                       max_length=20,
-                                       validators=[
-                                           UniqueValidator(queryset=UserProfile.objects.all(), message="用户学号已存在")
-                                       ])
+    username = serializers.CharField(validators=[UniqueValidator(queryset=User.objects.all(), message="用户邮箱已存在")])
+    password = serializers.CharField(required=True, min_length=6, max_length=256)
+    first_name = serializers.CharField(required=True)
+    student_id = serializers.CharField(required=True, max_length=20,
+                                       validators=[UniqueValidator(queryset=UserProfile.objects.all(), message="用户学号已存在")])
 
     def validate_username(self, username):
         if not is_email(username):
@@ -48,9 +38,21 @@ class UserRegisterSerializer(serializers.Serializer):
         return user
 
 
-class UserListSerializer(serializers.Serializer):
-    pass
+class UserSerializer(serializers.Serializer):
+    # 要不是为了 Swagger 文档生成，我也不想写这么长
+    pk = serializers.ReadOnlyField()
+    username = serializers.ReadOnlyField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    is_staff = serializers.ReadOnlyField()
+    is_superuser = serializers.ReadOnlyField()
+    last_login = serializers.ReadOnlyField()
+    date_joined = serializers.ReadOnlyField()
+    student_id = serializers.CharField(source='userprofile.student_id',
+                                       validators=[UniqueValidator(queryset=UserProfile.objects.all(), message="用户学号已存在")])
+    experience = serializers.ReadOnlyField(source='userprofile.experience')
+    about = serializers.CharField(source='userprofile.about')
+    avatar_url = serializers.ReadOnlyField(source='userprofile.get_avatar')
 
-
-class UserProfileSerializer(serializers.Serializer):
-    pass
+    class Meta:
+        model = User
