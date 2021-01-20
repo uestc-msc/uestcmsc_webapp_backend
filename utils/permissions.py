@@ -7,6 +7,8 @@ from rest_framework import status
 from rest_framework.permissions import *
 from rest_framework.response import Response
 
+from activities.models import Activity
+
 
 def isOwnerOrAdmin(request: WSGIRequest, owner: User):
     return request.user.is_staff or request.user.is_superuser or request.user == owner
@@ -91,6 +93,15 @@ class IsOwnerOrAdminOrReadOnly(BasePermission):
             request.method in SAFE_METHODS or
             request.user and
             (obj.user == request.user or request.user.is_staff or request.user.is_superuser)
+        )
+
+
+class IsPresenterOrAdminOrReadOnly(BasePermission):
+    def has_object_permission(self, request, view, obj: Activity):
+        return bool(
+            request.method in SAFE_METHODS or
+            request.user and
+            (request.user in obj.presenter_set or request.user.is_staff or request.user.is_superuser)
         )
 
 

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'activities.apps.ActivitiesConfig',
     'cloud.apps.CloudConfig',
+    'comment.apps.CommentConfig',
     'gallery.apps.GalleryConfig',
     'users.apps.UsersConfig',
 ]
@@ -149,7 +150,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'utils.MyPagination',
 }
 
-# settings about Swagger
+# settings about Swagger (Document Generator)
 SWAGGER_SETTINGS = {
     'DEFAULT_MODEL_RENDERING': 'example'
 }

@@ -1,14 +1,12 @@
 from datetime import timedelta
-from random import random
 
-from django.test import TestCase, Client
+from django.contrib.auth.models import User
+from django.test import TestCase
 from django.utils.timezone import now
 
 from users.models import ResetPasswordRequest
 from utils import generate_uuid
 from utils.tester import *
-from django.contrib.auth.models import User
-# Create your tester here.
 
 
 # 登录相关测试

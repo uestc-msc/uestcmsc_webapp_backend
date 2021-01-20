@@ -4,17 +4,16 @@ from django.contrib.auth import authenticate, login as django_login, logout as d
 from django.contrib.auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
 from django.utils.timezone import now
-from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import status
 
-from utils.mail import send_reset_password_email
+from users.models import ResetPasswordRequest
 from utils import generate_uuid, is_valid_password
+from utils.mail import send_reset_password_email
 from utils.permissions import login_required
 from utils.swagger import *
-from users.models import ResetPasswordRequest
 
 
 @swagger_auto_schema(
@@ -24,7 +23,7 @@ from users.models import ResetPasswordRequest
                           '失败（账户或密码错误）返回 401\n'
                           '注：一个已登录的用户 A 尝试 login 账户 B 失败后，仍具有账户 A 的凭证。',
     request_body=Schema_object(Schema_email, Schema_password),
-    responses={200: None}
+    responses={200: Schema_none}
 )
 @api_view(['POST'])
 def login(request: WSGIRequest) -> Response:
@@ -44,7 +43,7 @@ def login(request: WSGIRequest) -> Response:
     method='POST',
     operation_summary='登出',
     operation_description='成功返回 204，失败（未登陆用户请求登出）返回 401。',
-    responses={200: None}
+    responses={200: Schema_none}
 )
 @api_view(['POST'])
 @login_required
@@ -62,7 +61,7 @@ def logout(request: WSGIRequest) -> Response:
                           '邮件发送失败，返回 500 `{"detail": "发送邮件失败"}`\n'
                           '注：token 24 小时有效，新 token 不会使旧 token 失效',
     request_body=Schema_object(Schema_email),
-    responses={200: None}
+    responses={200: Schema_none}
 )
 @api_view(['POST'])
 def forget_password(request: WSGIRequest) -> Response:
@@ -111,7 +110,6 @@ def forget_password(request: WSGIRequest) -> Response:
                           '若参数 token 有效，且参数 new_password 不合法，返回 400 `{"detail": "新密码不合法"}`\n'
                           '若参数 token 有效，且参数 new_password 合法，修改密码、使用户下线并返回 204\n',
     request_body=Schema_object(Schema_token, Schema_new_password),
-    responses={200: None}
 )
 @api_view(['POST'])
 def reset_password(request: WSGIRequest) -> Response:
@@ -143,7 +141,7 @@ def reset_password(request: WSGIRequest) -> Response:
                           '若 new_password 不合法，返回 400 `{"detail": "新密码不合法"}`\n'
                           '若 old_password 和 new_password 均正确，修改密码、使用户下线并返回 204\n',
     request_body=Schema_object(Schema_old_password, Schema_new_password),
-    responses={200: None}
+    responses={200: Schema_none}
 )
 @api_view(['POST'])
 @login_required

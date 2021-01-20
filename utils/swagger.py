@@ -35,6 +35,7 @@ Schema_token = {'token': openapi.Schema(type=openapi.TYPE_STRING, description='�
 Schema_old_password = {'old_password': openapi.Schema(type=openapi.TYPE_STRING, description='旧密码')}
 Schema_new_password = {'new_password': openapi.Schema(type=openapi.TYPE_STRING, description='新密码')}
 Schema_count = {"count": openapi.Schema(type=openapi.TYPE_NUMBER, description="总数")}
+Schema_none = None
 
 Param_search = openapi.Parameter("search", openapi.IN_QUERY, type=openapi.TYPE_STRING, description='搜索关键字（为空时表示不搜索）')
 Param_page = openapi.Parameter("page", openapi.IN_QUERY, type=openapi.TYPE_NUMBER, description='页数（不正确时返回 404）')

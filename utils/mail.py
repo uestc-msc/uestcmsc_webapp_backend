@@ -17,11 +17,11 @@ def send_reset_password_email(receipt_email: str, name: str, token: str, request
               f"{FRONTEND_URL}/resetpassword?token={token}\n\n" \
               f"该链接 24 小时内有效。\n" \
               f"如果这不是您的请求，不用担心，您的个人信息并没有泄露。\n\n" \
-              f"电子科技大学微软学生俱乐部".format_map(vars())
+              f"电子科技大学微软学生俱乐部"
 
     try:
         return send_mail(
-            subject=f"[{APP_NAME}] 重设您的密码".format_map(vars()),
+            subject=f"[{APP_NAME}] 重设您的密码",
             message=message,
             from_email=MAILBOX_EMAIL,
             recipient_list=[receipt_email],
