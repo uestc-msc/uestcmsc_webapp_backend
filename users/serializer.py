@@ -1,60 +1,59 @@
-from abc import ABC
-
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 
 from users.models import UserProfile
-from utils import is_email, is_number
+from utils.serializer import validate_user_list, validate_username, validate_student_id
 
 
-class UserRegisterSerializer(serializers.Serializer):
-    username = serializers.CharField(validators=[UniqueValidator(queryset=User.objects.all(), message="用户邮箱已存在")])
-    password = serializers.CharField(required=True, min_length=6, max_length=256)
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "id", "username", "first_name", "last_name",
+            "student_id", "experience", "about", "subscribe_email", "avatar_url",
+            "last_login", "date_joined", "is_staff", "is_superuser")
+        read_only_fields = ('id', 'username',
+                            'experience', 'avatar_url',
+                            'last_login', 'date_joined', 'is_staff', 'is_superuser')
+    # user 中需要单独设置的字段
     first_name = serializers.CharField(required=True)
-    student_id = serializers.CharField(required=True, max_length=20,
-                                       validators=[UniqueValidator(queryset=UserProfile.objects.all(), message="用户学号已存在")])
-
-    def validate_username(self, username):
-        if not is_email(username):
-            raise serializers.ValidationError("邮箱格式错误")
-        if User.objects.filter(username=username):
-            raise serializers.ValidationError("邮箱已存在")
-        return username
+    # userprofile 中的可读写字段
+    student_id = serializers.CharField(source='userprofile.student_id')
+    about = serializers.CharField(source='userprofile.about')
+    subscribe_email = serializers.BooleanField(source='userprofile.subscribe_email')
+    # userprofile 中的只读字段
+    experience = serializers.ReadOnlyField(source='userprofile.experience')
+    avatar_url = serializers.ReadOnlyField(source='userprofile.get_avatar')
 
     def validate_student_id(self, student_id):
-        if not is_number(student_id):
-            raise serializers.ValidationError("学号格式错误")
-        if UserProfile.objects.filter(student_id=student_id):
-            raise serializers.ValidationError("学号已存在")
-        return student_id
+        return validate_student_id(student_id)
 
-    def create(self, validated_data):
-        user = User.objects.create_user(username=validated_data["username"],
-                                        password=validated_data["password"],
-                                        first_name=validated_data["first_name"])
-        user_profile = UserProfile.objects.create(user=user,
-                                                  student_id=validated_data["student_id"])
-        user.save()
-        user_profile.save()
-        return user
+    def update(self, instance: User, validated_data):
+        userprofile_data = validated_data.pop('userprofile', {}) # 将 data 中 userprofile 提取 pop 出来，没有就用 {} 代替
+
+        instance = super(UserSerializer, self).update(instance, validated_data) # 使用 ModelSerializer 自带的 update
+
+        if hasattr(instance, 'userprofile'):
+            userprofile = instance.userprofile
+        else:
+            userprofile = UserProfile(user=instance)
+        # 手动更新 userprofile 的每一个值
+        userprofile.about = userprofile_data.get('about', userprofile.about)
+        userprofile.subscribe_email = userprofile_data.get('subscribe_email', userprofile.subscribe_email)
+        userprofile.student_id = userprofile_data.get('student_id', userprofile.student_id)
+        userprofile.save()
+
+        return instance
 
 
-class UserSerializer(serializers.Serializer):
-    # 要不是为了 Swagger 文档生成，我也不想写这么长
-    pk = serializers.CharField(read_only=True)
-    username = serializers.CharField(read_only=True)
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
-    is_staff = serializers.CharField(read_only=True)
-    is_superuser = serializers.CharField(read_only=True)
-    last_login = serializers.DateTimeField(read_only=True)
-    date_joined = serializers.DateTimeField(read_only=True)
-    student_id = serializers.CharField(source='userprofile.student_id',
-                                       validators=[UniqueValidator(queryset=UserProfile.objects.all(), message="用户学号已存在")])
-    experience = serializers.ReadOnlyField(source='userprofile.experience')
-    about = serializers.CharField(source='userprofile.about')
+# 作为简单信息的 Serializer，可嵌套于活动名单等
+class UserBriefSerializer(serializers.ModelSerializer):
     avatar_url = serializers.ReadOnlyField(source='userprofile.get_avatar')
 
     class Meta:
         model = User
+        fields = ('id', 'first_name', 'last_name', 'is_staff', 'is_superuser', 'avatar_url')
+        read_only_fields = ('first_name', 'last_name', 'is_staff', 'is_superuser', 'avatar_url')
+
+    def validate_user(self, presenter_list):
+        validate_user_list(presenter_list)

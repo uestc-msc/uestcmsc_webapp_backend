@@ -1,8 +1,11 @@
 import re
+from typing import Dict, Type
 
 from django.core import mail
+from django.db.models import Model
 from django.test import Client
 from django.http import response
+from rest_framework.serializers import Serializer, ModelSerializer
 
 HTTP_USER_AGENT = 'Mozilla/5.0'
 
@@ -11,11 +14,11 @@ def tester_signup(username: str = "admin@example.com",
                   password: str = "adminadmin",
                   first_name: str = 'admin',
                   student_id: str = "20210101",
-                  c: Client = Client(HTTP_USER_AGENT=HTTP_USER_AGENT)) -> response:
+                  client: Client = Client(HTTP_USER_AGENT=HTTP_USER_AGENT)) -> response:
     """
     测试时用于创建一个默认账户。也可以用于给定参数创建账户
     """
-    return c.post('/users/', {
+    return client.post('/accounts/signup/', {
         'username': username,
         'password': password,
         'first_name': first_name,
@@ -45,3 +48,7 @@ def pop_token_from_virtual_mailbox(test_function):
     mail.outbox = []
     token = re.findall('token=.+', message)[0][6:]
     return token
+
+
+def generate_putdata_from_patch(patch_data: dict, id: int, model: Model, model_serializer: Type[Serializer]) -> Dict:
+    instance = model.objects.get(id=id)

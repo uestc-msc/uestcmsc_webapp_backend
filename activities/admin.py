@@ -1,13 +1,13 @@
 from django.contrib import admin
-from .models import Activity, Presenter, Attender, ActivityRelatedLink
-from gallery.models import Picture
+from .models import Activity, ActivityRelatedLink
+from gallery.models import Photo
 
-class PresenterInline(admin.StackedInline):
-    model = Presenter
-
-
-class AttenderInline(admin.StackedInline):
-    model = Attender
+# class PresenterInline(admin.StackedInline):
+#     model = Presenter
+#
+#
+# class AttenderInline(admin.StackedInline):
+#     model = Attender
 
 
 class ActivityRelatedLinkInline(admin.StackedInline):
@@ -15,11 +15,11 @@ class ActivityRelatedLinkInline(admin.StackedInline):
 
 
 class PictureInline(admin.StackedInline):
-    model = Picture
+    model = Photo
 
 
 class ActivityAdmin(admin.ModelAdmin):
-    inlines = [PresenterInline, AttenderInline, ActivityRelatedLinkInline, PictureInline]
+    inlines = [ActivityRelatedLinkInline, PictureInline]
 
 
 admin.site.register(Activity, ActivityAdmin)

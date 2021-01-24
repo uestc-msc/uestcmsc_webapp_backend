@@ -25,7 +25,7 @@ docker run -dit --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=testtest -e MYS
 
 ```sh
 pip3 install -r requirements.txt
-python3 manage.py migrate
+python3 manage.py migrate --noinput
 ```
 
 运行 Django Server：

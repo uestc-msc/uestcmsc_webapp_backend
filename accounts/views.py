@@ -9,12 +9,31 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+from accounts.serializer import UserRegisterSerializer
 from users.models import ResetPasswordRequest
+from users.serializer import UserSerializer
 from utils import generate_uuid, is_valid_password
 from utils.mail import send_reset_password_email
 from utils.permissions import login_required
 from utils.swagger import *
 
+
+@swagger_auto_schema(
+    method='POST',
+    operation_summary='注册新用户',
+    operation_description='成功返回 201\n'
+                          '失败（参数错误或不符合要求）返回 400',
+    request_body=UserRegisterSerializer,
+    responses={201: UserSerializer()}
+)
+@api_view(['POST'])
+def signup(request: WSGIRequest) -> Response:
+    register_serializer = UserRegisterSerializer(data=request.data)
+    if register_serializer.is_valid():
+        u = register_serializer.save()
+        user_serializer = UserSerializer(u)
+        return Response(user_serializer.data, status=status.HTTP_201_CREATED)
+    return Response(register_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @swagger_auto_schema(
     method='POST',
@@ -36,7 +55,7 @@ def login(request: WSGIRequest) -> Response:
     if user is None:
         return err_response
     django_login(request, user)
-    return Response(status=status.HTTP_200_OK)  # 尽量改为 /user/<pk>的东西
+    return Response(status=status.HTTP_200_OK)  # 尽量改为 /user/<id>的东西
 
 
 @swagger_auto_schema(

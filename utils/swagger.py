@@ -1,13 +1,9 @@
-from functools import reduce
-from typing import Dict, Type
+from typing import Type
 
 from django.forms import CharField
 from drf_yasg import openapi
-from drf_yasg.inspectors import SerializerInspector
-from rest_framework import serializers
-from rest_framework.fields import DecimalField
-
 from rest_framework.serializers import Serializer, CharField
+
 
 # 本文件为简写 @swagger_auto_schema 的语法而生
 # drf_yasg 文档：https://drf-yasg.readthedocs.io/en/stable/index.html
@@ -15,30 +11,43 @@ from rest_framework.serializers import Serializer, CharField
 # 示例：https://zoejoyuliao.medium.com/自定義-drf-yasg-的-swagger-文檔-以-get-post-檔案上傳為例-eeecd922059b
 
 
-def Schema_object(*prop: dict) -> openapi.Schema:
-    def merge_two_dict(x: dict, y: dict) -> dict:
-        return {**x, **y}
-    return openapi.Schema(type=openapi.TYPE_OBJECT, properties=reduce(merge_two_dict, prop))
+def Schema_object(*props: dict) -> openapi.Schema:
+    result_properties = {}
+    for prop in props:
+        result_properties = {**prop, **result_properties}
+    return openapi.Schema(type=openapi.TYPE_OBJECT, properties=result_properties)
 
 
 def Schema_pagination(serializer: Type[Serializer]) -> Serializer:
     class PaginationSerializer(Serializer):
         count = CharField()
         results = serializer(many=True)
+
     return PaginationSerializer()
 
 
+Schema_none = None
+Schema_count = {"count": openapi.Schema(type=openapi.TYPE_NUMBER, description="总数")}
+Schema_detail = {"detail": openapi.Schema(type=openapi.TYPE_STRING, description="错误信息")}
 Schema_string = {"string": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL)}
+Schema_id = {"id": openapi.Schema(type=openapi.TYPE_NUMBER, description="用户 id")}
 Schema_email = {"email": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description='邮箱')}
 Schema_password = {"password": openapi.Schema(type=openapi.TYPE_STRING, description='密码')}
 Schema_token = {'token': openapi.Schema(type=openapi.TYPE_STRING, description='由邮件提供')}
 Schema_old_password = {'old_password': openapi.Schema(type=openapi.TYPE_STRING, description='旧密码')}
 Schema_new_password = {'new_password': openapi.Schema(type=openapi.TYPE_STRING, description='新密码')}
-Schema_count = {"count": openapi.Schema(type=openapi.TYPE_NUMBER, description="总数")}
-Schema_none = None
+
+Schema_title = {"title": openapi.Schema(type=openapi.TYPE_STRING, description='沙龙标题')}
+Schema_datetime = {
+    "datetime": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description="日期时间")}
+Schema_location = {"location": openapi.Schema(type=openapi.TYPE_STRING, description='地点')}
+Schema_presenter_post = {"presenter": Schema_object(Schema_id)}  # POST 只需要提交 id
+Schema_check_in_code = {"check_in_code": openapi.Schema(type=openapi.TYPE_STRING, description="签到码")}
+Schema_check_in_open = {"check_in_open": openapi.Schema(type=openapi.TYPE_BOOLEAN, description="管理员开放签到")}
+Schema_create_activity = Schema_object(Schema_title, Schema_datetime, Schema_location, Schema_presenter_post,
+                                       Schema_check_in_code, Schema_check_in_open)
 
 Param_search = openapi.Parameter("search", openapi.IN_QUERY, type=openapi.TYPE_STRING, description='搜索关键字（为空时表示不搜索）')
 Param_page = openapi.Parameter("page", openapi.IN_QUERY, type=openapi.TYPE_NUMBER, description='页数（不正确时返回 404）')
-Param_page_size = openapi.Parameter("page_size", openapi.IN_QUERY, type=openapi.TYPE_NUMBER, description='页大小（不为正数时表示不分页）')
-
-
+Param_page_size = openapi.Parameter("page_size", openapi.IN_QUERY, type=openapi.TYPE_NUMBER,
+                                    description='页大小（不为正数时表示不分页）')

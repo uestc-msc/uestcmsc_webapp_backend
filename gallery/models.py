@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 
 # Create your models here.
-class Picture(models.Model):
+class Photo(models.Model):
     class Meta:
         verbose_name = '图片'
         verbose_name_plural = '图片'

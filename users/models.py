@@ -17,21 +17,22 @@ class UserProfile(models.Model):
     本模型为 django.contrib.auth.models.User 模型的拓展：https://docs.djangoproject.com/en/3.1/ref/contrib/auth/#user-model
     文档：https://github.com/uestc-msc/uestcmsc_webapp_backend/blob/master/docs/develop.md#用户模型-userprofile
     """
+    class Meta:
+        verbose_name = '用户其他信息'
+        verbose_name_plural = '用户其他信息'
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="用户名", db_index=True)
     experience = models.IntegerField("经验", default=0)
-    student_id = models.CharField("学号", max_length=20, unique=True)
-    about = models.TextField("个性签名", max_length=256, default='')
+    student_id = models.CharField("学号", max_length=20, unique=True, blank=True)
+    about = models.TextField("个性签名", max_length=256, default='', blank=True)
+    subscribe_email = models.BooleanField("订阅邮件", default=True, blank=True)
 
     def __str__(self) -> str:
         return self.user.first_name + ' ' + self.student_id
 
-    # https://en.gravatar.com/site/implement/images/django/
+    # https://libgravatar.readthedocs.io/en/latest/
     def get_avatar(self, size: int = 40) -> str:
         return Gravatar(self.user.username).get_image()
-
-    class Meta:
-        verbose_name = '用户其他信息'
-        verbose_name_plural = '用户其他信息'
 
 
 class ResetPasswordRequest(models.Model):
