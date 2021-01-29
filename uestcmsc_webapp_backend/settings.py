@@ -16,7 +16,7 @@ from config import *
 # 应用名称和版本号
 APP_NAME = "阮薇薇点名啦"
 API_VERSION = "v0.1.0 α"
-USER_DEFAULT_AVATAR = "https://raw.githubusercontent.com/uestc-msc/wechat-mini-program/master/img/ruanweiwei.jpg"
+USER_DEFAULT_AVATAR = "https://raw.githubusercontent.com/uestc-msc/uestcmsc_webapp_backend/lyh543/static/ruanweiwei.jpg"
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
