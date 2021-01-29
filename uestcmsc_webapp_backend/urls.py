@@ -21,7 +21,7 @@ from .docs import schema_view
 
 
 def index(response):
-    return HttpResponse("Hello uestc-mscer!")
+    return HttpResponse("Hello UESTC-MSCer! This is the backend of UESTC-MSC Webapp.")
 
 api_urlpatterns = [
     url(r'^docs(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
