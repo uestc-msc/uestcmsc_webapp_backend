@@ -9,7 +9,7 @@
 运行环境：
 
 * Ubuntu 18.04 / Windows 10, 
-* Python 3.6~3.9
+* Python 3.7~3.9
 
 [部署文档](deploy/deploy.md)
 
