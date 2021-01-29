@@ -19,7 +19,7 @@ bash <(curl -s https://get.docker.com)
 docker run -dit --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=testtest -e MYSQL_DATABASE=uestcmsc_webapp -v ~/mysql:/usr/lib/mysql --restart always mysql
 ```
 
-## Django 部署
+## Django 运行
 
 按自己的情况修改 `config.template.py`，并保存为 `config.py`。然后安装依赖库并初始化数据库：
 
@@ -34,9 +34,17 @@ python3 manage.py migrate --noinput
 python3 manage.py runserver
 ```
 
-访问 `http://localhost:8000/` 即可。
+访问 `http://localhost:8000/api/` 即可。
 
-## 加入 systemd
+## 使用 Gunicorn 部署 Django
+
+在项目目录下运行：
+
+```
+gunicorn -b "127.0.0.1:8000" uestcmsc_webapp_backend.wsgi
+```
+
+## 加入 systemd 实现自动重启
 
 ```sh
 sudo cp deploy/uestcmsc_webapp_backend.service /etc/systemd/system

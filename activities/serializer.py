@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
+from rest_framework.serializers import ListSerializer
 
 from activities.models import Activity  # , Presenter, Attender
-from utils.serializer import validate_user_list, validate_userid_list
+from utils.serializer import *
 from users.serializer import UserBriefSerializer
 
 
@@ -14,36 +15,35 @@ class ActivitySerializer(serializers.ModelSerializer):
     presenter = UserBriefSerializer(read_only=False, many=True, required=True)
     attender = UserBriefSerializer(read_only=True, many=True)
 
-    # def validate_presenter(self, presenter_list):
-    #     validate_user_list(presenter_list)
+    def validate_presenter(self, presenter_list):
+        if len(presenter_list) == 0:
+            raise serializers.ValidationError("演讲者名单不应为空")
+        for presenter in presenter_list:
+            if 'id' not in presenter:
+                raise serializers.ValidationError("用户不包含 id")
+            validate_user_id(presenter['id'])
+        return presenter_list
 
     def create(self, validated_data):
         presenter_data = validated_data.pop('presenter')
         activity = Activity.objects.create(**validated_data)
-
         for presenter in presenter_data:
             u = User.objects.get(id=presenter['id'])
             activity.presenter.add(u)
-
         activity.save()
         return activity
 
     def update(self, instance: Activity, validated_data):
-        presenter_data = validated_data.pop('presenter')
-        activity = Activity.objects.update(instance, **validated_data)
+        if 'presenter' in validated_data:
+            presenter_data = validated_data.pop('presenter')
+            instance.presenter.clear()
+            for presenter in presenter_data:
+                u = User.objects.get(id=presenter['id'])
+                instance.presenter.add(u)
 
-        instance.title = validated_data.get('title', instance.title)
-        instance.datetime = validated_data.get('datetime', instance.datetime)
-        instance.location = validated_data.get('datetime', instance.location)
-        instance.check_in_open = validated_data.get('check_in_open', instance.check_in_open)
-
-        instance.presenter.clear()
-        for presenter in presenter_data:
-            u = User.objects.get(id=presenter['id'])
-            activity.presenter.add(u)
-
-        activity.save()
-        return activity
+        instance = super().update(instance, validated_data) # 更新 title 等数据
+        instance.save()
+        return instance
 
 
 class ActivityAdminSerializer(serializers.ModelSerializer):
@@ -58,10 +58,14 @@ class ActivityAttenderUpdateSerializer(serializers.Serializer):
     remove = serializers.ListSerializer(child=serializers.IntegerField())
 
     def validate_add(self, add_list):
-        validate_userid_list(add_list)
+        for user_id in add_list:
+            validate_user_id(user_id)
+        return add_list
 
     def validate_remove(self, remove_list):
-        validate_userid_list(remove_list)
+        for user_id in remove_list:
+            validate_user_id(user_id)
+        return remove_list
 
     def update(self, instance: Activity, validated_data):
         add_list = validated_data['add']

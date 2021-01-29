@@ -8,7 +8,8 @@ Type=simple
 Restart=always
 RestartSec=1
 User=lyh543
-ExecStart= /usr/bin/python3 /etc/uestcmsc_webapp/backend/manage.py runserver
+WorkingDirectory=/etc/uestcmsc_webapp/backend/
+ExecStart=/usr/local/bin/gunicorn -b "127.0.0.1:8000" --access-logfile - uestcmsc_webapp_backend.wsgi
 
 [Install]
 WantedBy=multi-user.target

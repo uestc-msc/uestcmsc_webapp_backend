@@ -100,7 +100,7 @@ class IsPresenterOrAdmin(BasePermission):
     def has_object_permission(self, request, view, activity: Activity):
         return bool(
             request.user and
-            (request.user in activity.presenter or request.user.is_staff or request.user.is_superuser)
+            (request.user in activity.presenter.all() or request.user.is_staff or request.user.is_superuser)
         )
 
 
@@ -109,7 +109,7 @@ class IsPresenterOrAdminOrReadOnly(BasePermission):
         return bool(
             request.method in SAFE_METHODS or
             request.user and
-            (request.user in activity.presenter or request.user.is_staff or request.user.is_superuser)
+            (activity.presenter.filter(id=request.user.id) or request.user.is_staff or request.user.is_superuser)
         )
 
 

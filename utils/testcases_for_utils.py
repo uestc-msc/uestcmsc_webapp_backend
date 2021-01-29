@@ -1,5 +1,7 @@
+# 此代码被 users.tests 引用，在 python3 manage.py test 中会一并测试
 from django.test import SimpleTestCase
-from . import *
+
+from utils import is_email
 
 
 class TestIsEmail(SimpleTestCase):

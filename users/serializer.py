@@ -1,8 +1,4 @@
-from django.contrib.auth.models import User
-from rest_framework import serializers
-
-from users.models import UserProfile
-from utils.serializer import validate_user_list, validate_username, validate_student_id
+from utils.serializer import *
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -29,9 +25,9 @@ class UserSerializer(serializers.ModelSerializer):
         return validate_student_id(student_id)
 
     def update(self, instance: User, validated_data):
-        userprofile_data = validated_data.pop('userprofile', {}) # 将 data 中 userprofile 提取 pop 出来，没有就用 {} 代替
+        userprofile_data = validated_data.pop('userprofile', {})    # 将 data 中 userprofile 提取 pop 出来，没有就用 {} 代替
 
-        instance = super(UserSerializer, self).update(instance, validated_data) # 使用 ModelSerializer 自带的 update
+        instance = super().update(instance, validated_data)         # 使用 ModelSerializer 自带的 update
 
         if hasattr(instance, 'userprofile'):
             userprofile = instance.userprofile
@@ -46,14 +42,15 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 
-# 作为简单信息的 Serializer，可嵌套于活动名单等
+# 作为简单信息的 Serializer，可嵌套于活动签到名单、图片上传者等
 class UserBriefSerializer(serializers.ModelSerializer):
-    avatar_url = serializers.ReadOnlyField(source='userprofile.get_avatar')
-
     class Meta:
         model = User
         fields = ('id', 'first_name', 'last_name', 'is_staff', 'is_superuser', 'avatar_url')
         read_only_fields = ('first_name', 'last_name', 'is_staff', 'is_superuser', 'avatar_url')
 
-    def validate_user(self, presenter_list):
-        validate_user_list(presenter_list)
+    id = serializers.IntegerField()
+    avatar_url = serializers.ReadOnlyField(source='userprofile.get_avatar')
+
+    def validate_id(self, id):
+        return validate_user_id(id)

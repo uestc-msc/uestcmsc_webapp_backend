@@ -1,7 +1,7 @@
 from rest_framework import permissions, routers
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from config import API_VERSION, APP_NAME
+from .settings import API_VERSION, APP_NAME
 
 # API 文档页
 schema_view = get_schema_view(

@@ -1,12 +1,15 @@
 import re
 import uuid
+from datetime import datetime
 from random import randrange
 
+import pytz
+
+from uestcmsc_webapp_backend.settings import TIME_ZONE
 from rest_framework.pagination import PageNumberPagination
 
+
 # 判断字符串是否为邮箱
-
-
 def is_email(string: str) -> bool:
     email_re = r'^[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){0,4}@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){0,4}$'
     return bool(re.match(email_re, string))
@@ -24,6 +27,12 @@ def is_number(string: str) -> bool:
         return True
     except ValueError:
         return False
+
+
+# 判断两个 aware datetime 在 settings.TIME_ZONE 下是否是同一天
+def compare_date(dt1: datetime, dt2: datetime) -> bool:
+    tz = pytz.timezone(TIME_ZONE)
+    return dt1.astimezone(tz).date() == dt2.astimezone(tz).date()
 
 
 # 生成一个 32 位 uuid

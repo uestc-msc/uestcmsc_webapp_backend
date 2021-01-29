@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Activity, ActivityRelatedLink
+from .models import Activity, ActivityURL
 from gallery.models import Photo
 
 # class PresenterInline(admin.StackedInline):
@@ -10,8 +10,8 @@ from gallery.models import Photo
 #     model = Attender
 
 
-class ActivityRelatedLinkInline(admin.StackedInline):
-    model = ActivityRelatedLink
+class ActivityURLInline(admin.StackedInline):
+    model = ActivityURL
 
 
 class PictureInline(admin.StackedInline):
@@ -19,7 +19,7 @@ class PictureInline(admin.StackedInline):
 
 
 class ActivityAdmin(admin.ModelAdmin):
-    inlines = [ActivityRelatedLinkInline, PictureInline]
+    inlines = [ActivityURLInline, PictureInline]
 
 
 admin.site.register(Activity, ActivityAdmin)

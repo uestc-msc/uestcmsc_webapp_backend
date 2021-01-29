@@ -13,6 +13,12 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 from pathlib import Path
 from config import *
 
+# 应用名称和版本号
+APP_NAME = "阮薇薇点名啦"
+API_VERSION = "v0.1.0 α"
+USER_DEFAULT_AVATAR = "https://raw.githubusercontent.com/uestc-msc/wechat-mini-program/master/img/ruanweiwei.jpg"
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -39,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'corsheaders',
     "rest_framework",
     'drf_yasg', # API document generation
 
@@ -51,6 +58,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', # 需注意与其他中间件顺序，这里放在最前面即可.
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -144,13 +152,17 @@ EMAIL_USE_TLS = MAILBOX_USE_TLS
 EMAIL_USE_SSL = MAILBOX_USE_SSL
 
 # REST_FRAMEWORK
-
-REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
-    'DEFAULT_PAGINATION_CLASS': 'utils.MyPagination',
-}
+#
+# REST_FRAMEWORK = {
+#     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
+#     'DEFAULT_PAGINATION_CLASS': 'utils.MyPagination',
+# }
 
 # settings about Swagger (Document Generator)
 SWAGGER_SETTINGS = {
     'DEFAULT_MODEL_RENDERING': 'example'
 }
+
+# CORS headers
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True

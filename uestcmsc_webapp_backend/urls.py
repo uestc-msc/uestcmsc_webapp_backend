@@ -23,13 +23,17 @@ from .docs import schema_view
 def index(response):
     return HttpResponse("Hello uestc-mscer!")
 
-
-urlpatterns = [
+api_urlpatterns = [
     url(r'^docs(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     url(r'^docs/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('activities/', include('activities.urls')),
     path('users/', include('users.urls')),
     path('', index)
+]
+
+urlpatterns = [
+    url('api/', include(api_urlpatterns))
 ]

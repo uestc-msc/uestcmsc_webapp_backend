@@ -1,179 +1,195 @@
 from datetime import timedelta
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, Client
+from datetime import datetime
+
+from django.urls import reverse
 from django.utils.timezone import now
 
 from users.models import ResetPasswordRequest
 from utils import generate_uuid
-from utils.tester import *
+from utils.tester import tester_signup, assertUserDetailEqual, tester_login, pop_token_from_virtual_mailbox
+
+signup_url = reverse('signup')
+login_url = reverse('login')
+logout_url = reverse('logout')
+forget_password_url = reverse('forget_password')
+reset_password_url = reverse('reset_password')
+change_password_url = reverse('change_password')
 
 
 # 注册相关测试
 class SignUpTests(TestCase):
+    def test_sign_up(self):
+        response = tester_signup()
+        self.assertEqual(User.objects.count(), 1)
+        assertUserDetailEqual(self, response.content, User.objects.first())
+
     def test_sign_up_with_empty_field(self):
-        r = Client().post('/accounts/signup/')
-        self.assertEqual(r.status_code, 400)
-        error_argument = set(eval(r.content).keys())
-        self.assertEqual(error_argument, {'username', 'password', 'first_name', 'student_id'})
+        response = Client().post(signup_url)
+        self.assertEqual(response.status_code, 400)
+        error_argument = set(eval(response.content).keys())
+        self.assertSetEqual(error_argument, {'username', 'password', 'first_name', 'student_id'})
 
-        r = tester_signup('admin@example.com', 'adminadmin', '', '123456')
-        self.assertEqual(r.status_code, 400)
-        error_argument = set(eval(r.content).keys())
-        self.assertEqual(error_argument, {'first_name'})
+        response = tester_signup('admin@example.com', 'adminadmin', '', '123456')
+        self.assertEqual(response.status_code, 400)
+        error_argument = set(eval(response.content).keys())
+        self.assertSetEqual(error_argument, {'first_name'})
 
-        r = tester_signup('admin@example.com', '', 'ad', '123456')
-        self.assertEqual(r.status_code, 400)
-        error_argument = set(eval(r.content).keys())
-        self.assertEqual(error_argument, {'password'})
+        response = tester_signup('admin@example.com', '', 'ad', '123456')
+        self.assertEqual(response.status_code, 400)
+        error_argument = set(eval(response.content).keys())
+        self.assertSetEqual(error_argument, {'password'})
 
-        r = tester_signup('', 'adminadmin', 'ad', '123456')
-        self.assertEqual(r.status_code, 400)
-        error_argument = set(eval(r.content).keys())
-        self.assertEqual(error_argument, {'username'})
+        response = tester_signup('', 'adminadmin', 'ad', '123456')
+        self.assertEqual(response.status_code, 400)
+        error_argument = set(eval(response.content).keys())
+        self.assertSetEqual(error_argument, {'username'})
 
-        r = tester_signup('admin@example.com', 'adminadmin', 'ad', '')
-        self.assertEqual(r.status_code, 400)
-        error_argument = set(eval(r.content).keys())
-        self.assertEqual(error_argument, {'student_id'})
+        response = tester_signup('admin@example.com', 'adminadmin', 'ad', '')
+        self.assertEqual(response.status_code, 400)
+        error_argument = set(eval(response.content).keys())
+        self.assertSetEqual(error_argument, {'student_id'})
 
     def test_sign_up_with_invalid_field(self):
-        r = tester_signup('admin@example.com', 'adminadmin', 'ad', '123456')
-        self.assertEqual(r.status_code, 201)
+        response = tester_signup('admin@example.com', 'adminadmin', 'ad', '123456')
+        self.assertEqual(response.status_code, 201)
 
-        r = tester_signup('admin1@example.com', 'adminadmin', 'ad', '123456')
-        self.assertEqual(r.status_code, 400)
-        error_argument = set(eval(r.content).keys())
-        self.assertEqual(error_argument, {'student_id'})
+        response = tester_signup('admin1@example.com', 'adminadmin', 'ad', '123456')
+        self.assertEqual(response.status_code, 400)
+        error_argument = set(eval(response.content).keys())
+        self.assertSetEqual(error_argument, {'student_id'})
 
-        r = tester_signup('admin5@example.com', 'adminadmin', 'ad', '3e5')
-        self.assertEqual(r.status_code, 400)
-        error_argument = set(eval(r.content).keys())
-        self.assertEqual(error_argument, {'student_id'})
+        response = tester_signup('admin5@example.com', 'adminadmin', 'ad', '3e5')
+        self.assertEqual(response.status_code, 400)
+        error_argument = set(eval(response.content).keys())
+        self.assertSetEqual(error_argument, {'student_id'})
 
-        r = tester_signup('admin3@example.com', 'admina', 'ad', '1234567')
-        self.assertEqual(r.status_code, 201)
+        response = tester_signup('admin3@example.com', 'admina', 'ad', '1234567')
+        self.assertEqual(response.status_code, 201)
 
-        r = tester_signup('admin4@example.com', 'admin', 'ad', '12345678')
-        self.assertEqual(r.status_code, 400)
-        error_argument = set(eval(r.content).keys())
-        self.assertEqual(error_argument, {'password'})
+        response = tester_signup('admin4@example.com', 'admin', 'ad', '12345678')
+        self.assertEqual(response.status_code, 400)
+        error_argument = set(eval(response.content).keys())
+        self.assertSetEqual(error_argument, {'password'})
 
-        r = tester_signup('admin@example.com', 'adminadmin', 'ad', '12345678')
-        self.assertEqual(r.status_code, 400)
-        error_argument = set(eval(r.content).keys())
-        self.assertEqual(error_argument, {'username'})
+        response = tester_signup('admin@example.com', 'adminadmin', 'ad', '12345678')
+        self.assertEqual(response.status_code, 400)
+        error_argument = set(eval(response.content).keys())
+        self.assertSetEqual(error_argument, {'username'})
 
-        r = tester_signup('admin6@example.com', 'adminadmin', 'ad', '1234567890')
-        self.assertEqual(r.status_code, 201)
+        response = tester_signup('admin6@example.com', 'adminadmin', 'ad', '1234567890')
+        self.assertEqual(response.status_code, 201)
 
-        r = tester_signup('uestcmsc@outlook.com', 'passw0rd', '电子科技大学微软学生俱乐部', '20201024')
-        self.assertEqual(r.status_code, 201)
+        response = tester_signup('uestcmsc@outlook.com', 'passw0rd', '电子科技大学微软学生俱乐部', '20201024')
+        self.assertEqual(response.status_code, 201)
 
-        r = tester_signup('admin', 'adminadmin', 'Admin', '1234567890123456')
-        self.assertEqual(r.status_code, 400)
-        error_argument = set(eval(r.content).keys())
-        self.assertEqual(error_argument, {'username'})
+        response = tester_signup('admin', 'adminadmin', 'Admin', '1234567890123456')
+        self.assertEqual(response.status_code, 400)
+        error_argument = set(eval(response.content).keys())
+        self.assertSetEqual(error_argument, {'username'})
 
 
 # 登录相关测试
 class LoginTest(TestCase):
     def setUp(self):
-        r = tester_signup('admin@example.com', 'adminadmin', 'Admin', '20210101')
+        response = tester_signup('admin@example.com', 'adminadmin', 'Admin', '20210101')
         self.admin_user = User.objects.get(username='admin@example.com')
         tester_signup('user@example.com', 'useruser', 'User', '20210104')
         self.another_user = User.objects.get(username='user@example.com')
 
     def test_login_correctly(self):
-        r = tester_login('admin@example.com', 'adminadmin')
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.wsgi_request.user, self.admin_user)
+        response = tester_login('admin@example.com', 'adminadmin')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.wsgi_request.user, self.admin_user)
 
-        r = tester_login('admin@example.com', 'adminadmin')
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.wsgi_request.user, self.admin_user)
+        response = tester_login('admin@example.com', 'adminadmin')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.wsgi_request.user, self.admin_user)
 
     def test_login_with_less_argument(self):
-        r = Client().post('/accounts/login/')
-        self.assertEqual(r.status_code, 401)
+        response = Client().post(login_url)
+        self.assertEqual(response.status_code, 401)
 
-        r = Client().post('/accounts/login/')
-        self.assertEqual(r.status_code, 401)
+        response = Client().post(login_url)
+        self.assertEqual(response.status_code, 401)
 
-        r = Client().get('/accounts/login/')
-        self.assertEqual(r.status_code, 405)
+        response = Client().get(login_url)
+        self.assertEqual(response.status_code, 405)
 
-        r = Client().post('/accounts/login/', {"username": "admin@example.com"})
-        self.assertEqual(r.status_code, 401)
+        response = Client().post(login_url, {"username": "admin@example.com"})
+        self.assertEqual(response.status_code, 401)
 
-        r = Client().post('/accounts/login/', {"password": "adminadmin"})
-        self.assertEqual(r.status_code, 401)
+        response = Client().post(login_url, {"password": "adminadmin"})
+        self.assertEqual(response.status_code, 401)
 
-        r = tester_login('admin', '')
-        self.assertEqual(r.status_code, 401)
+        response = tester_login('admin', '')
+        self.assertEqual(response.status_code, 401)
 
-        r = tester_login('', 'admin')
-        self.assertEqual(r.status_code, 401)
+        response = tester_login('', 'admin')
+        self.assertEqual(response.status_code, 401)
 
     def test_login_with_invalid_authentication(self):
-        r = tester_login('user@example.com', 'useruser')
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.wsgi_request.user, self.another_user)
+        response = tester_login('user@example.com', 'useruser')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.wsgi_request.user, self.another_user)
 
-        r = tester_login('user@example.com', 'admin')
-        self.assertEqual(r.status_code, 401)
+        response = tester_login('user@example.com', 'admin')
+        self.assertEqual(response.status_code, 401)
 
-        r = tester_login('admin@example.com', 'USERUSER')
-        self.assertEqual(r.status_code, 401)
+        response = tester_login('admin@example.com', 'USERUSER')
+        self.assertEqual(response.status_code, 401)
 
-        r = tester_login('admin@example.com', 'adminadmin')
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.wsgi_request.user, self.admin_user)
+        response = tester_login('admin@example.com', 'adminadmin')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.wsgi_request.user, self.admin_user)
 
-        r = tester_login('admin@example.com', 'admin')
-        self.assertEqual(r.status_code, 401)
+        response = tester_login('admin@example.com', 'admin')
+        self.assertEqual(response.status_code, 401)
 
-        r = tester_login('admin', 'adminadmin')
-        self.assertEqual(r.status_code, 401)
+        response = tester_login('admin', 'adminadmin')
+        self.assertEqual(response.status_code, 401)
 
-        r = tester_login('admin@example.com', 'useruser')
-        self.assertEqual(r.status_code, 401)
+        response = tester_login('admin@example.com', 'useruser')
+        self.assertEqual(response.status_code, 401)
 
-        r = tester_login('user@example.com', 'adminadmin')
-        self.assertEqual(r.status_code, 401)
+        response = tester_login('user@example.com', 'adminadmin')
+        self.assertEqual(response.status_code, 401)
 
     def test_login_by_switch_user(self):
-        c = Client()
-        r = tester_login('admin@example.com', 'adminadmin', c)
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.wsgi_request.user, self.admin_user)
+        client = Client()
+        response = tester_login('admin@example.com', 'adminadmin', client)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.wsgi_request.user, self.admin_user)
 
-        r = tester_login('user@example.com', 'useruser', c)
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.wsgi_request.user, self.another_user)
+        response = tester_login('user@example.com', 'useruser', client)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.wsgi_request.user, self.another_user)
 
-        r = tester_login('wrong', 'wrongpassword', c)
-        self.assertEqual(r.status_code, 401)
+        response = tester_login('wrong', 'wrongpassword', client)
+        self.assertEqual(response.status_code, 401)
 
-        r = tester_login('admin@example.com', 'adminadmin', c)
-        self.assertEqual(r.status_code, 200)
-        self.assertEqual(r.wsgi_request.user, self.admin_user)
+        response = tester_login('admin@example.com', 'adminadmin', client)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.wsgi_request.user, self.admin_user)
 
 
 # 登出相关测试
 class LogoutTest(TestCase):
     def test_log_out(self):
         tester_signup("admin@example.com", "adminadmin")
-        r = Client().post('/accounts/logout/')
-        self.assertEqual(r.status_code, 401)
+        response = Client().post(logout_url)
+        self.assertEqual(response.status_code, 401)
 
-        r = tester_login("admin@example.com", "adminadmin")
-        self.assertEqual(r.wsgi_request.user, User.objects.first())
-        r = r.client.post('/accounts/logout/')
-        self.assertEqual(r.status_code, 204)
-        self.assertEqual(r.wsgi_request.user.is_authenticated, False)
+        response = tester_login("admin@example.com", "adminadmin")
+        self.assertEqual(response.wsgi_request.user, User.objects.first())
+        response = response.client.post(logout_url)
+        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.wsgi_request.user.is_authenticated, False)
 
 
+# 重置密码相关测试
 class ResetPasswordTest(TestCase):
     email = "admin@example.com"
     password = "adminadmin"
@@ -185,102 +201,102 @@ class ResetPasswordTest(TestCase):
     # Django test 中不会真的发送邮件
     # 文档：https://docs.djangoproject.com/zh-hans/3.1/topics/testing/tools/#email-services
     def test_forget_password_whole_process(self):
-        c = Client()
-        r = tester_login(self.email, self.password, c)
-        self.assertEqual(r.wsgi_request.user, self.user)
-        r = c.get('/')
-        self.assertEqual(r.wsgi_request.user, self.user)
+        client = Client()
+        response = tester_login(self.email, self.password, client)
+        self.assertEqual(response.wsgi_request.user, self.user)
+        response = client.get('/')
+        self.assertEqual(response.wsgi_request.user, self.user)
 
         c2 = Client()
-        r = c2.post('/accounts/forget_password/', {"email": self.email})
-        self.assertEqual(r.status_code, 202)
+        response = c2.post(forget_password_url, {"email": self.email})
+        self.assertEqual(response.status_code, 202)
 
         token = pop_token_from_virtual_mailbox(self)
-        r = c2.post('/accounts/reset_password/', {
+        response = c2.post(reset_password_url, {
             "token": token
         })
-        self.assertEqual(r.status_code, 200)  # token 有效
+        self.assertEqual(response.status_code, 200)  # token 有效
 
-        r = c2.post('/accounts/reset_password/', {
+        response = c2.post(reset_password_url, {
             "token": token,
             "new_password": "new_password"
         })
-        self.assertEqual(r.status_code, 204)
+        self.assertEqual(response.status_code, 204)
 
-        r = c.get('/')
-        self.assertEqual(r.wsgi_request.user.is_authenticated, False)  # 此时第一个 Client 理应被下线
-        r = c2.get('/')
-        self.assertEqual(r.wsgi_request.user.is_authenticated, False)  # 此时第二个 Client 也应该不在线
+        response = client.get('/')
+        self.assertEqual(response.wsgi_request.user.is_authenticated, False)  # 此时第一个 Client 理应被下线
+        response = c2.get('/')
+        self.assertEqual(response.wsgi_request.user.is_authenticated, False)  # 此时第二个 Client 也应该不在线
 
-        r = tester_login(self.email, self.password)
-        self.assertEqual(r.status_code, 401)
+        response = tester_login(self.email, self.password)
+        self.assertEqual(response.status_code, 401)
 
-        r = tester_login(self.email, 'new_password')
-        self.assertEqual(r.status_code, 200)
+        response = tester_login(self.email, 'new_password')
+        self.assertEqual(response.status_code, 200)
 
-        r = tester_login(self.email, self.password)
-        self.assertEqual(r.status_code, 401)
+        response = tester_login(self.email, self.password)
+        self.assertEqual(response.status_code, 401)
 
     def test_forget_email_with_invalid_field(self):
-        c = Client()
-        r = tester_login(self.email, self.password, c)
-        self.assertEqual(r.wsgi_request.user, self.user)
+        client = Client()
+        response = tester_login(self.email, self.password, client)
+        self.assertEqual(response.wsgi_request.user, self.user)
 
-        r = c.post('/accounts/forget_password/', {"email": "12312313"})
-        self.assertEqual(r.status_code, 400)
-        r = c.post('/accounts/forget_password/', {"email": "Admin"})
-        self.assertEqual(r.status_code, 400)
-        r = c.post('/accounts/forget_password/', {"email": "example@example.com"})
-        self.assertEqual(r.status_code, 400)
-        r = c.post('/accounts/forget_password/', {"email": self.email})
-        self.assertEqual(r.status_code, 202)
+        response = client.post(forget_password_url, {"email": "12312313"})
+        self.assertEqual(response.status_code, 400)
+        response = client.post(forget_password_url, {"email": "Admin"})
+        self.assertEqual(response.status_code, 400)
+        response = client.post(forget_password_url, {"email": "example@example.com"})
+        self.assertEqual(response.status_code, 400)
+        response = client.post(forget_password_url, {"email": self.email})
+        self.assertEqual(response.status_code, 202)
 
     def test_validate_token_with_invalid_field(self):
         tester_signup("another@example.com", "anotheruser", "another", "20201231")
         anotheruser = User.objects.filter(username="another@example.com").first()
         self.assertIsNotNone(anotheruser)
-        c = Client()
-        r = c.post('/accounts/forget_password/', {"email": self.email})
-        self.assertEqual(r.status_code, 202)
+        client = Client()
+        response = client.post(forget_password_url, {"email": self.email})
+        self.assertEqual(response.status_code, 202)
         user_token = pop_token_from_virtual_mailbox(self)
 
         # 假 token
-        r = c.post('/accounts/reset_password/', {
+        response = client.post(reset_password_url, {
             "token": generate_uuid(),
             "new_password": "new_password"
         })
-        self.assertEqual(r.status_code, 403)
+        self.assertEqual(response.status_code, 403)
 
-        r = c.post('/accounts/reset_password/', {
+        response = client.post(reset_password_url, {
             "token": generate_uuid()
         })
-        self.assertEqual(r.status_code, 403)
+        self.assertEqual(response.status_code, 403)
         # 过期 token
         expired_token = generate_uuid()
         ResetPasswordRequest.objects.create(user=self.user, token=expired_token, request_time=now() - timedelta(days=2),
                                             ipv4addr="127.0.0.1")
-        r = c.post('/accounts/reset_password/', {
+        response = client.post(reset_password_url, {
             "token": expired_token
         })
-        self.assertEqual(r.status_code, 403)
+        self.assertEqual(response.status_code, 403)
         # 弱密码
-        r = c.post('/accounts/reset_password/', {
+        response = client.post(reset_password_url, {
             "token": user_token,
             "new_password": "pd"
         })
-        self.assertEqual(r.status_code, 400)
-        self.assertEqual(eval(r.content)['detail'], '新密码不合法')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(eval(response.content)['detail'], '新密码不合法')
         # 重复使用 token
-        r = c.post('/accounts/reset_password/', {
+        response = client.post(reset_password_url, {
             "token": user_token,
             "new_password": "new_password"
         })
-        self.assertEqual(r.status_code, 204)
-        r = c.post('/accounts/reset_password/', {
+        self.assertEqual(response.status_code, 204)
+        response = client.post(reset_password_url, {
             "token": user_token,
             "new_password": "new_password"
         })
-        self.assertEqual(r.status_code, 403)
+        self.assertEqual(response.status_code, 403)
 
     def test_forget_password_frequently(self):
         """
@@ -307,23 +323,24 @@ class ResetPasswordTest(TestCase):
                                                     ipv4addr='127.0.0.1')
             self.assertEqual(ResetPasswordRequest.objects.count(), number - 1)
             # 发两封，assert第一封成功第二封失败
-            r = Client().post('/accounts/forget_password/', {"email": self.user.username})
-            self.assertEqual(r.status_code, 202)
-            r = Client().post('/accounts/forget_password/', {"email": self.user.username})
-            self.assertEqual(r.status_code, 403)
+            response = Client().post(forget_password_url, {"email": self.user.username})
+            self.assertEqual(response.status_code, 202)
+            response = Client().post(forget_password_url, {"email": self.user.username})
+            self.assertEqual(response.status_code, 403)
             # 将最近一封改为更远的时间，重新发两封，第一封成功第二封失败
             rpr = ResetPasswordRequest.objects.order_by('request_time').last()
             rpr.request_time = now() - delta
             rpr.save()
-            r = Client().post('/accounts/forget_password/', {"email": self.user.username})
-            self.assertEqual(r.status_code, 202)
+            response = Client().post(forget_password_url, {"email": self.user.username})
+            self.assertEqual(response.status_code, 202)
             self.assertEqual(ResetPasswordRequest.objects.filter(request_time__lt=now() - timedelta(days=1)).count(),
                              0)  # 保证过期的邮件有被清除
-            r = Client().post('/accounts/forget_password/', {"email": self.user.username})
-            self.assertEqual(r.status_code, 403)
+            response = Client().post(forget_password_url, {"email": self.user.username})
+            self.assertEqual(response.status_code, 403)
             ResetPasswordRequest.objects.all().delete()
 
 
+# 更改密码相关测试
 class ChangePasswordTest(TestCase):
     email = "admin@example.com"
     password = "adminadmin"
@@ -331,56 +348,55 @@ class ChangePasswordTest(TestCase):
     def setUp(self):
         tester_signup(self.email, self.password, 'Admin', '20210101')
         self.user = User.objects.filter(username=self.email).first()
-        self.password_url = '/accounts/change_password/'
 
     def test_reset_password(self):
         c1 = Client()
-        r = tester_login(self.email, self.password, c1)
-        self.assertEqual(r.wsgi_request.user, self.user)
-        r = c1.get('/')
-        self.assertEqual(r.wsgi_request.user, self.user)
+        response = tester_login(self.email, self.password, c1)
+        self.assertEqual(response.wsgi_request.user, self.user)
+        response = c1.get('/')
+        self.assertEqual(response.wsgi_request.user, self.user)
 
         c2 = Client()
         tester_login(self.email, self.password, c2)
-        r2 = c2.post(self.password_url, {"old_password": self.password, "new_password": "ADMINADMIN"})
+        r2 = c2.post(change_password_url, {"old_password": self.password, "new_password": "ADMINADMIN"})
         self.assertEqual(r2.status_code, 204)
-        r = c1.get('/')
-        self.assertEqual(r.wsgi_request.user.is_authenticated, False)  # 此时第一个 Client 理应被下线
-        r = c2.get('/')
-        self.assertEqual(r.wsgi_request.user.is_authenticated, False)  # 此时第二个 Client 理应被下线
+        response = c1.get('/')
+        self.assertEqual(response.wsgi_request.user.is_authenticated, False)  # 此时第一个 Client 理应被下线
+        response = c2.get('/')
+        self.assertEqual(response.wsgi_request.user.is_authenticated, False)  # 此时第二个 Client 理应被下线
 
-        r = tester_login(self.email, self.password, c1)
-        self.assertEqual(r.status_code, 401)
-        r = tester_login(self.email, 'ADMINADMIN', c1)
-        self.assertEqual(r.status_code, 200)
+        response = tester_login(self.email, self.password, c1)
+        self.assertEqual(response.status_code, 401)
+        response = tester_login(self.email, 'ADMINADMIN', c1)
+        self.assertEqual(response.status_code, 200)
         r2 = tester_login(self.email, self.password, c2)
         self.assertEqual(r2.status_code, 401)
 
-        r = c1.post(self.password_url, {"old_password": "ADMINADMIN", "new_password": self.password})
-        self.assertEqual(r.status_code, 204)
-        r = tester_login(self.email, self.password, c1)
-        self.assertEqual(r.status_code, 200)
+        response = c1.post(change_password_url, {"old_password": "ADMINADMIN", "new_password": self.password})
+        self.assertEqual(response.status_code, 204)
+        response = tester_login(self.email, self.password, c1)
+        self.assertEqual(response.status_code, 200)
 
     def test_reset_password_with_invalid_field(self):
         tester_signup("another@example.com", "anotheruser", "another", "20201231")
         anotheruser = User.objects.filter(username="another@example.com").first()
         # 没上线
-        c = Client()
-        r = c.post(self.password_url, {"old_password": self.password, "new_password": "ADMINADMIN"})
-        self.assertEqual(r.status_code, 401)
-        r = tester_login("another@example.com", "anotheruser", c)
-        self.assertEqual(r.status_code, 200)
+        client = Client()
+        response = client.post(change_password_url, {"old_password": self.password, "new_password": "ADMINADMIN"})
+        self.assertEqual(response.status_code, 401)
+        response = tester_login("another@example.com", "anotheruser", client)
+        self.assertEqual(response.status_code, 200)
         # 少字段
-        r = tester_login(self.email, self.password, c)
-        r = c.post(self.password_url, {"new_password": "ADMINADMIN"})
-        self.assertEqual(r.status_code, 400)
-        r = c.post(self.password_url, {"old_password": self.password})
-        self.assertEqual(r.status_code, 400)
-        r = c.post(self.password_url, {"old_password": self.password, "password": "ADMINADMIN"})
-        self.assertEqual(r.status_code, 400)
+        response = tester_login(self.email, self.password, client)
+        response = client.post(change_password_url, {"new_password": "ADMINADMIN"})
+        self.assertEqual(response.status_code, 400)
+        response = client.post(change_password_url, {"old_password": self.password})
+        self.assertEqual(response.status_code, 400)
+        response = client.post(change_password_url, {"old_password": self.password, "password": "ADMINADMIN"})
+        self.assertEqual(response.status_code, 400)
         # 旧密码错误
-        r = c.post(self.password_url, {"old_password": "password", "new_password": "ADMINADMIN"})
-        self.assertEqual(r.status_code, 401)
+        response = client.post(change_password_url, {"old_password": "password", "new_password": "ADMINADMIN"})
+        self.assertEqual(response.status_code, 401)
         # 新密码强度不够
-        r = c.post(self.password_url, {"old_password": "password", "password": "admin"})
-        self.assertEqual(r.status_code, 400)
+        response = client.post(change_password_url, {"old_password": "password", "password": "admin"})
+        self.assertEqual(response.status_code, 400)

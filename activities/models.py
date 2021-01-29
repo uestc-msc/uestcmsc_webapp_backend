@@ -8,7 +8,7 @@ class Activity(models.Model):
         verbose_name = '沙龙'
         verbose_name_plural = '沙龙'
 
-    datetime = models.DateTimeField('日期时间', db_index=True)
+    datetime = models.DateTimeField('日期时间', db_index=True, )
     location = models.CharField('地点', max_length=50)
     title = models.CharField('主题', max_length=150)
     check_in_code = models.CharField('签到码', max_length=10, db_index=True, default=generate_check_in_code)
@@ -20,7 +20,7 @@ class Activity(models.Model):
         return self.title
 
 
-class ActivityRelatedLink(models.Model):
+class ActivityURL(models.Model):
     class Meta:
         verbose_name = '沙龙相关链接'
         verbose_name_plural = '沙龙相关链接'

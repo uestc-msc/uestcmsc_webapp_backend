@@ -15,7 +15,7 @@
 
 ## 文档
 
-* API 文档：`http://localhost:8000/docs/`
+* API 文档：本项目的 API 文档使用 [drf-yasg](https://github.com/axnsan12/drf-yasg/) 生成。运行项目后见 `http://localhost:8000/api/docs/`
 * [数据模型文档](docs/models.md)
 
 ## TO-DO
@@ -27,4 +27,4 @@
 * 邮件推送提醒活动
 * 邮件推送留言、评论
 * 修改用户信息部分，目前采用管理员和用户在修改字段上同权
-
+* 给活动加上 tag

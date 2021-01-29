@@ -4,6 +4,7 @@ from smtplib import SMTPException
 from django.core.mail import send_mail
 
 from config import *
+from uestcmsc_webapp_backend.settings import APP_NAME
 
 
 def send_reset_password_email(receipt_email: str, name: str, token: str, request_time: datetime) -> bool:

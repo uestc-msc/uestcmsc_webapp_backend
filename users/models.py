@@ -6,6 +6,8 @@ import urllib
 # 将 django.contrib.auth.models.User 的 first_name 设为必填
 from libgravatar import Gravatar
 
+from uestcmsc_webapp_backend.settings import USER_DEFAULT_AVATAR
+
 User._meta.get_field('first_name')._Blank = False
 User.add_to_class("__str__", lambda u: u.first_name)
 
@@ -31,8 +33,9 @@ class UserProfile(models.Model):
         return self.user.first_name + ' ' + self.student_id
 
     # https://libgravatar.readthedocs.io/en/latest/
-    def get_avatar(self, size: int = 40) -> str:
-        return Gravatar(self.user.username).get_image()
+    def get_avatar(self, size: int = 160) -> str:
+        return Gravatar(self.user.username).get_image(default=USER_DEFAULT_AVATAR,
+                                                      use_ssl=True)
 
 
 class ResetPasswordRequest(models.Model):
