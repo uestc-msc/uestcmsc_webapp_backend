@@ -43,12 +43,13 @@ Schema_old_password = {'old_password': openapi.Schema(type=openapi.TYPE_STRING, 
 Schema_new_password = {'new_password': openapi.Schema(type=openapi.TYPE_STRING, description='新密码')}
 
 Schema_title = {"title": openapi.Schema(type=openapi.TYPE_STRING, description='沙龙标题')}
-Schema_datetime = {
-    "datetime": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description="日期时间")}
+Schema_datetime = {"datetime": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description="日期时间")}
 Schema_location = {"location": openapi.Schema(type=openapi.TYPE_STRING, description='地点')}
 Schema_presenter_ids = {"presenter": Schema_array(Schema_object(Schema_id))}  # POST 只需要提交 id
 Schema_check_in_code = {"check_in_code": openapi.Schema(type=openapi.TYPE_STRING, description="签到码")}
 Schema_check_in_open = {"check_in_open": openapi.Schema(type=openapi.TYPE_BOOLEAN, description="管理员开放签到")}
+Schema_add = {"add": Schema_array(openapi.Schema(type=openapi.TYPE_NUMBER, description="用户 id"))}
+Schema_remove = {"remove": Schema_array(openapi.Schema(type=openapi.TYPE_NUMBER, description="用户 id"))}
 
 Param_search = openapi.Parameter("search", openapi.IN_QUERY, type=openapi.TYPE_STRING, description='搜索关键字（为空时表示不搜索）')
 Param_page = openapi.Parameter("page", openapi.IN_QUERY, type=openapi.TYPE_NUMBER, description='页数（不正确时返回 404）')

@@ -3,8 +3,6 @@ from datetime import timedelta
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.contrib.auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
-from datetime import datetime
-
 from django.utils.timezone import now
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -77,7 +75,7 @@ def logout(request: WSGIRequest) -> Response:
 @swagger_auto_schema(
     method='POST',
     operation_summary='忘记密码',
-    operation_description='服务器生成 token 并发送至用户邮箱，然后返回 202\n'
+    operation_description='服务器生成 token 并发送至用户邮箱，成功发送邮件返回 200\n'
                           '若用户邮件不存在，服务器拒绝服务并返回 400 `{"detail": "邮箱参数不存在或不正确"}`\n'
                           '若用户操作过于频繁（同 IP 1 分钟内只能发送 1 封，24 小时内只能发送 10 封），服务器拒绝服务并返回 403 `{"detail": "发送邮件过于频繁"}`\n'
                           '邮件发送失败，返回 500 `{"detail": "发送邮件失败"}`\n'
@@ -105,11 +103,11 @@ def forget_password(request: WSGIRequest) -> Response:
         ipv4addr = request.META.get('REMOTE_ADDR')
     # 判断是否发送频繁
     if ResetPasswordRequest.objects \
-            .filter(ipv4addr=ipv4addr, request_time__gte=one_min_ago) \
-            .count() >= 1 or \
-            ResetPasswordRequest.objects \
-                    .filter(ipv4addr=ipv4addr, request_time__gte=one_day_ago) \
-                    .count() >= 10:
+        .filter(ipv4addr=ipv4addr, request_time__gte=one_min_ago) \
+        .count() >= 1 or \
+        ResetPasswordRequest.objects \
+            .filter(ipv4addr=ipv4addr, request_time__gte=one_day_ago) \
+            .count() >= 10:
         return Response({"detail": "发送邮件过于频繁"}, status=status.HTTP_403_FORBIDDEN)
     # 生成 token
     token = generate_uuid()
@@ -118,7 +116,7 @@ def forget_password(request: WSGIRequest) -> Response:
         reset_password_request = ResetPasswordRequest(user=user, ipv4addr=ipv4addr, token=token,
                                                       request_time=current)
         reset_password_request.save()
-        return Response(status=status.HTTP_202_ACCEPTED)
+        return Response(status=status.HTTP_200_OK)  # 发送成功了
     else:
         return Response({"detail": "发送邮件失败"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

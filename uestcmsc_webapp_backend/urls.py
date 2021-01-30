@@ -17,11 +17,26 @@ from django.contrib import admin
 from django.conf.urls import url
 from django.http import HttpResponse
 from django.urls import path, include
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.decorators import api_view
+
 from .docs import schema_view
+from .settings import API_VERSION
 
 
-def index(response):
+def hello_world(request):
     return HttpResponse("Hello UESTC-MSCer! This is the backend of UESTC-MSC Webapp.")
+
+
+@swagger_auto_schema(
+    method='GET',
+    operation_summary='获取 API 版本号',
+    operation_description=r'返回 `X.Y.Z`，遵循[语义化版本控制](https://semver.org/lang/zh-CN/)。'
+)
+@api_view(['GET'])
+def version(request):
+    return HttpResponse(API_VERSION)
+
 
 api_urlpatterns = [
     url(r'^docs(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
@@ -31,7 +46,8 @@ api_urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('activities/', include('activities.urls')),
     path('users/', include('users.urls')),
-    path('', index)
+    path('', hello_world),
+    path('version/', version)
 ]
 
 urlpatterns = [

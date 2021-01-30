@@ -35,8 +35,7 @@ class UserListView(ListAPIView):
 @method_decorator(name="put", decorator=swagger_auto_schema(
     operation_summary='更新用户信息',
     operation_description='响应报文和 PATCH 方法相同，但 PUT 要求在请求中提交所有信息',
-    deprecated=True
-))
+    ))
 @method_decorator(name="patch", decorator=swagger_auto_schema(
     operation_summary='更新用户部分信息',
     operation_description='更新一个用户的信息，成功返回 200\n'

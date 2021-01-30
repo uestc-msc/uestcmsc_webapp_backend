@@ -1,8 +1,10 @@
-# 阮薇薇点名啦 后端 
+# 阮薇薇点名啦 后端
 
 ![Deploy To Server](https://github.com/uestc-msc/uestcmsc_webapp_backend/workflows/Deploy%20To%20Server/badge.svg)
 
 <a href="http://www.djangoproject.com/"><img src="https://www.djangoproject.com/m/img/badges/djangomade124x25.gif" border="0" alt="Made with Django." title="Made with Django." /></a>
+
+本 API 遵循[语义化版本控制](https://semver.org/lang/zh-CN/)。
 
 ## 运行 & 部署
 

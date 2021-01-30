@@ -1,12 +1,11 @@
-from datetime import datetime
-
 from django.utils.decorators import method_decorator
 from django.utils.timezone import now
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters
 from rest_framework.generics import *
+from rest_framework.views import APIView
 
-from activities.serializer import ActivitySerializer, ActivityAdminSerializer, ActivityAttenderUpdateSerializer
+from activities.serializer import ActivitySerializer, ActivityAdminSerializer
 from utils import MyPagination
 from utils import compare_date
 from utils.permissions import *
@@ -63,8 +62,7 @@ class ActivityListView(ListCreateAPIView):
                                Schema_presenter_ids,
                                Schema_check_in_open),
     responses={201: ActivitySerializer()},
-    deprecated=True
-))
+    ))
 @method_decorator(name="patch", decorator=swagger_auto_schema(
     operation_summary='更新沙龙部分信息',
     operation_description='更新沙龙信息，成功返回 200\n'
@@ -110,7 +108,8 @@ class ActivityCheckInView(GenericAPIView):
     @swagger_auto_schema(
         operation_summary='用户签到',
         operation_description='可能会有以下情况：\n'
-                              '1. 签到成功，用户经验+10，每位管理员经验+50，返回 200\n'
+                              '1. 签到成功，用户经验+50，每位演讲者经验+10，返回 200'
+                              '2. 已经签过到了，返回 200\n'
                               '2. 活动不存在，返回 404\n'
                               '3. POST 数据不包含签到码，返回 400\n'
                               '4. 非当日活动，返回 403\n'
@@ -124,32 +123,47 @@ class ActivityCheckInView(GenericAPIView):
         if not Activity.objects.filter(id=id):
             return Response({"detail": "活动不存在"}, status=status.HTTP_404_NOT_FOUND)
         activity = Activity.objects.get(id=id)
-        if "check_in_code" not in request.POST:
-            return Response({"detail": "POST 数据不包含签到码"}, status=status.HTTP_400_BAD_REQUEST)
+        if activity.attender.filter(id=request.user.id):
+            return Response({"detail": "您已经签过到了"}, status=status.HTTP_200_OK)
         if not compare_date(activity.datetime, now()): #
             return Response({"detail": "非当日活动"}, status=status.HTTP_403_FORBIDDEN)
         if not activity.check_in_open:
             return Response({"detail": "演讲者已关闭签到"}, status=status.HTTP_403_FORBIDDEN)
+        if "check_in_code" not in request.POST:
+            return Response({"detail": "POST 数据不包含签到码"}, status=status.HTTP_400_BAD_REQUEST)
         if request.POST["check_in_code"] != activity.check_in_code:
             return Response({"detail": "签到码错误"}, status=status.HTTP_403_FORBIDDEN)
-
         activity.attender.add(request.user)
         # 经验系统：在做了在做了
-        return Response(status=status.HTTP_200_OK)
+        return Response({"detail": "签到成功，经验+50"}, status=status.HTTP_200_OK)
 
 
-@method_decorator(name="put", decorator=swagger_auto_schema(
-    operation_summary='增量更新沙龙参与者名单',
-    operation_description='响应报文和 PATCH 方法相同，但 PUT 要求在请求中提交所有信息',
-    deprecated=True
-))
 @method_decorator(name="patch", decorator=swagger_auto_schema(
     operation_summary='增量更新沙龙参与者名单',
     operation_description='更新沙龙参与者，成功返回 200\n'
-                          '如更新的用户不存在，返回 400\n'
-                          '更新方法：将 add 中用户全部设为已签到，将 remove 中用户全部设为未签到\n',
+                          '如更新的用户不存在，对请求不予执行，并返回 400\n'
+                          '更新方法：将 add 中用户全部设为已签到，将 remove 中用户全部设为未签到\n'
+                          '注：需要是管理员或沙龙演讲者，否则返回 403'
+                          '注：该接口不受“演讲者关闭了签到”影响',
+    request_body=Schema_object(Schema_add, Schema_remove),
+    responses={200: ActivitySerializer()}
 ))
-class ActivityAttenderUpdateView(UpdateAPIView):
-    permission_classes = (IsAuthenticated, IsPresenterOrAdminOrReadOnly, )
-    queryset = Activity.objects.all()
-    serializer_class = ActivityAttenderUpdateSerializer
+class ActivityAttenderUpdateView(GenericAPIView):
+    permission_classes = (IsPresenterOrAdminOrReadOnly, )
+
+    def patch(self, request: WSGIRequest, id: int) -> Response:
+        if not Activity.objects.filter(id=id):
+            return Response({"detail": "活动不存在"}, status=status.HTTP_404_NOT_FOUND)
+        activity = Activity.objects.get(id=id)
+        self.check_object_permissions(request, activity)
+
+        add_list = request.data.pop('add', [])
+        remove_list = request.data.pop('remove', [])
+        add_user_list = list(User.objects.filter(id__in=add_list))
+        remove_user_list = list(User.objects.filter(id__in=remove_list))
+        if len(add_user_list) != len(add_list) or len(remove_user_list) != len(remove_list):    # 有 id 不存在
+            return Response({"detail": "用户不存在"}, status=status.HTTP_400_BAD_REQUEST)
+        activity.attender.add(*add_user_list)
+        activity.attender.remove(*remove_user_list)
+
+        return Response(ActivitySerializer(activity).data, status=status.HTTP_200_OK)

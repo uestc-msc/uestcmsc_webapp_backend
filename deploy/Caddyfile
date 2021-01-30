@@ -12,3 +12,7 @@ app.uestc-msc.com {
         file_server
     }
 }
+
+api.uestc-msc.com {
+    reverse_proxy localhost:3306
+}

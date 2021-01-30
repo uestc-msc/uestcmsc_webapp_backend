@@ -17,7 +17,7 @@ class ActivitySerializer(serializers.ModelSerializer):
 
     def validate_presenter(self, presenter_list):
         if len(presenter_list) == 0:
-            raise serializers.ValidationError("演讲者名单不应为空")
+            raise serializers.ValidationError("活动没有演讲者")
         for presenter in presenter_list:
             if 'id' not in presenter:
                 raise serializers.ValidationError("用户不包含 id")
@@ -51,28 +51,3 @@ class ActivityAdminSerializer(serializers.ModelSerializer):
         model = Activity
         fields = ('check_in_code', )
         read_only_fields = ('check_in_code', )
-
-
-class ActivityAttenderUpdateSerializer(serializers.Serializer):
-    add = serializers.ListSerializer(child=serializers.IntegerField())
-    remove = serializers.ListSerializer(child=serializers.IntegerField())
-
-    def validate_add(self, add_list):
-        for user_id in add_list:
-            validate_user_id(user_id)
-        return add_list
-
-    def validate_remove(self, remove_list):
-        for user_id in remove_list:
-            validate_user_id(user_id)
-        return remove_list
-
-    def update(self, instance: Activity, validated_data):
-        add_list = validated_data['add']
-        remove_list = validated_data['remove']
-        add_user_list = User.objects.filter(id__in=add_list)
-        remove_user_list = User.objects.filter(id__in=remove_list)
-        instance.attender.add(add_user_list)
-        instance.attender.remove(remove_user_list)
-        instance.save()
-        return instance

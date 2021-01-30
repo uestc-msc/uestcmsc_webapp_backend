@@ -4,6 +4,7 @@ from random import randrange
 from typing import List, Dict
 from unittest import mock
 
+import pytz
 from django.contrib.auth.models import User, AnonymousUser
 from django.test import TestCase, Client
 from django.urls import reverse
@@ -21,8 +22,8 @@ from utils.tester import tester_signup, tester_create_activity, tester_login, as
 activity_list_url = reverse('activity_list')
 activity_detail_url = lambda id: reverse('activity_detail', args=[id])
 activity_detail_admin_url = lambda id: reverse('activity_detail_admin', args=[id])
-activity_check_in_url = lambda id: reverse('activity_check_in_url', args=[id])
-activity_check_in_admin_url = lambda id: reverse('activity_check_in_admin_url', args=[id])
+activity_check_in_url = lambda id: reverse('activity_check_in', args=[id])
+activity_detail_admin_check_in_url = lambda id: reverse('activity_detail_admin_check_in', args=[id])
 
 
 class ActivityListTest(TestCase):
@@ -258,16 +259,14 @@ class ActivityListTest(TestCase):
 
 class ActivityDetailTest(TestCase):
     def setUp(self):
-        tester_signup()
-        tester_signup("superuser@example.com", "supersuper", "superuser", "1297391")
-        tester_signup("user@example.com", "useruser", "user", "1297392")
-        tester_signup("anotheruser@example.com", "anotheruser", "anotheruser", "1297393")
-        self.superuser = User.objects.filter(first_name="superuser")[0]
-        self.superuser.is_superuser = True
-        self.superuser.save()
-        self.admin = User.objects.filter(first_name="admin")[0]
-        self.admin.is_admin = True
-        self.admin.save()
+        # 设置用户的权限
+        self.superuser = User.objects.create_user(username="superuser@aka.ms", first_name="superuser",
+                                                  is_superuser=True)
+        self.admin = User.objects.create_user(username="admin@aka.ms", first_name="admin", is_staff=True)
+        self.simple_user = User.objects.create_user(username="a_user@aka.ms", first_name="user")
+        self.presenter = User.objects.create_user(username="presenter@aka.ms", first_name="presenter")
+        self.another_presenter = User.objects.create_user(username="another_presenter@aka.ms",
+                                                          first_name="another_presenter")
         self.ids = list(map(lambda u: u.id, User.objects.all()))
 
         tester_create_activity('First Salon', '2020-01-01T00:00:00.000Z', 'MS Shanghai', self.ids[0:2])
@@ -290,26 +289,25 @@ class ActivityDetailTest(TestCase):
             response = client.get(activity_detail_url(a.id))
             assertActivityDetailEqual(self, response.content, a)
 
+    def test_get_404(self):
+        client = Client()
+        for user_id in self.ids:
+            client.force_login(User.objects.get(id=user_id))
+            response = client.get(activity_detail_url(23333))
+            self.assertEqual(response.status_code, 404)
+
     # 只测试 patch
     def test_patch_unauthorized(self):
-        # 设置用户的权限
-        superuser = User.objects.create_user(username="superuser@aka.ms", first_name="superuser", is_superuser=True)
-        admin = User.objects.create_user(username="admin@aka.ms", first_name="admin", is_staff=True)
-        simple_user = User.objects.create_user(username="a_user@aka.ms", first_name="user")
-        presenter = User.objects.create_user(username="presenter@aka.ms", first_name="presenter")
-        another_presenter = User.objects.create_user(username="another_presenter@aka.ms",
-                                                     first_name="another_presenter")
-
-        response = tester_create_activity(presenter_ids=[presenter.id, another_presenter.id])
+        response = tester_create_activity(presenter_ids=[self.presenter.id, self.another_presenter.id])
         activity_id = json.loads(response.content)['id']
 
         user_permissions = [  # 以六种用户身份去遍历
             [AnonymousUser, False],
-            [superuser, True],
-            [admin, True],
-            [simple_user, False],
-            [presenter, True],
-            [another_presenter, True]
+            [self.superuser, True],
+            [self.admin, True],
+            [self.simple_user, False],
+            [self.presenter, True],
+            [self.another_presenter, True]
         ]
 
         for user, permission in user_permissions:
@@ -326,6 +324,13 @@ class ActivityDetailTest(TestCase):
             activity_title = Activity.objects.get(id=activity_id).title
             self.assertEqual(new_title == activity_title, permission,
                              f"user={user}, new_title={new_title}, current={activity_title}")
+
+    def test_patch_404(self):
+        client = Client()
+        for user_id in self.ids:
+            client.force_login(User.objects.get(id=user_id))
+            response = client.patch(activity_detail_url(23333))
+            self.assertEqual(response.status_code, 404)
 
     def test_patch_correctly(self):
         field_and_example = {
@@ -376,32 +381,34 @@ class ActivityDetailTest(TestCase):
             response = client.patch(activity_detail_url(id),
                                     data={field: example},
                                     content_type='application/json')
-            self.assertEqual(response.status_code, 400, f"{field}={example}")   # 返回 400
+            self.assertEqual(response.status_code, 400, f"{field}={example}")  # 返回 400
             response = client.get(activity_detail_url(id))
             json_response = json.loads(response.content)
             self.assertNotEqual(json_response[field], example)  # GET 的数据并没有被修改
 
 
 class ActivityDetailAdmin(TestCase):
-    def test_get_unauthorized(self):
+    def setUp(self):
         # 设置用户的权限
-        superuser = User.objects.create_user(username="superuser@aka.ms", first_name="superuser", is_superuser=True)
-        admin = User.objects.create_user(username="admin@aka.ms", first_name="admin", is_staff=True)
-        simple_user = User.objects.create_user(username="a_user@aka.ms", first_name="user")
-        presenter = User.objects.create_user(username="presenter@aka.ms", first_name="presenter")
-        another_presenter = User.objects.create_user(username="another_presenter@aka.ms",
-                                                     first_name="another_presenter")
+        self.superuser = User.objects.create_user(username="superuser@aka.ms", first_name="superuser",
+                                                  is_superuser=True)
+        self.admin = User.objects.create_user(username="admin@aka.ms", first_name="admin", is_staff=True)
+        self.simple_user = User.objects.create_user(username="a_user@aka.ms", first_name="user")
+        self.presenter = User.objects.create_user(username="presenter@aka.ms", first_name="presenter")
+        self.another_presenter = User.objects.create_user(username="another_presenter@aka.ms",
+                                                          first_name="another_presenter")
 
-        response = tester_create_activity(presenter_ids=[presenter.id, another_presenter.id])
-        activity_id = json.loads(response.content)['id']
+        response = tester_create_activity(presenter_ids=[self.presenter.id, self.another_presenter.id])
+        self.activity_id = json.loads(response.content)['id']
 
+    def test_get_unauthorized(self):
         user_permissions = [  # 以六种用户身份去遍历
             [AnonymousUser, False],
-            [superuser, True],
-            [admin, True],
-            [simple_user, False],
-            [presenter, True],
-            [another_presenter, True]
+            [self.superuser, True],
+            [self.admin, True],
+            [self.simple_user, False],
+            [self.presenter, True],
+            [self.another_presenter, True]
         ]
 
         for user, permission in user_permissions:
@@ -409,12 +416,19 @@ class ActivityDetailAdmin(TestCase):
             if user != AnonymousUser:
                 client.force_login(user)
 
-            response = client.get(activity_detail_admin_url(activity_id))
+            response = client.get(activity_detail_admin_url(self.activity_id))
             self.assertEqual(response.status_code == 200, permission,
                              f"user={user}, status_code={response.status_code}")
             if permission:
                 self.assertEqual(json.loads(response.content)['check_in_code'],
                                  Activity.objects.first().check_in_code)
+
+    def test_404(self):
+        client = Client()
+        for user in [self.superuser, self.admin, self.simple_user, self.presenter, self.another_presenter]:
+            client.force_login(user)
+            response = client.get(activity_detail_admin_url(23333))
+            self.assertEqual(response.status_code, 404)
 
 
 class ActivityCheckInTest(TestCase):
@@ -430,52 +444,191 @@ class ActivityCheckInTest(TestCase):
         self.admin.is_admin = True
         self.admin.save()
         self.user = User.objects.filter(first_name="user")[0]
-        self.anthother_user = User.objects.filter(first_name="anotheruser")[0]
+        self.another_user = User.objects.filter(first_name="anotheruser")[0]
 
-        tester_create_activity('First Salon', '2020-01-01T00:00:00.000Z', 'MS Shanghai', [self.user.id])
-        Activity.objects.create(title='Second Salon',
-                                datetime='2021-02-28 08:00+08:00',
-                                location='MS Seattle')
+        tester_create_activity('First Salon', '2020-01-02T20:00+08:00', 'MS Shanghai', [self.user.id])
+        self.activity = Activity.objects.first()
+        self.second_activity = Activity.objects.create(title='Second Salon',
+                                                       datetime='2021-02-28 08:00+08:00',
+                                                       location='MS Seattle')
         Activity.objects.get(title='Second Salon').presenter.add(*list(User.objects.all()))
+
         self.assertEqual(Activity.objects.count(), 2)
 
-    def check_in_correctly(self):
-        activity = Activity.objects.filter(title='First Salon')[0]
-        users = [self.superuser, self.admin, self.user, self.anthother_user]
+    @mock.patch('activities.views.now')
+    def test_check_in_correctly(self, mocked_now):
+        mocked_now.return_value = datetime(2020, 1, 2, 20, 15,
+                                           tzinfo=pytz.timezone('Asia/Shanghai'))  # 通过 mock 重新定义 view.now()
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.attender.count(), 0)
+
+        users = [self.superuser, self.admin, self.user, self.another_user]
         for i in range(len(users)):
             user = users[i]
             client = Client()
             client.force_login(user)
-            # client.post()
+            response = client.post(activity_check_in_url(self.activity.id), {
+                "check_in_code": self.activity.check_in_code
+            })
+            self.assertEqual(response.status_code, 200)  # 签到成功
+            self.activity.refresh_from_db()
+            self.assertEqual(self.activity.attender.count(), i + 1)  # 活动参与人数 + 1
 
+        self.second_activity.refresh_from_db()
+        self.assertEqual(self.second_activity.attender.count(), 0)  # 另一场活动的人数没有变化
 
-    def test_check_in_unauthorized(self):
-        pass
+    @mock.patch('activities.views.now')
+    def test_check_in_unauthorized(self, mocked_now):
+        mocked_now.return_value = datetime(2020, 1, 2, 20, 15, tzinfo=pytz.timezone('Asia/Shanghai'))
+        response = Client().post(activity_check_in_url(self.activity.id), {
+            "check_in_code": self.activity.check_in_code
+        })
+        self.assertEqual(response.status_code, 403)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.attender.count(), 0)
 
-    def test_check_in_with_empty_field(self):
-        pass
+    @mock.patch('activities.views.now')
+    def test_check_in_with_empty_field(self, mocked_now):
+        mocked_now.return_value = datetime(2020, 1, 2, 20, 15, tzinfo=pytz.timezone('Asia/Shanghai'))
+        client = Client()
+        client.force_login(self.user)
+        response = client.post(activity_check_in_url(self.activity.id))
+        self.assertEqual(response.status_code, 400)  # 没提交签到码，签到失败
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.attender.count(), 0)
 
-    def test_check_in_with_invalid_field(self):
-        pass
+    @mock.patch('activities.views.now')
+    def test_check_in_with_invalid_field(self, mocked_now):
+        mocked_now.return_value = datetime(2020, 1, 2, 20, 15, tzinfo=pytz.timezone('Asia/Shanghai'))
+        code = self.activity.check_in_code
+        invalid_examples = ['', '12345', 'QAQAQ', code + ' ', code + 'Q', code[0:-1]]
+        client = Client()
+        client.force_login(self.user)
+        for example in invalid_examples:
+            response = client.post(activity_check_in_url(self.activity.id), {
+                "check_in_code": invalid_examples
+            })
+            self.assertEqual(response.status_code, 403)  # 签到码错误，签到失败
+            self.activity.refresh_from_db()
+            self.assertEqual(self.activity.attender.count(), 0)
+
+    @mock.patch('activities.views.now')
+    def test_check_in_404(self, mocked_now):
+        mocked_now.return_value = datetime(2020, 1, 2, 20, 15, tzinfo=pytz.timezone('Asia/Shanghai'))
+        client = Client()
+        client.force_login(self.user)
+        response = client.post(activity_check_in_url(2333), {
+            "check_in_code": self.activity.check_in_code
+        })
+        self.assertEqual(response.status_code, 404)  # 活动不存在，签到失败
 
     @mock.patch('activities.views.now')
     def test_check_in_anytime(self, mocked_now):
-        mocked_now.return_value = datetime(2010, 1, 1)
+        for day in [1, 2, 3]:
+            is_today = day == 2
+            for hour in range(24):
+                mocked_now.return_value = datetime(2020, 1, day, hour, 15, tzinfo=pytz.timezone('Asia/Shanghai'))
+                client = Client()
+                client.force_login(self.user)
+                response = client.post(activity_check_in_url(self.activity.id), {
+                    "check_in_code": self.activity.check_in_code
+                })
+                self.assertEqual(response.status_code, 200 if is_today else 403, f'date={mocked_now.return_value}')
+                self.activity.refresh_from_db()
+                self.assertEqual(self.activity.attender.count(), 1 if is_today else 0)
+                self.activity.attender.clear()
 
-
-    def test_check_in_activity_that_closes_check_in(self):
-        pass
+    @mock.patch('activities.views.now')
+    def test_check_in_activity_that_closes_check_in(self, mocked_now):
+        mocked_now.return_value = datetime(2020, 1, 2, 20, 15, tzinfo=pytz.timezone('Asia/Shanghai'))
+        for check_in_open in [True, False, True, False, True]:
+            self.activity.check_in_open = check_in_open
+            self.activity.attender.clear()
+            self.activity.save()
+            client = Client()
+            client.force_login(self.user)
+            response = client.post(activity_check_in_url(self.activity.id), {
+                "check_in_code": self.activity.check_in_code
+            })
+            self.assertEqual(response.status_code, 200 if check_in_open else 403)
+            self.activity.refresh_from_db()
+            self.assertEqual(self.activity.attender.count(), 1 if check_in_open else 0)
+            self.activity.attender.clear()
 
 
 class ActivityCheckInAdminTest(TestCase):
-    def test_check_in_correctly(self):
-        pass
+    def setUp(self):
+        self.superuser = User.objects.create_user(id=1, username="superuser@example.com", password="supersuper",
+                                                  is_superuser=True)
+        self.admin = User.objects.create_user(id=2, username="admin@example.com", password="adminadmin", is_staff=True)
+        self.user = User.objects.create_user(id=3, username="user@example.com", password="useruser")
+        self.another_user = User.objects.create_user(id=4, username="anotheruser@example.com", password="anotheruser")
 
-    def test_check_in_unauthorized(self):
-        return
+        tester_create_activity('First Salon', '2020-01-02T20:00+08:00', 'MS Shanghai', [self.user.id])
+        self.activity = Activity.objects.first()
+        self.assertEqual(Activity.objects.count(), 1)
 
-    def test_check_in_with_empty_field(self):
-        pass
+    def test_admin_check_in_correctly(self):
+        input_and_result = [
+            [{"add": [1, 2, 3]}, {1, 2, 3}],
+            [{"remove": [1, 3]}, {2}],
+            [{"add": [4], "remove": [2]}, {4}]
+        ]
+        client = Client()
+        client.force_login(self.superuser)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.attender.count(), 0)
 
-    def test_check_in_with_invalid_field(self):
-        pass
+        for post_data, expected in input_and_result:
+            response = client.patch(activity_detail_admin_check_in_url(self.activity.id), post_data,
+                                    content_type='application/json')
+            self.assertEqual(response.status_code, 200)
+            self.activity.refresh_from_db()
+            attender_list = list(self.activity.attender.all())
+            attender_set = set(map(lambda u: u.id, attender_list))
+            self.assertSetEqual(expected, attender_set)
+
+    def test_admin_check_in_unauthorized(self):
+
+        user_permissions = [  # 以六种用户身份去遍历
+            [AnonymousUser, False],
+            [self.superuser, True],
+            [self.admin, True],
+            [self.user, True],
+            [self.another_user, False]
+        ]
+
+        for user, permission in user_permissions:
+            client = Client()
+            if user != AnonymousUser:
+                client.force_login(user)
+
+            response = client.patch(activity_detail_admin_check_in_url(self.activity.id), data={"add": [1]},
+                                    content_type='application/json')
+            self.assertEqual(response.status_code == 200, permission,
+                             f"user={user.username}, status_code={response.status_code}")
+            self.assertEqual(self.activity.attender.count() == 1, permission, f"user={user}")
+
+            self.activity.attender.clear()
+
+    def test_admin_check_in_with_empty_field(self):
+        client = Client()
+        client.force_login(self.superuser)
+        response = client.patch(activity_detail_admin_check_in_url(self.activity.id), {"add": []},
+                                content_type='application/json')
+        self.assertEqual(response.status_code, 200)  # 没有为用户签到，但是执行成功了
+
+    def test_admin_check_in_with_invalid_field(self):
+        client = Client()
+        client.force_login(self.superuser)
+        response = client.patch(activity_detail_admin_check_in_url(self.activity.id), {"add": [1], "remove": [2333]},
+                                content_type='application/json')
+        self.assertEqual(response.status_code, 400)     # 若 add 或 remove 有错误，整个请求不应该被执行
+        self.assertEqual(self.activity.attender.count(), 0)
+
+    def test_admin_check_in_404(self):
+        client = Client()
+        client.force_login(self.superuser)
+        response = client.patch(activity_detail_admin_check_in_url(233), {"add": [1, 2, 3]},
+                                content_type='application/json')
+        self.assertEqual(response.status_code, 404)  # 活动不存在，签到失败
