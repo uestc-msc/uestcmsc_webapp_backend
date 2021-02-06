@@ -1,18 +1,20 @@
-app.uestc-msc.com {
+example.com {
     handle /api/static/* {
         uri strip_prefix /api/static
         root * /etc/uestcmsc_webapp/backend/.static
         file_server
     }
+
     handle /api/* {
         reverse_proxy localhost:8000
     }
+    
     handle {
+        rewrite {
+            regexp .*
+            to {path} /
+        }
         root * /etc/uestcmsc_webapp/frontend
         file_server
     }
-}
-
-api.uestc-msc.com {
-    reverse_proxy localhost:3306
 }

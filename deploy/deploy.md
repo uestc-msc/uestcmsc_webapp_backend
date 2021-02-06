@@ -2,8 +2,8 @@
 
 部署环境：
 
-* Ubuntu 18.04 / Windows 10, 
-* Python 3.6~3.9
+* Ubuntu 18.04 / CentOS 7 / Windows 10, 
+* Python 3.7~3.9
 
 ## Docker、MySQL 部署
 
@@ -24,10 +24,14 @@ docker run -dit --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=testtest -e MYS
 按自己的情况修改 `config.template.py`，并保存为 `config.py`。然后安装依赖库并初始化数据库：
 
 ```sh
-# Ubuntu 需要从 apt 安装 libmysqlclient-dev
-sudo apt-get install libmysqlclient-dev
+git clone https://github.com/uestc-msc/uestcmsc_webapp_backend
+cd uestcmsc_webapp_backend
+sudo apt-get install libmysqlclient-dev     # Ubuntu 需要安装 libmysqlclient-dev
+sudo yum install python3-devel maria-devel  # CentOS 需要安装 python3-devel maria-devel
 pip3 install -r requirements.txt
+python3 manage.py makemigrations accounts activities cloud comment gallery users --noinput
 python3 manage.py migrate --noinput
+python3 manage.py collectstatic --noinput --clear
 ```
 
 运行 Django Server：

@@ -7,7 +7,7 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=1
-User=lyh543
+User=root
 WorkingDirectory=/etc/uestcmsc_webapp/backend/
 ExecStart=/usr/local/bin/gunicorn -b "127.0.0.1:8000" --access-logfile - uestcmsc_webapp_backend.wsgi
 

@@ -2,8 +2,8 @@ name: Deploy To Server
 
 env:
   ACTION_DEPLOY_KEY: ${{ secrets.ACTION_DEPLOY_KEY }}
-  SERVER_DOMAIN: api.uestc-msc.com
-  SERVER_USERNAME: lyh543
+  SERVER_DOMAIN: app.uestc-msc.top
+  SERVER_USERNAME: root
 
 on:
   push:
@@ -42,10 +42,7 @@ jobs:
         run: |
           python3 manage.py makemigrations accounts activities cloud comment gallery users --noinput
           python3 manage.py migrate --noinput
-          coverage run --source=./ manage.py test --noinput
-      - name: Coverage Report
-        run: |
-          coverage report -m
+          python3 manage.py test --noinput --parallel 4 # push 时不跑 coverage
 
   deploy:
     needs: test

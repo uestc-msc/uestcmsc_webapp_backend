@@ -44,7 +44,13 @@ class UserListView(ListAPIView):
                           '注：需要是用户本人或管理员，否则返回 403\n'
                           '注：PATCH 方法可以只提交更新的值，也可以提交所有值'
 ))
-class UserDetailView(RetrieveUpdateAPIView):
+@method_decorator(name="delete", decorator=swagger_auto_schema(
+    operation_summary='删除用户',
+    operation_description='删除用户，成功返回 204\n'
+                          '如用户不存在，返回 404\n'
+                          '注：需要是用户本人或管理员，否则返回 403'
+))
+class UserDetailView(RetrieveUpdateDestroyAPIView):
     permission_classes = (IsSelfOrAdminOrReadOnly, )
     queryset = User.objects.all()
     serializer_class = UserSerializer
