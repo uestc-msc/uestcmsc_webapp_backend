@@ -50,7 +50,7 @@ python3 manage.py runserver
 gunicorn -b "127.0.0.1:8000" uestcmsc_webapp_backend.wsgi
 ```
 
-然后借助 Nginx 或 Caddy 实现反向代理。注意 Nginx/Caddy 还需要对 `/etc/uestc_webapp/backend/.static/` 中的文件提供 file_server 服务。
+然后借助 Nginx、Apache 或 Caddy 实现反向代理。注意还需要对 `/etc/uestc_webapp/backend/.static/` 中的文件提供 file_server 服务。这里提供一份 Caddy 2 的配置文件 [Caddyfile](./Caddyfile)。
 
 ## 加入 systemd 实现自动重启
 

@@ -10,11 +10,8 @@ example.com {
     }
     
     handle {
-        rewrite {
-            regexp .*
-            to {path} /
-        }
         root * /etc/uestcmsc_webapp/frontend
+        try_files {path} /index.html
         file_server
     }
 }
