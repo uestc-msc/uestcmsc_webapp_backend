@@ -15,7 +15,7 @@ from utils.tester import tester_signup, tester_login, assertUserDetailEqual
 
 user_list_url = reverse('user_list')
 user_detail_url = lambda user_id: reverse('user_detail', args=[user_id])
-
+whoami_url = reverse('users_whoami')
 
 class UserListTest(TestCase):
     def check_order(self, results: List[Dict]):
@@ -305,3 +305,24 @@ class UserDetailTest(TestCase):
         u = User.objects.get(id=23333)
         self.assertEqual(hasattr(u, 'userprofile'), True)  # Patch 操作创建了 userProfile
         self.assertEqual(u.userprofile.about, "I'm 23333")
+
+
+class WhoAmITest(TestCase):
+    def setUp(self):
+        tester_signup()
+        tester_signup("superuser@example.com", "supersuper", "superuser", "1297391")
+        tester_signup("user@example.com", "useruser", "user", "1297392")
+        tester_signup("anotheruser@example.com", "anotheruser", "anotheruser", "1297393")
+        self.admin = User.objects.filter(first_name="admin")[0]
+
+    def test_get_whoami(self):
+        c = Client()
+        tester_login(client=c)
+        r1 = c.get(whoami_url)
+        self.assertEqual(r1.status_code, 200)
+        r2 = c.get(user_detail_url(self.admin.id))
+        self.assertEqual(r1.content, r2.content)
+
+    def test_get_unauthorized(self):
+        r = Client().get(whoami_url)
+        self.assertEqual(r.status_code, 401)

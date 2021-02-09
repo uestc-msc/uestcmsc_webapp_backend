@@ -1,6 +1,8 @@
+from django.contrib.auth.models import AnonymousUser
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters
+from rest_framework.decorators import api_view
 from rest_framework.generics import *
 
 from utils import MyPagination
@@ -28,9 +30,9 @@ class UserListView(ListAPIView):
 
 
 @method_decorator(name="get", decorator=swagger_auto_schema(
-        operation_summary='获取用户信息',
-        operation_description='获取一个的用户信息，成功返回 200\n'
-                              # '注：需要登录，否则返回 403',
+    operation_summary='获取用户信息',
+    operation_description='获取一个的用户信息，成功返回 200\n'
+                          # '注：需要登录，否则返回 403',
 ))
 @method_decorator(name="put", decorator=swagger_auto_schema(
     operation_summary='更新用户信息',
@@ -55,3 +57,19 @@ class UserDetailView(RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'id'
+
+
+@swagger_auto_schema(
+    method='GET',
+    operation_summary='获取用户自身信息',
+    operation_description='获取用户自身的信息，成功返回 200，响应报文和 `/users/<id>` 成功的响应报文相同\n'
+                          '注：需要登录（即 Headers 中包含 Cookies: `sessionid: xxxx`），否则返回 403\n',
+    responses={200: UserSerializer()}
+)
+@api_view(['GET'])
+def whoami_view(request: WSGIRequest) -> Response:
+    if not request.user.is_authenticated:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    else:
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -22,7 +22,8 @@ from utils.swagger import *
     method='POST',
     operation_summary='注册新用户',
     operation_description='成功返回 201\n'
-                          '失败（参数错误或不符合要求）返回 400',
+                          '失败（参数错误或不符合要求）返回 400\n'
+                          '注：注册以后不会自动登录',
     request_body=UserRegisterSerializer,
     responses={201: UserSerializer()}
 )
@@ -43,7 +44,7 @@ def signup(request: WSGIRequest) -> Response:
                           '失败（账户或密码错误）返回 401\n'
                           '注：一个已登录的用户 A 尝试 login 账户 B 失败后，仍具有账户 A 的凭证。',
     request_body=Schema_object(Schema_email, Schema_password),
-    responses={200: Schema_None}
+    responses={200: UserSerializer()}
 )
 @api_view(['POST'])
 def login(request: WSGIRequest) -> Response:
@@ -56,7 +57,8 @@ def login(request: WSGIRequest) -> Response:
     if user is None:
         return err_response
     django_login(request, user)
-    return Response(status=status.HTTP_200_OK)  # 尽量改为 /user/<id>的东西
+    user_serializer = UserSerializer(user)
+    return Response(user_serializer.data, status=status.HTTP_200_OK)
 
 
 @swagger_auto_schema(

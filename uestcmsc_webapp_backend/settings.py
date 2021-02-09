@@ -158,10 +158,13 @@ EMAIL_USE_SSL = MAILBOX_USE_SSL
 
 # REST_FRAMEWORK
 #
-# REST_FRAMEWORK = {
+REST_FRAMEWORK = {
+    # 'DEFAULT_AUTHENTICATION_CLASSES': (
+    #     'rest_framework_simplejwt.authentication.JWTAuthentication',
+    # )
 #     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
 #     'DEFAULT_PAGINATION_CLASS': 'utils.MyPagination',
-# }
+}
 
 # settings about Swagger (Document Generator)
 SWAGGER_SETTINGS = {
@@ -171,3 +174,6 @@ SWAGGER_SETTINGS = {
 # CORS headers
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+# Append Slash
+APPEND_SLASH = False
