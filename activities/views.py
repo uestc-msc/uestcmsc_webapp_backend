@@ -129,9 +129,9 @@ class ActivityCheckInView(GenericAPIView):
             return Response({"detail": "非当日活动"}, status=status.HTTP_403_FORBIDDEN)
         if not activity.check_in_open:
             return Response({"detail": "演讲者已关闭签到"}, status=status.HTTP_403_FORBIDDEN)
-        if "check_in_code" not in request.POST:
+        if "check_in_code" not in request.data:
             return Response({"detail": "POST 数据不包含签到码"}, status=status.HTTP_400_BAD_REQUEST)
-        if request.POST["check_in_code"] != activity.check_in_code:
+        if request.data["check_in_code"] != activity.check_in_code:
             return Response({"detail": "签到码错误"}, status=status.HTTP_403_FORBIDDEN)
         activity.attender.add(request.user)
         # 经验系统：在做了在做了

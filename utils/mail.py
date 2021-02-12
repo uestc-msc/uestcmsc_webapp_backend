@@ -1,13 +1,15 @@
-from datetime import datetime
 from smtplib import SMTPException
 
 from django.core.mail import send_mail
 
 from config import *
 from uestcmsc_webapp_backend.settings import APP_NAME
+from utils.asynchronous import asynchronous
+from utils.log import log_error, log_info
 
 
-def send_reset_password_email(receipt_email: str, name: str, token: str, request_time: datetime) -> bool:
+@asynchronous
+def send_reset_password_email(receipt_email: str, name: str, token: str):
     """
     发送重置密码的邮件，成功后返回 True
     参考文档：https://docs.djangoproject.com/zh-hans/3.1/topics/email/
@@ -21,11 +23,12 @@ def send_reset_password_email(receipt_email: str, name: str, token: str, request
               f"电子科技大学微软学生俱乐部"
 
     try:
-        return send_mail(
+        send_mail(
             subject=f"[{APP_NAME}] 重设您的密码",
             message=message,
             from_email=MAILBOX_EMAIL,
             recipient_list=[receipt_email],
-            fail_silently=False) == 1
-    except SMTPException:
-        return False
+            fail_silently=False)
+        log_info(f"向 {name} ({receipt_email}) 发送邮件成功")
+    except SMTPException as e:
+        log_error(f"向 {name} ({receipt_email}) 发送邮件失败：{e}")

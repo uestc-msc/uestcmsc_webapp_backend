@@ -213,7 +213,7 @@ class ResetPasswordTest(TestCase):
 
         c2 = Client()
         response = c2.post(forget_password_url, {"email": self.email})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 202)
 
         token = pop_token_from_virtual_mailbox(self)
         response = c2.post(reset_password_url, {
@@ -225,7 +225,7 @@ class ResetPasswordTest(TestCase):
             "token": token,
             "new_password": "new_password"
         })
-        self.assertEqual(response.status_code, 204)
+        self.assertEqual(response.status_code, 204)  # 修改成功
 
         response = client.get('/')
         self.assertEqual(response.wsgi_request.user.is_authenticated, False)  # 此时第一个 Client 理应被下线
@@ -253,7 +253,7 @@ class ResetPasswordTest(TestCase):
         response = client.post(forget_password_url, {"email": "example@example.com"})
         self.assertEqual(response.status_code, 400)
         response = client.post(forget_password_url, {"email": self.email})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 202)
 
     def test_validate_token_with_invalid_field(self):
         tester_signup("another@example.com", "anotheruser", "another", "20201231")
@@ -261,7 +261,7 @@ class ResetPasswordTest(TestCase):
         self.assertIsNotNone(anotheruser)
         client = Client()
         response = client.post(forget_password_url, {"email": self.email})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 202)
         user_token = pop_token_from_virtual_mailbox(self)
 
         # 假 token
@@ -328,7 +328,7 @@ class ResetPasswordTest(TestCase):
             self.assertEqual(ResetPasswordRequest.objects.count(), number - 1)
             # 发两封，assert第一封成功第二封失败
             response = Client().post(forget_password_url, {"email": self.user.username})
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 202)
             response = Client().post(forget_password_url, {"email": self.user.username})
             self.assertEqual(response.status_code, 403)
             # 将最近一封改为更远的时间，重新发两封，第一封成功第二封失败
@@ -336,7 +336,7 @@ class ResetPasswordTest(TestCase):
             rpr.request_time = now() - delta
             rpr.save()
             response = Client().post(forget_password_url, {"email": self.user.username})
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 202)
             self.assertEqual(ResetPasswordRequest.objects.filter(request_time__lt=now() - timedelta(days=1)).count(),
                              0)  # 保证过期的邮件有被清除
             response = Client().post(forget_password_url, {"email": self.user.username})
