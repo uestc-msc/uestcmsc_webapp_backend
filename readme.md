@@ -13,7 +13,7 @@
 * Ubuntu 18.04 / Windows 10, 
 * Python 3.7~3.9
 
-[部署文档](deploy/deploy.md)
+[部署文档](docs/deploy/deploy.md)
 
 ## 文档
 

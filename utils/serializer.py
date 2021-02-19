@@ -16,8 +16,6 @@ def validate_username(username):
 def validate_student_id(student_id: str):
     if not is_number(student_id):
         raise serializers.ValidationError("学号格式错误")
-    if UserProfile.objects.filter(student_id=student_id):
-        raise serializers.ValidationError("学号已存在")
     return student_id
 
 

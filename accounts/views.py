@@ -1,18 +1,17 @@
 from datetime import timedelta
 
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
-from django.contrib.auth.models import User
 from django.core.handlers.wsgi import WSGIRequest
 from django.utils.timezone import now
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status
+from rest_framework import status, serializers
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from accounts.serializer import UserRegisterSerializer
-from users.models import ResetPasswordRequest
+from users.models import User, UserProfile, ResetPasswordRequest
 from users.serializer import UserSerializer
-from utils import generate_uuid, is_valid_password
+from utils import generate_uuid, is_valid_password, is_email
 from utils.mail import send_reset_password_email
 from utils.permissions import login_required
 from utils.swagger import *
@@ -21,8 +20,9 @@ from utils.swagger import *
 @swagger_auto_schema(
     method='POST',
     operation_summary='注册新用户',
-    operation_description='成功返回 201\n'
-                          '失败（参数错误或不符合要求）返回 400\n'
+    operation_description='成功注册新账户：返回 201\n'
+                          '成功绑定微信小程序账户：返回200\n'
+                          '失败（参数错误或不符合要求）：返回 400\n'
                           '注：注册以后不会自动登录',
     request_body=UserRegisterSerializer,
     responses={201: UserSerializer()}
@@ -30,11 +30,25 @@ from utils.swagger import *
 @api_view(['POST'])
 def signup(request: WSGIRequest) -> Response:
     register_serializer = UserRegisterSerializer(data=request.data)
-    if register_serializer.is_valid():
-        u = register_serializer.save()
-        user_serializer = UserSerializer(u)
-        return Response(user_serializer.data, status=status.HTTP_201_CREATED)
-    return Response(register_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if not register_serializer.is_valid():
+        return Response(register_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if User.objects.filter(userprofile__student_id=register_serializer.validated_data['student_id']):
+        # 判断注册的用户是微信小程序用户：姓名和学号与数据库中相同，且数据库中密码为空
+        # 如果满足条件，则将找到的用户的信息更新，然后返回 200
+        origin_wechat_user = User.objects.filter(
+            userprofile__student_id=register_serializer.validated_data['student_id'],
+            first_name=register_serializer.validated_data['first_name'],
+            password='')
+        if origin_wechat_user:
+            u = origin_wechat_user[0]
+            user_serializer = UserSerializer(u)
+            user_serializer.update(u, register_serializer.validated_data)
+            return Response(user_serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(data={"student_id": "学号已存在"}, status=status.HTTP_400_BAD_REQUEST)
+    u = register_serializer.save()
+    user_serializer = UserSerializer(u)
+    return Response(user_serializer.data, status=status.HTTP_201_CREATED)
 
 
 @swagger_auto_schema(
@@ -105,11 +119,11 @@ def forget_password(request: WSGIRequest) -> Response:
         ipv4addr = request.META.get('REMOTE_ADDR')
     # 判断是否发送频繁
     if ResetPasswordRequest.objects \
-        .filter(ipv4addr=ipv4addr, request_time__gte=one_min_ago) \
-        .count() >= 1 or \
-        ResetPasswordRequest.objects \
-            .filter(ipv4addr=ipv4addr, request_time__gte=one_day_ago) \
-            .count() >= 10:
+            .filter(ipv4addr=ipv4addr, request_time__gte=one_min_ago) \
+            .count() >= 1 or \
+            ResetPasswordRequest.objects \
+                    .filter(ipv4addr=ipv4addr, request_time__gte=one_day_ago) \
+                    .count() >= 10:
         return Response({"detail": "发送邮件过于频繁"}, status=status.HTTP_403_FORBIDDEN)
     # 生成 token
     token = generate_uuid()
@@ -151,28 +165,42 @@ def reset_password(request: WSGIRequest) -> Response:
 
 
 @swagger_auto_schema(
-    method='POST',
+    method='PATCH',
     operation_summary='修改密码',
     operation_description='若用户未登录，返回 401\n'
                           '若登录用户和 `{id}` 不同，返回 403\n'
-                          '若参数 old_password 和 new_password 不都存在，返回 400 `{"detail": "缺少参数 old_response 或 new_password"}`\n'
+                          '若参数 old_password 不存在，返回 400 `{"detail": "缺少参数 old_password"}`\n'
                           '若 old_password 和原密码不同，返回 401 `{"detail": "原密码不匹配"}`\n'
                           '若 new_password 不合法，返回 400 `{"detail": "新密码不合法"}`\n'
-                          '若 old_password 和 new_password 均正确，修改密码、使用户下线并返回 204\n',
-    request_body=Schema_object(Schema_old_password, Schema_new_password),
+                          '若 new_email 不合法或已存在，返回 400 `{"detail": "新邮箱不合法或已存在"}`\n'
+                          '验证正确性后，修改邮箱及密码，返回 204\n'
+                          '注 1：new_email 和 new_password 可以不同时存在\n'
+                          '注 2：若 new_email 和 new_password 其中一项错误，对另一项的修改也不会生效\n'
+                          '注 3：修改密码会使得已有的登录失效',
+    request_body=Schema_object(Schema_old_password, Schema_new_email, Schema_new_password),
     responses={200: Schema_None}
 )
-@api_view(['POST'])
+@api_view(['PATCH'])
 @login_required
 def change_password(request: WSGIRequest) -> Response:
-    if "old_password" not in request.data or "new_password" not in request.data:
-        return Response({"detail": "缺少参数 old_response 或 new_password"}, status=status.HTTP_400_BAD_REQUEST)
+    if "old_password" not in request.data:
+        return Response({"detail": "缺少参数 old_password"}, status=status.HTTP_400_BAD_REQUEST)
     old_password = request.data["old_password"]
-    new_password = request.data["new_password"]
     if not authenticate(request, username=request.user.username, password=old_password):
         return Response({"detail": "原密码不匹配"}, status=status.HTTP_401_UNAUTHORIZED)
-    if not is_valid_password(new_password):
+
+    new_email = request.data.pop('new_email', None)
+    new_password = request.data.pop('new_password', None)
+    if new_email and \
+            (not is_email(new_email) or User.objects.filter(username=new_email)):
+        return Response({"detail": "新邮箱不合法或已存在"}, status=status.HTTP_400_BAD_REQUEST)
+    if new_password and not is_valid_password(new_password):
         return Response({"detail": "新密码不合法"}, status=status.HTTP_400_BAD_REQUEST)
-    request.user.set_password(new_password)
+
+    if new_email:
+        request.user.username = new_email
+    if new_password:
+        request.user.set_password(new_password)
     request.user.save()
+
     return Response(status=status.HTTP_204_NO_CONTENT)

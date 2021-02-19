@@ -41,6 +41,7 @@ Schema_password = {"password": openapi.Schema(type=openapi.TYPE_STRING, descript
 Schema_token = {'token': openapi.Schema(type=openapi.TYPE_STRING, description='由邮件提供')}
 Schema_old_password = {'old_password': openapi.Schema(type=openapi.TYPE_STRING, description='旧密码')}
 Schema_new_password = {'new_password': openapi.Schema(type=openapi.TYPE_STRING, description='新密码')}
+Schema_new_email = {"new_email": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description='新邮箱')}
 
 Schema_title = {"title": openapi.Schema(type=openapi.TYPE_STRING, description='沙龙标题')}
 Schema_datetime = {"datetime": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description="日期时间")}

@@ -33,8 +33,9 @@ class UserProfile(models.Model):
         return self.user.first_name + ' ' + self.student_id
 
     # https://libgravatar.readthedocs.io/en/latest/
-    def get_avatar(self, size: int = 160) -> str:
-        return Gravatar(self.user.username).get_image(default=USER_DEFAULT_AVATAR,
+    def get_avatar(self, size: int = 300) -> str:
+        return Gravatar(self.user.username).get_image(size=size,
+                                                      default=USER_DEFAULT_AVATAR,
                                                       use_ssl=True)
 
 
