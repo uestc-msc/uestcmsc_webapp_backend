@@ -1,0 +1,63 @@
+name: Deploy To Server
+
+env:
+  ACTION_DEPLOY_KEY: ${{ secrets.ACTION_DEPLOY_KEY }}
+  SERVER_DOMAIN: app.uestc-msc.top
+  SERVER_USERNAME: root
+
+on:
+  push:
+    branches: [ master, dev ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: testtest
+          MYSQL_DATABASE: uestcmsc_webapp
+        ports:
+          - 3306:3306
+
+    strategy:
+      max-parallel: 3
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Dependencies
+        run: |
+          cp config.template.py config.py
+          python3 -m pip install --upgrade pip
+          pip3 install -r requirements.txt
+      - name: Run Tests
+        run: |
+          python3 manage.py makemigrations accounts activities cloud comment gallery users --noinput
+          python3 manage.py migrate --noinput
+          python3 manage.py test --noinput --parallel 4 # push 时不跑 coverage
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Git Checkout
+      uses: actions/checkout@v2
+    - name: Setup SSH Environment
+      run: |
+        mkdir -p ~/.ssh/
+        echo "$ACTION_DEPLOY_KEY" | tr -d '\r' > ~/.ssh/id_rsa # 配置秘钥
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan $SERVER_DOMAIN >> ~/.ssh/known_hosts
+
+    - name: Run SSH Command
+      run: |
+        ssh ${SERVER_USERNAME}@${SERVER_DOMAIN} < .github/workflows/django-deploy.sh

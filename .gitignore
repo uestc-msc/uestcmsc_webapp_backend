@@ -7,3 +7,13 @@ __pycache__/
 
 # ignore private profiles
 config.py
+
+# ignore migrations file
+migrations/
+
+# ignore coverage file
+.coverage
+htmlcov/
+
+# ignore temp static file
+.static/

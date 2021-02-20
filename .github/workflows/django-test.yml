@@ -1,0 +1,45 @@
+name: Django Test
+
+on:
+  pull_request:
+    branches: [ master, dev ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+            MYSQL_ROOT_PASSWORD: testtest
+            MYSQL_DATABASE: uestcmsc_webapp
+        ports:
+            - 3306:3306
+
+    strategy:
+      max-parallel: 3
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+
+    steps:
+    - name: Git Checkout
+      uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install Dependencies
+      run: |
+        cp config.template.py config.py
+        python3 -m pip install --upgrade pip
+        pip3 install -r requirements.txt
+    - name: Run Tests
+      run: |
+        python3 manage.py makemigrations accounts activities cloud comment gallery users --noinput
+        python3 manage.py migrate --noinput
+        coverage run --source=./ manage.py test --noinput
+    - name: Coverage Report
+      run: |
+        coverage report -m
+
