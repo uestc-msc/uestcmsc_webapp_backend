@@ -30,7 +30,7 @@ SECRET_KEY = DJANGO_SECRET_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DJANGO_DEBUGGING_MODE
 
-ALLOWED_HOSTS = DJANGO_SERVER_HOSTNAME
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver', DJANGO_SERVER_HOSTNAME]
 
 # Application definition
 
@@ -59,7 +59,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -193,10 +193,10 @@ APPEND_SLASH = False
 
 # Cookie 中的 Samesite，见 https://zhuanlan.zhihu.com/p/103420328
 if not DEBUG:
-    # CSRF_COOKIE_DOMAIN = '.uestc-msc.com'
-    # CSRF_COOKIE_SAMESITE = 'None'
+    CSRF_COOKIE_DOMAIN = DJANGO_SERVER_HOSTNAME
+    CSRF_COOKIE_SAMESITE = 'None'
     LANGUAGE_COOKIE_SAMESITE = 'None'
     SESSION_COOKIE_SAMESITE = 'None'
-    # CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
     LANGUAGE_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
