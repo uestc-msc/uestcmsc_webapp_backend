@@ -56,7 +56,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',  # CORS 中间件，需注意与其他中间件顺序，这里放在最前面即可
-    'django_cookies_samesite.middleware.CookiesSameSite',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -192,5 +191,6 @@ CORS_ALLOW_HEADERS = (
 APPEND_SLASH = False
 
 # Cookie 中的 Samesite，见 https://zhuanlan.zhihu.com/p/103420328
+CSRF_COOKIE_SAMESITE = 'None'
+LANGUAGE_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SAMESITE_FORCE_ALL = True
