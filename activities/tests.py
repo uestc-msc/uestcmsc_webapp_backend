@@ -15,7 +15,7 @@ from django.utils.timezone import now
 from activities.models import Activity
 from users.models import UserProfile
 from users.serializer import UserSerializer
-from utils import MyPagination
+from utils import Pagination
 from utils.tester import tester_signup, tester_create_activity, tester_login, assertUserDetailEqual, \
     assertActivityDetailEqual, assertDatetimeEqual
 
@@ -241,7 +241,7 @@ class ActivityListTest(TestCase):
                 results2 = json.loads(r2.content)['results']
                 self.assertEqual(results1, results2)  # 请求参数顺序不同，但结果相同
                 # 判定 page_size 不合法时结果是否和默认 page_size 相同
-                if page_size == MyPagination.page_size:
+                if page_size == Pagination.page_size:
                     for invalid_page_size in [-1, total_activities, 0, 'qwerty']:
                         r3 = client.get("%s?&page_size=%s&" % (activity_list_url, invalid_page_size))
                         self.assertEqual(r1.status_code, 200)

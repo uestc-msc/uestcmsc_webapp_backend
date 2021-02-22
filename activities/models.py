@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from utils import generate_check_in_code
+from utils.random import generate_check_in_code
 
 
 class Activity(models.Model):

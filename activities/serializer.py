@@ -12,8 +12,9 @@ class ActivitySerializer(serializers.ModelSerializer):
         model = Activity
         fields = ("id", "title", "datetime", "location", "presenter", "attender", "check_in_open")
 
-    presenter = UserBriefSerializer(read_only=False, many=True, required=True)
-    attender = UserBriefSerializer(read_only=True, many=True)
+    title = serializers.CharField(max_length=150)
+    location = serializers.CharField(max_length=50)
+    presenter = UserBriefSerializer(read_only=False, many=True)
 
     def validate_presenter(self, presenter_list):
         if len(presenter_list) == 0:

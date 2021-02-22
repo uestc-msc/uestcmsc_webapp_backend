@@ -26,7 +26,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="用户名", db_index=True)
     experience = models.IntegerField("经验", default=0)
     student_id = models.CharField("学号", max_length=20, unique=True, blank=True)
-    about = models.TextField("个性签名", max_length=256, default='', blank=True)
+    about = models.TextField("自我介绍", max_length=256, default='', blank=True)
     subscribe_email = models.BooleanField("订阅邮件", default=True, blank=True)
 
     def __str__(self) -> str:

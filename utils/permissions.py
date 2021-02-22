@@ -10,8 +10,21 @@ from rest_framework.response import Response
 from activities.models import Activity
 
 
-def isOwnerOrAdmin(request: WSGIRequest, owner: User):
+def isOwnerOrAdmin(request: WSGIRequest, owner: User) -> bool:
     return request.user.is_staff or request.user.is_superuser or request.user == owner
+
+
+# 判断 user1 的权限是否大于 user2
+def hasGreaterPermissions(user1: User, user2: User) -> bool:
+    def permission_value(user: User):
+        if user.is_superuser:
+            return 2
+        elif user.is_staff:
+            return 1
+        else:
+            return 0
+    # superuser 拥有最高权限
+    return user1.is_superuser or permission_value(user1) > permission_value(user2)
 
 
 # 一系列装饰器

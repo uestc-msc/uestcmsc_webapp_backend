@@ -6,7 +6,7 @@ from rest_framework.generics import *
 from rest_framework.views import APIView
 
 from activities.serializer import ActivitySerializer, ActivityAdminSerializer
-from utils import MyPagination
+from utils import Pagination
 from utils import compare_date
 from utils.permissions import *
 from utils.swagger import *
@@ -45,7 +45,7 @@ class ActivityListView(ListCreateAPIView):
     queryset = Activity.objects.all().order_by("-datetime")
     filter_backends = (filters.SearchFilter,)
     search_fields = ('title', 'datetime','location', 'presenter__first_name')
-    pagination_class = MyPagination
+    pagination_class = Pagination
     serializer_class = ActivitySerializer
 
 

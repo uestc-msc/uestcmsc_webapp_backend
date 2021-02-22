@@ -2,13 +2,11 @@ from datetime import timedelta
 
 from django.contrib.auth.models import User
 from django.test import TestCase, Client
-from datetime import datetime
-
 from django.urls import reverse
 from django.utils.timezone import now
 
 from users.models import ResetPasswordRequest, UserProfile
-from utils import generate_uuid
+from utils.random import generate_uuid
 from utils.tester import tester_signup, assertUserDetailEqual, tester_login, pop_token_from_virtual_mailbox
 
 signup_url = reverse('signup')
@@ -16,7 +14,6 @@ login_url = reverse('login')
 logout_url = reverse('logout')
 forget_password_url = reverse('forget_password')
 reset_password_url = reverse('reset_password')
-change_password_url = reverse('change_password')
 user_detail_url = lambda id: reverse('user_detail', args={id: id})
 
 
@@ -372,120 +369,3 @@ class ResetPasswordTest(TestCase):
             response = Client().post(forget_password_url, {"email": self.user.username})
             self.assertEqual(response.status_code, 403)
             ResetPasswordRequest.objects.all().delete()
-
-
-# 更改密码相关测试
-class ChangePasswordTest(TestCase):
-    email = "admin@example.com"
-    password = "adminadmin"
-
-    def setUp(self):
-        tester_signup(self.email, self.password, 'Admin', '20210101')
-        self.user = User.objects.filter(username=self.email).first()
-
-    def test_change_password(self):
-        c1 = Client()
-        response = tester_login(self.email, self.password, c1)
-        self.assertEqual(response.wsgi_request.user, self.user)
-        response = c1.get('/')
-        self.assertEqual(response.wsgi_request.user, self.user)
-
-        c2 = Client()
-        tester_login(self.email, self.password, c2)
-        r2 = c2.patch(change_password_url,
-                      {"old_password": self.password,
-                       "new_password": "ADMINADMIN"},
-                      content_type='application/json')
-
-        self.assertEqual(r2.status_code, 204)
-        response = c1.get('/')
-        self.assertEqual(response.wsgi_request.user.is_authenticated, False)  # 此时第一个 Client 理应被下线
-        response = c2.get('/')
-        self.assertEqual(response.wsgi_request.user.is_authenticated, False)  # 此时第二个 Client 理应被下线
-
-        response = tester_login(self.email, self.password, c1)
-        self.assertEqual(response.status_code, 401)  # 尝试用旧密码登录
-        response = tester_login(self.email, 'ADMINADMIN', c1)
-        self.assertEqual(response.status_code, 200)  # 尝试用新密码登录
-        r2 = tester_login(self.email, self.password, c2)
-        self.assertEqual(r2.status_code, 401)  # 尝试用旧密码登录
-
-        response = c1.patch(change_password_url,
-                            {"old_password": "ADMINADMIN",
-                             "new_password": self.password},
-                                content_type='application/json')
-        self.assertEqual(response.status_code, 204)  # 将密码改回来
-        response = tester_login(self.email, self.password, c1)
-        self.assertEqual(response.status_code, 200)
-
-    def test_change_email_and_password(self):
-        c1 = Client()
-        response = tester_login(self.email, self.password, c1)
-        self.assertEqual(response.wsgi_request.user, self.user)
-        response = c1.patch(change_password_url,
-                     {"old_password": self.password,
-                      "new_password": "ADMINADMIN",
-                      "new_email": "qwerty@example.com"},
-                     content_type='application/json')
-        self.assertEqual(response.status_code, 204)
-
-        response = tester_login(self.email, self.password)
-        self.assertEqual(response.status_code, 401)  # 旧账号无法登陆
-
-        response = tester_login("qwerty@example.com", "ADMINADMIN")
-        self.assertEqual(response.status_code, 200)  # 新账号可以登陆
-
-    def test_reset_password_with_invalid_field(self):
-        tester_signup("another@example.com", "anotheruser", "another", "20201231")
-        anotheruser = User.objects.filter(username="another@example.com").first()
-        # 没上线
-        client = Client()
-        response = client.patch(change_password_url,
-                                {"old_password": self.password,
-                                 "new_password": "ADMINADMIN"},
-                                content_type='application/json')
-        self.assertEqual(response.status_code, 401)
-        response = tester_login("another@example.com", "anotheruser", client)
-        self.assertEqual(response.status_code, 200)
-        # 少字段
-        response = tester_login(self.email, self.password, client)
-        self.assertEqual(response.status_code, 200)
-        response = client.patch(change_password_url,
-                                {"new_password": "ADMINADMIN"},
-                                content_type='application/json')
-        self.assertEqual(response.status_code, 400)
-        response = client.patch(change_password_url,
-                                {"password": "anotheruser",
-                                 "new_password": "ADMINADMIN"},
-                                content_type='application/json')
-        self.assertEqual(response.status_code, 400)
-        # 旧密码错误
-        response = client.patch(change_password_url,
-                                {"old_password": "password",
-                                 "new_email": 'test@example.com',
-                                 "new_password": "ADMINADMIN", },
-                                content_type='application/json')
-        self.assertEqual(response.status_code, 401)
-        response = tester_login("another@example.com", "anotheruser", client)
-        self.assertEqual(response.status_code, 200)  # 邮箱没有被修改
-        # 新密码强度不够
-        response = client.patch(change_password_url,
-                                {"old_password": "anotheruser",
-                                 "new_password": "other"},
-                                content_type='application/json')
-        self.assertEqual(response.status_code, 400)
-        # 邮箱不合法
-        response = client.patch(change_password_url,
-                                {"old_password": "anotheruser",
-                                 "new_email": "qwerty"},
-                                content_type='application/json')
-        self.assertEqual(response.status_code, 400)
-        # 邮箱已被占用
-        response = client.patch(change_password_url,
-                                {"old_password": "anotheruser",
-                                 "new_email": 'admin@example.com',
-                                 'new_password': "testtest"},
-                                content_type='application/json')
-        self.assertEqual(response.status_code, 400)
-        response = tester_login("another@example.com", "anotheruser", client)
-        self.assertEqual(response.status_code, 200)  # 密码没有被修改

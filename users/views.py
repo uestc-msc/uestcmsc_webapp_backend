@@ -1,3 +1,4 @@
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import AnonymousUser
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
@@ -5,9 +6,10 @@ from rest_framework import filters
 from rest_framework.decorators import api_view
 from rest_framework.generics import *
 
-from utils import MyPagination
+from utils import Pagination
 from utils.permissions import *
 from utils.swagger import *
+from utils.validators import is_email, is_valid_password
 from .serializer import UserSerializer
 
 
@@ -25,7 +27,7 @@ class UserListView(ListAPIView):
     queryset = User.objects.all().order_by("-userprofile__experience")
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username', 'first_name', 'last_name', 'userprofile__student_id')
-    pagination_class = MyPagination
+    pagination_class = Pagination
     serializer_class = UserSerializer
 
 
@@ -57,6 +59,50 @@ class UserDetailView(RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'id'
+
+
+@swagger_auto_schema(
+    method='PATCH',
+    operation_summary='修改密码',
+    operation_description='修改邮箱和密码，用户需要满足以下两个条件之一：\n'
+                          '1. 修改本人的邮箱密码，且需要提供旧密码\n'
+                          '2. 管理员或超级用户修改权限比自己低的用户的邮箱密码，无需提供旧密码\n\n'
+                          '若 id 不正确，返回 404\n'
+                          '若无权修改（不满足以上两个条件），返回 403\n'
+                          '若 new_password 不合法，返回 400 `{"detail": "新密码不合法"}`\n'
+                          '若 new_email 不合法或已存在，返回 400 `{"detail": "新邮箱不合法或已存在"}`\n'
+                          '验证正确性后，修改邮箱及密码，返回 204\n'
+                          '注 1：new_email 和 new_password 可以不同时存在\n'
+                          '注 2：若 new_email 和 new_password 其中一项错误，对另一项的修改也不会生效\n'
+                          '注 3：修改密码会使得已有的登录失效',
+    request_body=Schema_object(Schema_old_password, Schema_new_email, Schema_new_password),
+    responses={200: Schema_None}
+)
+@api_view(['PATCH'])
+@login_required
+def change_password_view(request: WSGIRequest, id: int) -> Response:
+    user2 = get_object_or_404(User, id=id)
+    # 权限判定
+    if not hasGreaterPermissions(request.user, user2):
+        if not (request.user.is_authenticated
+                and "old_password" in request.data
+                and authenticate(request, username=request.user.username, password=request.data["old_password"])):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+    # 对更新数据的判定
+    new_email = request.data.pop('new_email', None)
+    new_password = request.data.pop('new_password', None)
+    if new_email and \
+            (not is_email(new_email) or User.objects.filter(username=new_email)):
+        return Response({"detail": "新邮箱不合法或已存在"}, status=status.HTTP_400_BAD_REQUEST)
+    if new_password and not is_valid_password(new_password):
+        return Response({"detail": "新密码不合法"}, status=status.HTTP_400_BAD_REQUEST)
+    # 更新数据
+    if new_email:
+        request.user.username = new_email
+    if new_password:
+        request.user.set_password(new_password)
+    request.user.save()
+    return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @swagger_auto_schema(

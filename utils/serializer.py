@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from users.models import UserProfile
-from utils import is_email, is_number
+from utils.validators import is_email, is_number
 
 
 def validate_username(username):

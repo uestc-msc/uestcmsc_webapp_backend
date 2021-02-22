@@ -12,10 +12,11 @@ class UserSerializer(serializers.ModelSerializer):
                             'experience', 'avatar_url',
                             'last_login', 'date_joined', 'is_staff', 'is_superuser')
     # user 中需要单独设置的字段
-    first_name = serializers.CharField(required=True)
+    first_name = serializers.CharField(max_length=150)
+    last_name = serializers.CharField(max_length=150, allow_blank=True)
     # userprofile 中的可读写字段
-    student_id = serializers.CharField(source='userprofile.student_id')
-    about = serializers.CharField(source='userprofile.about')
+    student_id = serializers.CharField(source='userprofile.student_id', max_length=20)
+    about = serializers.CharField(source='userprofile.about', allow_blank=True)
     subscribe_email = serializers.BooleanField(source='userprofile.subscribe_email')
     # userprofile 中的只读字段
     experience = serializers.ReadOnlyField(source='userprofile.experience')

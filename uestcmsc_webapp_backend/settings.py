@@ -18,10 +18,8 @@ APP_NAME = "阮薇薇点名啦"
 API_VERSION = "v0.1.0"
 USER_DEFAULT_AVATAR = "https://raw.githubusercontent.com/uestc-msc/uestcmsc_webapp_backend/lyh543/static/ruanweiwei.jpg"
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -33,7 +31,6 @@ SECRET_KEY = DJANGO_SECRET_KEY
 DEBUG = DJANGO_DEBUGGING_MODE
 
 ALLOWED_HOSTS = DJANGO_SERVER_HOSTNAME
-
 
 # Application definition
 
@@ -47,7 +44,7 @@ INSTALLED_APPS = [
 
     'corsheaders',
     "rest_framework",
-    'drf_yasg', # API document generation
+    'drf_yasg',  # API document generation
 
     'accounts.apps.AccountsConfig',
     'activities.apps.ActivitiesConfig',
@@ -58,7 +55,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware', # 需注意与其他中间件顺序，这里放在最前面即可.
+    'corsheaders.middleware.CorsMiddleware',  # 需注意与其他中间件顺序，这里放在最前面即可.
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -89,7 +86,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'uestcmsc_webapp_backend.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
@@ -103,7 +99,6 @@ DATABASES = {
         'PORT': MYSQL_PORT,
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -123,7 +118,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
@@ -137,11 +131,10 @@ USE_L10N = False
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-STATIC_ROOT = os.path.join(BASE_DIR, '.static')     # 应在 Nginx/Caddy 中提供这个文件夹
+STATIC_ROOT = os.path.join(BASE_DIR, '.static')  # 应在 Nginx/Caddy 中提供这个文件夹
 STATIC_URL = '/api/static/'
 
 STATICFILES_DIRS = [
@@ -159,8 +152,8 @@ EMAIL_USE_SSL = MAILBOX_USE_SSL
 # REST_FRAMEWORK
 #
 REST_FRAMEWORK = {
-#     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
-#     'DEFAULT_PAGINATION_CLASS': 'utils.MyPagination',
+    #     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
+    #     'DEFAULT_PAGINATION_CLASS': 'utils.Pagination',
 }
 
 # settings about Swagger (Document Generator)
@@ -171,6 +164,28 @@ SWAGGER_SETTINGS = {
 # CORS headers
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = (
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+    'VIEW',
+)
+CORS_ALLOW_HEADERS = (
+    'XMLHttpRequest',
+    'X_FILENAME',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'Pragma',
+)
 
 # Append Slash
 APPEND_SLASH = False
