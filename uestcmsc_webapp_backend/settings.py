@@ -15,7 +15,7 @@ from config import *
 
 # 应用名称和版本号
 APP_NAME = "阮薇薇点名啦"
-API_VERSION = "v0.1.0"
+API_VERSION = "v0.1.1"
 USER_DEFAULT_AVATAR = "https://raw.githubusercontent.com/uestc-msc/uestcmsc_webapp_backend/lyh543/static/ruanweiwei.jpg"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -30,7 +30,7 @@ SECRET_KEY = DJANGO_SECRET_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DJANGO_DEBUGGING_MODE
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver', DJANGO_SERVER_HOSTNAME]
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver'] + DJANGO_SERVER_HOSTNAME
 
 # Application definition
 
@@ -193,10 +193,9 @@ APPEND_SLASH = False
 
 # Cookie 中的 Samesite，见 https://zhuanlan.zhihu.com/p/103420328
 if not DEBUG:
-    CSRF_COOKIE_DOMAIN = DJANGO_SERVER_HOSTNAME
     CSRF_COOKIE_SAMESITE = 'None'
-    LANGUAGE_COOKIE_SAMESITE = 'None'
-    SESSION_COOKIE_SAMESITE = 'None'
     CSRF_COOKIE_SECURE = True
+    LANGUAGE_COOKIE_SAMESITE = 'None'
     LANGUAGE_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = 'None'
     SESSION_COOKIE_SECURE = True

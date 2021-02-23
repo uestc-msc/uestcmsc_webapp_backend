@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.core.handlers.wsgi import WSGIRequest
+from django.middleware import csrf
 from django.utils.timezone import now
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -72,8 +73,9 @@ def login(request: WSGIRequest) -> Response:
     if user is None:
         return err_response
     django_login(request, user)
-    user_serializer = UserSerializer(user)
-    return Response(user_serializer.data, status=status.HTTP_200_OK)
+    response_data = UserSerializer(user).data
+    response_data['csrftoken'] = csrf.get_token(request)
+    return Response(response_data, status=status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
@@ -85,6 +87,7 @@ def login(request: WSGIRequest) -> Response:
 @api_view(['POST'])
 @login_required
 def logout(request: WSGIRequest) -> Response:
+    print(csrf.get_token(request))
     django_logout(request)
     return Response(status=status.HTTP_204_NO_CONTENT)
 
