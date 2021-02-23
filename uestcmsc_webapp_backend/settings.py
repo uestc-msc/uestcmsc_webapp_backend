@@ -191,6 +191,7 @@ CORS_ALLOW_HEADERS = (
 # Append Slash
 APPEND_SLASH = False
 
+CSRF_USE_SESSIONS = True
 # Cookie 中的 Samesite，见 https://zhuanlan.zhihu.com/p/103420328
 if not DEBUG:
     CSRF_COOKIE_SAMESITE = 'None'
