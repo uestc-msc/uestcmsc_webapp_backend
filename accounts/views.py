@@ -58,7 +58,8 @@ def signup(request: WSGIRequest) -> Response:
     operation_summary='登录',
     operation_description='成功返回 200\n'
                           '失败（账户或密码错误）返回 401\n'
-                          '注：一个已登录的用户 A 尝试 login 账户 B 失败后，仍具有账户 A 的凭证。',
+                          '注 1：成功返回的字段中还包含了 csrftoken，请将其按照[文档](https://docs.djangoproject.com/zh-hans/3.1/ref/csrf/)所示方法加入 cookie 和 header'
+                          '注 2：一个已登录的用户 A 尝试 login 账户 B 失败后，仍具有账户 A 的凭证。',
     request_body=Schema_object(Schema_email, Schema_password),
     responses={200: UserSerializer()}
 )
@@ -74,7 +75,8 @@ def login(request: WSGIRequest) -> Response:
         return err_response
     django_login(request, user)
     response_data = UserSerializer(user).data
-    response_data['csrftoken'] = csrf.get_token(request)
+    response_data['csrftoken'] = csrf.get_token(request)        # 由于前后端部署在不同的域名
+    response_data['sessionid'] = request.session.session_key    # 这是对“禁止第三方cookie”的权宜之计
     return Response(response_data, status=status.HTTP_200_OK)
 
 

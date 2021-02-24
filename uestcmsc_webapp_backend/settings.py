@@ -149,13 +149,6 @@ EMAIL_HOST_PASSWORD = MAILBOX_PASSWORD
 EMAIL_USE_TLS = MAILBOX_USE_TLS
 EMAIL_USE_SSL = MAILBOX_USE_SSL
 
-# REST_FRAMEWORK
-#
-REST_FRAMEWORK = {
-    #     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',),
-    #     'DEFAULT_PAGINATION_CLASS': 'utils.Pagination',
-}
-
 # settings about Swagger (Document Generator)
 SWAGGER_SETTINGS = {
     'DEFAULT_MODEL_RENDERING': 'example'
@@ -192,6 +185,7 @@ CORS_ALLOW_HEADERS = (
 APPEND_SLASH = False
 
 CSRF_USE_SESSIONS = True
+CSRF_TRUSTED_ORIGINS = FRONTEND_TRUSTED_ORIGINS
 # Cookie 中的 Samesite，见 https://zhuanlan.zhihu.com/p/103420328
 if not DEBUG:
     CSRF_COOKIE_SAMESITE = 'None'
