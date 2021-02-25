@@ -1,10 +1,6 @@
-from django.contrib.auth.models import User
-from rest_framework import serializers
-from rest_framework.serializers import ListSerializer
-
 from activities.models import Activity  # , Presenter, Attender
-from utils.serializer import *
 from users.serializer import UserBriefSerializer
+from utils.serializer import *
 
 
 class ActivitySerializer(serializers.ModelSerializer):
@@ -15,6 +11,7 @@ class ActivitySerializer(serializers.ModelSerializer):
     title = serializers.CharField(max_length=150)
     location = serializers.CharField(max_length=50)
     presenter = UserBriefSerializer(read_only=False, many=True)
+    attender = UserBriefSerializer(read_only=True, many=True)
 
     def validate_presenter(self, presenter_list):
         if len(presenter_list) == 0:
