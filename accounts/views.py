@@ -74,10 +74,9 @@ def login(request: WSGIRequest) -> Response:
     if user is None:
         return err_response
     django_login(request, user)
-    response_data = UserSerializer(user).data
-    response_data['csrftoken'] = csrf.get_token(request)        # 由于前后端部署在不同的域名
-    response_data['sessionid'] = request.session.session_key    # 这是对“禁止第三方cookie”的权宜之计
-    return Response(response_data, status=status.HTTP_200_OK)
+    serializer_data = UserSerializer(user).data
+    serializer_data['csrftoken'] = csrf.get_token(request)
+    return Response(serializer_data, status=status.HTTP_200_OK)
 
 
 @swagger_auto_schema(
@@ -89,7 +88,6 @@ def login(request: WSGIRequest) -> Response:
 @api_view(['POST'])
 @login_required
 def logout(request: WSGIRequest) -> Response:
-    print(csrf.get_token(request))
     django_logout(request)
     return Response(status=status.HTTP_204_NO_CONTENT)
 

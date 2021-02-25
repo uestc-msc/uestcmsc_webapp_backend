@@ -11,6 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'username',
                             'experience', 'avatar_url',
                             'last_login', 'date_joined', 'is_staff', 'is_superuser')
+
     # user 中需要单独设置的字段
     first_name = serializers.CharField(max_length=150)
     last_name = serializers.CharField(max_length=150, allow_blank=True)
@@ -22,13 +23,25 @@ class UserSerializer(serializers.ModelSerializer):
     experience = serializers.ReadOnlyField(source='userprofile.experience')
     avatar_url = serializers.ReadOnlyField(source='userprofile.get_avatar')
 
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+
+        # 隐藏 username 和 student_id
+        request = self.context.get('request')
+        if request is None:     # django shell 时会出现 request is None
+            return ret
+        if not (request.user.is_staff or request.user.is_superuser or request.user.id == ret['id']):
+            ret['username'] = '***'
+            ret['student_id'] = ret['student_id'][0:4]
+        return ret
+
     def validate_student_id(self, student_id):
         return validate_student_id(student_id)
 
     def update(self, instance: User, validated_data):
-        userprofile_data = validated_data.pop('userprofile', {})    # 将 data 中 userprofile 提取 pop 出来，没有就用 {} 代替
+        userprofile_data = validated_data.pop('userprofile', {})  # 将 data 中 userprofile 提取 pop 出来，没有就用 {} 代替
 
-        instance = super().update(instance, validated_data)         # 使用 ModelSerializer 自带的 update
+        instance = super().update(instance, validated_data)  # 使用 ModelSerializer 自带的 update
 
         if hasattr(instance, 'userprofile'):
             userprofile = instance.userprofile

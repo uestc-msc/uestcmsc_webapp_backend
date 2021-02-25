@@ -16,7 +16,7 @@ bash <(curl -s https://get.docker.com)
 安装 MySQL：
 
 ```sh
-docker run -dit --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=testtest -e MYSQL_DATABASE=uestcmsc_webapp -v ~/mysql:/usr/lib/mysql --restart always mysql
+docker run -dit --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=testtest -e MYSQL_DATABASE=uestcmsc_webapp --restart always mysql
 ```
 
 ## Django 运行
@@ -55,7 +55,7 @@ gunicorn -b "127.0.0.1:8000" uestcmsc_webapp_backend.wsgi
 ## 加入 systemd 实现自动重启
 
 ```sh
-sudo cp deploy/uestcmsc_webapp_backend.service /etc/systemd/system
+sudo cp docs/deploy/uestcmsc_webapp_backend.service /etc/systemd/system
 sudo systemctl enable uestcmsc_webapp_backend.service
 sudo systemctl start uestcmsc_webapp_backend.service
 ```

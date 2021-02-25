@@ -106,7 +106,7 @@ def assertUserDetailEqual(cls: TestCase, content: str, user: User):
     """
     比较 REST API 返回的 User 和数据库中 User 是否相同
     """
-    compare_fields = set(UserSerializer.Meta.fields) - {'last_login', 'date_joined'}  # 时间正确性不能通过字符串比较
+    compare_fields = set(UserSerializer.Meta.fields) - {'last_login', 'date_joined', 'username', 'student_id'}  # 时间正确性不能通过字符串比较
     json1 = json.loads(content)
     json2 = UserSerializer(user).data
     for field in compare_fields:
@@ -114,6 +114,12 @@ def assertUserDetailEqual(cls: TestCase, content: str, user: User):
 
     assertDatetimeEqual(cls, json1['date_joined'], user.date_joined)
     assertDatetimeEqual(cls, json1['last_login'], user.last_login)
+    if not(user.is_staff or user.is_superuser or int(user.id) == int(json1['id'])):
+        cls.assertEqual(json1['username'], '***')
+        cls.assertEqual(cls, json1['student_id'], user.userprofile.student_id[0:4])
+    else:
+        cls.assertEqual(json1['username'], user.username)
+        cls.assertEqual(json1['student_id'], user.userprofile.student_id)
 
 
 def assertActivityDetailEqual(cls: TestCase, content: Union[str, Dict], activity: Activity):

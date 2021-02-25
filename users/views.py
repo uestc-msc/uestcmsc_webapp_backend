@@ -17,10 +17,11 @@ from .serializer import UserSerializer
     operation_summary='获取用户列表',
     operation_description='获取用户列表（以及总页数），可对姓名、邮箱、学号进行搜索，并可指定页码和每页大小\n'
                           '数据作为 list 返回在 `results` 中，返回值的 `count` 为搜索结果的总数\n'
+                          '考虑到数据安全，非管理员获取该列表的结果中，所有人的学号会被替换为学号前四位，邮箱会被替换为 `***`\n'
                           '返回结果以经验值降序排序\n'
-                          '注：如页码不正确或不存在，返回 404\n'
-                          '注：如每页大小不正确或不存在，使用默认每页大小（15）\n'
-                          '注：如无搜索结果，返回 200，其中 `results` 为空',
+                          '注 1：如页码不正确或不存在，返回 404\n'
+                          '注 2：如每页大小不正确或不存在，使用默认每页大小（15）\n'
+                          '注 3：如无搜索结果，返回 200，其中 `results` 为空',
     manual_parameters=[Param_search, Param_page, Param_page_size],
 ))
 class UserListView(ListAPIView):
@@ -65,7 +66,7 @@ class UserDetailView(RetrieveUpdateDestroyAPIView):
     method='PATCH',
     operation_summary='修改密码',
     operation_description='修改邮箱和密码，用户需要满足以下两个条件之一：\n'
-                          '1. 修改本人的邮箱密码，且需要提供旧密码\n'
+                          '1. 修改本人的邮箱密码，且需要提供旧密码 old_password\n'
                           '2. 管理员或超级用户修改权限比自己低的用户的邮箱密码，无需提供旧密码\n\n'
                           '若 id 不正确，返回 404\n'
                           '若无权修改（不满足以上两个条件），返回 403\n'

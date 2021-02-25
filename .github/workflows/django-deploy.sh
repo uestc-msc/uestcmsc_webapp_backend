@@ -15,5 +15,5 @@ sudo systemctl stop uestcmsc_webapp_backend
 sudo systemctl start uestcmsc_webapp_backend
 # 测试
 sleep 1
-curl -sSI "https://uestcmsc-webapp.lyh543.cn/api/" | grep "200"
-curl -sSI "https://uestcmsc-webapp.lyh543.cn/api/static/" | grep "200"
+curl -sSI "https://api.uestc-msc.com/api/" | grep "200"
+curl -sSI "https://api.uestc-msc.com/api/static/" | grep "200"

@@ -386,6 +386,9 @@ class ActivityDetailTest(TestCase):
             json_response = json.loads(response.content)
             self.assertNotEqual(json_response[field], example)  # GET 的数据并没有被修改
 
+    # 删除就懒得写测试了
+    def test_delete_activity(self):
+        pass
 
 class ActivityDetailAdmin(TestCase):
     def setUp(self):
