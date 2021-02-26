@@ -3,7 +3,7 @@ import os
 
 import requests
 from django.core.cache import cache
-from requests import Response
+from requests import Response as RequestsResponse
 
 import config
 from uestcmsc_webapp_backend.settings import DEBUG
@@ -32,7 +32,7 @@ class Onedrive():
         host = 'http://localhost:8000' if DEBUG else f'https://{config.DJANGO_SERVER_HOSTNAME}'
         self.redirect_uri = host + self.redirect_path
 
-    def generate_errormsg(self, event: str, response: Response) -> str:
+    def generate_errormsg(self, event: str, response: RequestsResponse) -> str:
         return f'{event}，状态码 {response.status_code}，详细信息：{json.loads(response.content)}'
 
     # 登录页面需要用户自行访问，于是这里只负责生成 uri，登录授权成功后跳转到指定链接，链接中 params 即是 auth_token
@@ -79,7 +79,7 @@ class Onedrive():
             send_system_alert_mail_to_managers(error_info)
             return
 
-    def _save_access_token(self, response: Response):
+    def _save_access_token(self, response: RequestsResponse):
         response_json = json.loads(response.content)
         access_token = response_json.get('access_token', None)
         access_token_expires_in = response_json.get('expires_in', 3600)
@@ -96,3 +96,6 @@ class Onedrive():
 
 
 onedrive = Onedrive()
+
+def test():
+    pass

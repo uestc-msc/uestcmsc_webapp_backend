@@ -28,9 +28,18 @@ def onedrive_login(request: WSGIRequest):
 def onedrive_login_callback(request: WSGIRequest):
     auth_code = request.GET.get('code', '')
     if auth_code == '':
-        return Response("Auth_code is ''", status=400)
+        return Response("都说了叫你没事别 xjb 打开这个啊", status=400)
     else:
         onedrive.grant_access_token(auth_code)
         return redirect(FRONTEND_URL + '/cloud/status/')
 
 
+@swagger_auto_schema(
+    method='GET',
+    operation_summary='Onedrive 状态',
+    operation_description=''
+
+)
+@api_view(['GET'])
+def onedrive_status(request: WSGIRequest) -> Response:
+    pass

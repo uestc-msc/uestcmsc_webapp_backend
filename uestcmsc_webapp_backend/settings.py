@@ -42,8 +42,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'django_crontab',
     'corsheaders',
-    "rest_framework",
+    'rest_framework',
     'drf_yasg',  # API document generation
 
     'accounts.apps.AccountsConfig',
@@ -158,7 +159,13 @@ EMAIL_HOST_PASSWORD = MAILBOX_PASSWORD
 EMAIL_USE_TLS = MAILBOX_USE_TLS
 EMAIL_USE_SSL = MAILBOX_USE_SSL
 
+# Send System Alert Email to managers
 MANAGERS = MANAGERS
+
+# Django crontab (not available for windows)
+CRONJOBS = [
+    ('*/40 * * * *', 'cloud.onedrive.onedrive.refresh_access_token')
+]
 
 # Auto Append Slash
 APPEND_SLASH = False
