@@ -6,8 +6,8 @@ from django.urls import reverse
 from django.utils.timezone import now
 
 from users.models import ResetPasswordRequest, UserProfile
-from utils.random import generate_uuid
-from utils.tester import tester_signup, assertUserDetailEqual, tester_login, pop_token_from_virtual_mailbox
+from utils import generate_uuid
+from utils import tester_signup, assertUserDetailEqual, tester_login, pop_token_from_virtual_mailbox
 
 signup_url = reverse('signup')
 login_url = reverse('login')

@@ -14,10 +14,8 @@ from django.utils.timezone import now
 
 from activities.models import Activity
 from users.models import UserProfile
-from users.serializer import UserSerializer
 from utils import Pagination
-from utils.tester import tester_signup, tester_create_activity, tester_login, assertUserDetailEqual, \
-    assertActivityDetailEqual, assertDatetimeEqual
+from utils import tester_signup, tester_create_activity, tester_login, assertActivityDetailEqual, assertDatetimeEqual
 
 activity_list_url = reverse('activity_list')
 activity_detail_url = lambda id: reverse('activity_detail', args=[id])

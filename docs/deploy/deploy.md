@@ -32,6 +32,7 @@ pip3 install -r requirements.txt
 python3 manage.py makemigrations accounts activities cloud comment gallery users --noinput
 python3 manage.py migrate --noinput
 python3 manage.py collectstatic --noinput --clear
+python manage.py createcachetable
 ```
 
 运行 Django Server：

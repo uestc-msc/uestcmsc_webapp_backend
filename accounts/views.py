@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login as django_login, logout as d
 from django.core.handlers.wsgi import WSGIRequest
 from django.middleware import csrf
 from django.utils.timezone import now
+from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -30,6 +31,7 @@ from utils.validators import is_valid_password
     responses={201: UserSerializer()}
 )
 @api_view(['POST'])
+@csrf_exempt
 def signup(request: WSGIRequest) -> Response:
     register_serializer = UserRegisterSerializer(data=request.data)
     if not register_serializer.is_valid():
@@ -64,6 +66,7 @@ def signup(request: WSGIRequest) -> Response:
     responses={200: UserSerializer()}
 )
 @api_view(['POST'])
+@csrf_exempt
 def login(request: WSGIRequest) -> Response:
     err_response = Response(status=status.HTTP_401_UNAUTHORIZED)
     if 'username' not in request.data or 'password' not in request.data:
@@ -87,6 +90,7 @@ def login(request: WSGIRequest) -> Response:
 )
 @api_view(['POST'])
 @login_required
+@csrf_exempt
 def logout(request: WSGIRequest) -> Response:
     django_logout(request)
     return Response(status=status.HTTP_204_NO_CONTENT)
@@ -104,6 +108,7 @@ def logout(request: WSGIRequest) -> Response:
     responses={200: Schema_None}
 )
 @api_view(['POST'])
+@csrf_exempt
 def forget_password(request: WSGIRequest) -> Response:
     # 获取时间
     current = now()
@@ -149,6 +154,7 @@ def forget_password(request: WSGIRequest) -> Response:
     request_body=Schema_object(Schema_token, Schema_new_password),
 )
 @api_view(['POST'])
+@csrf_exempt
 def reset_password(request: WSGIRequest) -> Response:
     current = now()
     if "token" not in request.data:

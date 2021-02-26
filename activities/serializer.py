@@ -1,6 +1,9 @@
+from django.contrib.auth.models import User
+from rest_framework import serializers
+
 from activities.models import Activity  # , Presenter, Attender
 from users.serializer import UserBriefSerializer
-from utils.serializer import *
+from utils.validators import validate_user_id
 
 
 class ActivitySerializer(serializers.ModelSerializer):

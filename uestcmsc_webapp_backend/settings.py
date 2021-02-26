@@ -30,7 +30,7 @@ SECRET_KEY = DJANGO_SECRET_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DJANGO_DEBUGGING_MODE
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver'] + DJANGO_SERVER_HOSTNAME
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver', DJANGO_SERVER_HOSTNAME]
 
 # Application definition
 
@@ -100,6 +100,15 @@ DATABASES = {
     }
 }
 
+# Caches
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'cache_table',
+    }
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
@@ -149,6 +158,7 @@ EMAIL_HOST_PASSWORD = MAILBOX_PASSWORD
 EMAIL_USE_TLS = MAILBOX_USE_TLS
 EMAIL_USE_SSL = MAILBOX_USE_SSL
 
+MANAGERS = MANAGERS
 
 # Auto Append Slash
 APPEND_SLASH = False

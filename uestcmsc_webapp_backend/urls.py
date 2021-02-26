@@ -45,6 +45,7 @@ api_urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('activities/', include('activities.urls')),
+    path('cloud/', include('cloud.urls')),
     path('users/', include('users.urls')),
     path('', hello_world),
     path('version/', version)

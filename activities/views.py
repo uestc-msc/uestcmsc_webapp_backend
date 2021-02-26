@@ -3,11 +3,11 @@ from django.utils.timezone import now
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters
 from rest_framework.generics import *
-from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
+from activities.models import Activity
 from activities.serializer import ActivitySerializer, ActivityAdminSerializer
-from utils import Pagination
-from utils import compare_date
+from utils import *
 from utils.permissions import *
 from utils.swagger import *
 

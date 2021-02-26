@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from users.models import UserProfile
-from utils.serializer import validate_username, validate_student_id
+from utils.validators import validate_username, validate_student_id
 
 
 class UserRegisterSerializer(serializers.Serializer):

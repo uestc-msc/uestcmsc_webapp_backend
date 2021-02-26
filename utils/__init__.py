@@ -1,6 +1,4 @@
-import uuid
 from datetime import datetime
-from random import randrange
 
 import pytz
 from rest_framework.pagination import PageNumberPagination
