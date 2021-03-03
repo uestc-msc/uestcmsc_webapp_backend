@@ -1,6 +1,7 @@
 import json
 import re
 from datetime import datetime, timedelta
+from time import sleep
 from typing import Union, List, Dict
 from unittest import TestCase
 
@@ -82,6 +83,7 @@ def pop_token_from_virtual_mailbox(test_function):
     测试时从虚拟的邮箱中找到验证码，并清空测试发件箱
     虚拟邮箱：https://docs.djangoproject.com/zh-hans/3.1/topics/testing/tools/#email-services
     """
+    sleep(1)
     test_function.assertEqual(len(mail.outbox), 1)
     message = mail.outbox[0].message().as_string()
     mail.outbox = []

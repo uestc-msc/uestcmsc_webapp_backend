@@ -12,6 +12,7 @@ from django.utils.timezone import now
 from users.models import UserProfile
 from utils import Pagination
 from utils.tester import tester_signup, tester_login, assertUserDetailEqual
+from utils.unittest import *
 
 user_list_url = reverse('user_list')
 user_detail_url = lambda user_id: reverse('user_detail', args=[user_id])
@@ -50,7 +51,7 @@ class UserListTest(TestCase):
         response = client.get(user_list_url)
         self.assertEqual(response.status_code, 200)
         import json
-        json_content = json.loads(response.content)
+        json_content = response.json()
         results = json_content['results']
         self.check_order(results)
         self.assertEqual([5, 1, 0, 0], list(map(lambda u: u['experience'], results)))  # 可见结果经过排序
@@ -81,7 +82,7 @@ class UserListTest(TestCase):
         for keyword in test_keywords:
             response = client.get("%s?search=%s&page_size=100" % (user_list_url, keyword))  # page_size = 0 表示不分页
             self.assertEqual(response.status_code, 200)
-            json_content = json.loads(response.content)
+            json_content = response.json()
             results = json_content['results']
             check_search_queryset(results, keyword)
 
@@ -225,7 +226,7 @@ class UserDetailTest(TestCase):
             self.assertEqual(response.status_code, 200)
             modify_user = User.objects.get(first_name="user")
             response = client.get(user_detail_url(user.id))
-            json_response = json.loads(response.content)
+            json_response = response.json()
             self.assertNotEqual(json_response[field], example)
 
     def test_patch_correctly(self):
@@ -241,7 +242,7 @@ class UserDetailTest(TestCase):
         client = Client()
         client.force_login(u)
         response = client.get(user_detail_url(id))
-        last_json = json.loads(response.content)
+        last_json = response.json()
 
         for field, example in field_and_example.items():
             response = client.patch(user_detail_url(id),
@@ -249,7 +250,7 @@ class UserDetailTest(TestCase):
                                     content_type='application/json')
             self.assertEqual(response.status_code, 200)
             response = client.get(user_detail_url(id))
-            current_json = json.loads(response.content)
+            current_json = response.json()
 
             last_json[field] = example
             self.assertEqual(current_json, last_json)  # 比较更新后 JSON 和预期 JSON
@@ -274,7 +275,7 @@ class UserDetailTest(TestCase):
             self.assertEqual(response.status_code, 400, field + example)
             modify_user = User.objects.get(first_name="user")
             response = client.get(user_detail_url(user.id))
-            json_response = json.loads(response.content)
+            json_response = response.json()
             self.assertNotEqual(json_response[field], example)
 
     def test_patch_one_field_in_userprofile_does_not_affect_others(self):

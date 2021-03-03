@@ -164,7 +164,7 @@ MANAGERS = MANAGERS
 
 # Django crontab (not available for windows)
 CRONJOBS = [
-    ('*/40 * * * *', 'cloud.onedrive.onedrive.refresh_access_token')
+    ('*/40 * * * *', 'cloud.onedrive.onedrive_authentication.refresh_access_token')
 ]
 
 # Auto Append Slash
@@ -175,7 +175,7 @@ SWAGGER_SETTINGS = {
     'DEFAULT_MODEL_RENDERING': 'example'
 }
 
-# CORS headers
+# CORS extra_headers
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = (

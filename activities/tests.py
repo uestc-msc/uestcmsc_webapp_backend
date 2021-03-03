@@ -15,7 +15,7 @@ from django.utils.timezone import now
 from activities.models import Activity
 from users.models import UserProfile
 from utils import Pagination
-from utils import tester_signup, tester_create_activity, tester_login, assertActivityDetailEqual, assertDatetimeEqual
+from utils.tester import tester_signup, tester_create_activity, tester_login, assertActivityDetailEqual, assertDatetimeEqual
 
 activity_list_url = reverse('activity_list')
 activity_detail_url = lambda id: reverse('activity_detail', args=[id])
@@ -88,7 +88,7 @@ class ActivityListTest(TestCase):
         for test_input in testcases:
             response = tester_create_activity(date_time=test_input)
             self.assertEqual(response.status_code, 201)
-            result = json.loads(response.content)['datetime']
+            result = response.json()['datetime']
             if output is None:
                 output = result
             else:
@@ -96,7 +96,7 @@ class ActivityListTest(TestCase):
 
         for error_input in error_testcases:
             response = tester_create_activity(date_time=error_input)
-            self.assertEqual(response.status_code, 400, json.loads(response.content))
+            self.assertEqual(response.status_code, 400, response.json())
 
     def test_create_activity_with_empty_field(self):
         client = Client()
@@ -112,7 +112,7 @@ class ActivityListTest(TestCase):
             incomplete_data.pop(missing_field)
             response = client.post(activity_list_url, incomplete_data, content_type='application/json')
             self.assertEqual(response.status_code, 400)
-            self.assertEqual(eval(response.content).keys(), {missing_field})
+            self.assertEqual(response.json().keys(), {missing_field})
 
         response = client.post(activity_list_url, complete_data, content_type='application/json')
         self.assertEqual(response.status_code, 201)  # 而正确数据是可以注册的
@@ -163,7 +163,7 @@ class ActivityListTest(TestCase):
         tester_login(client=client)
         response = client.get(activity_list_url)
         self.assertEqual(response.status_code, 200)
-        json_content = json.loads(response.content)
+        json_content = response.json()
         self.assertEqual(json_content['count'], 4)  # 总数正确
         results = json_content['results']
         self.check_order(results)  # 检查是否按日期降序排序
@@ -206,7 +206,7 @@ class ActivityListTest(TestCase):
             keyword = str(keyword)
             response = client.get("%s?search=%s&page_size=100" % (activity_list_url, keyword))  # page_size = 0 表示不分页
             self.assertEqual(response.status_code, 200)
-            json_content = json.loads(response.content)
+            json_content = response.json()
             results = json_content['results']
             check_search_queryset(results, keyword)
 
@@ -297,7 +297,7 @@ class ActivityDetailTest(TestCase):
     # 只测试 patch
     def test_patch_unauthorized(self):
         response = tester_create_activity(presenter_ids=[self.presenter.id, self.another_presenter.id])
-        activity_id = json.loads(response.content)['id']
+        activity_id = response.json()['id']
 
         user_permissions = [  # 以六种用户身份去遍历
             [AnonymousUser, False],
@@ -344,7 +344,7 @@ class ActivityDetailTest(TestCase):
         id = Activity.objects.first().id
 
         response = client.get(activity_detail_url(id))
-        last_json = json.loads(response.content)
+        last_json = response.json()
 
         for field, example in field_and_example.items():
             response = client.patch(activity_detail_url(id),
@@ -381,7 +381,7 @@ class ActivityDetailTest(TestCase):
                                     content_type='application/json')
             self.assertEqual(response.status_code, 400, f"{field}={example}")  # 返回 400
             response = client.get(activity_detail_url(id))
-            json_response = json.loads(response.content)
+            json_response = response.json()
             self.assertNotEqual(json_response[field], example)  # GET 的数据并没有被修改
 
     # 删除就懒得写测试了
@@ -400,7 +400,7 @@ class ActivityDetailAdmin(TestCase):
                                                           first_name="another_presenter")
 
         response = tester_create_activity(presenter_ids=[self.presenter.id, self.another_presenter.id])
-        self.activity_id = json.loads(response.content)['id']
+        self.activity_id = response.json()['id']
 
     def test_get_unauthorized(self):
         user_permissions = [  # 以六种用户身份去遍历
@@ -421,7 +421,7 @@ class ActivityDetailAdmin(TestCase):
             self.assertEqual(response.status_code == 200, permission,
                              f"user={user}, status_code={response.status_code}")
             if permission:
-                self.assertEqual(json.loads(response.content)['check_in_code'],
+                self.assertEqual(response.json()['check_in_code'],
                                  Activity.objects.first().check_in_code)
 
     def test_404(self):

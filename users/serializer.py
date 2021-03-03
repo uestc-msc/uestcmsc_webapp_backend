@@ -1,6 +1,9 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
+from users.models import UserProfile
+from utils.validators import validate_student_id, validate_user_id
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

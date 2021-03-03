@@ -1,13 +1,15 @@
 from datetime import timedelta
+from time import sleep
 
 from django.contrib.auth.models import User
+from django.core import mail
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils.timezone import now
 
 from users.models import ResetPasswordRequest, UserProfile
-from utils import generate_uuid
-from utils import tester_signup, assertUserDetailEqual, tester_login, pop_token_from_virtual_mailbox
+from utils.random import generate_uuid
+from utils.tester import tester_signup, assertUserDetailEqual, tester_login, pop_token_from_virtual_mailbox
 
 signup_url = reverse('signup')
 login_url = reverse('login')
@@ -27,27 +29,27 @@ class SignUpTests(TestCase):
     def test_sign_up_with_empty_field(self):
         response = Client().post(signup_url)
         self.assertEqual(response.status_code, 400)
-        error_argument = set(eval(response.content).keys())
+        error_argument = set(response.json().keys())
         self.assertSetEqual(error_argument, {'username', 'password', 'first_name', 'student_id'})
 
         response = tester_signup('admin@example.com', 'adminadmin', '', '123456')
         self.assertEqual(response.status_code, 400)
-        error_argument = set(eval(response.content).keys())
+        error_argument = set(response.json().keys())
         self.assertSetEqual(error_argument, {'first_name'})
 
         response = tester_signup('admin@example.com', '', 'ad', '123456')
         self.assertEqual(response.status_code, 400)
-        error_argument = set(eval(response.content).keys())
+        error_argument = set(response.json().keys())
         self.assertSetEqual(error_argument, {'password'})
 
         response = tester_signup('', 'adminadmin', 'ad', '123456')
         self.assertEqual(response.status_code, 400)
-        error_argument = set(eval(response.content).keys())
+        error_argument = set(response.json().keys())
         self.assertSetEqual(error_argument, {'username'})
 
         response = tester_signup('admin@example.com', 'adminadmin', 'ad', '')
         self.assertEqual(response.status_code, 400)
-        error_argument = set(eval(response.content).keys())
+        error_argument = set(response.json().keys())
         self.assertSetEqual(error_argument, {'student_id'})
 
     def test_sign_up_with_invalid_field(self):
@@ -56,12 +58,12 @@ class SignUpTests(TestCase):
 
         response = tester_signup('admin1@example.com', 'adminadmin', 'ad', '123456')
         self.assertEqual(response.status_code, 400)
-        error_argument = set(eval(response.content).keys())
+        error_argument = set(response.json().keys())
         self.assertSetEqual(error_argument, {'student_id'})
 
         response = tester_signup('admin5@example.com', 'adminadmin', 'ad', '3e5')
         self.assertEqual(response.status_code, 400)
-        error_argument = set(eval(response.content).keys())
+        error_argument = set(response.json().keys())
         self.assertSetEqual(error_argument, {'student_id'})
 
         response = tester_signup('admin3@example.com', 'admina', 'ad', '1234567')
@@ -69,12 +71,12 @@ class SignUpTests(TestCase):
 
         response = tester_signup('admin4@example.com', 'admin', 'ad', '12345678')
         self.assertEqual(response.status_code, 400)
-        error_argument = set(eval(response.content).keys())
+        error_argument = set(response.json().keys())
         self.assertSetEqual(error_argument, {'password'})
 
         response = tester_signup('admin@example.com', 'adminadmin', 'ad', '12345678')
         self.assertEqual(response.status_code, 400)
-        error_argument = set(eval(response.content).keys())
+        error_argument = set(response.json().keys())
         self.assertSetEqual(error_argument, {'username'})
 
         response = tester_signup('admin6@example.com', 'adminadmin', 'ad', '1234567890')
@@ -85,7 +87,7 @@ class SignUpTests(TestCase):
 
         response = tester_signup('admin', 'adminadmin', 'Admin', '1234567890123456')
         self.assertEqual(response.status_code, 400)
-        error_argument = set(eval(response.content).keys())
+        error_argument = set(response.json().keys())
         self.assertSetEqual(error_argument, {'username'})
 
     def test_wechat_user_sign_up_and_bind_account(self):
@@ -281,6 +283,7 @@ class ResetPasswordTest(TestCase):
         self.assertEqual(response.status_code, 400)
         response = client.post(forget_password_url, {"email": self.email})
         self.assertEqual(response.status_code, 202)
+        mail.outbox.clear()
 
     def test_validate_token_with_invalid_field(self):
         tester_signup("another@example.com", "anotheruser", "another", "20201231")
@@ -316,7 +319,7 @@ class ResetPasswordTest(TestCase):
             "new_password": "pd"
         })
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(eval(response.content)['detail'], '新密码不合法')
+        self.assertEqual(response.json()['detail'], '新密码不合法')
         # 重复使用 token
         response = client.post(reset_password_url, {
             "token": user_token,
@@ -356,6 +359,7 @@ class ResetPasswordTest(TestCase):
             # 发两封，assert第一封成功第二封失败
             response = Client().post(forget_password_url, {"email": self.user.username})
             self.assertEqual(response.status_code, 202)
+            mail.outbox.clear()
             response = Client().post(forget_password_url, {"email": self.user.username})
             self.assertEqual(response.status_code, 403)
             # 将最近一封改为更远的时间，重新发两封，第一封成功第二封失败
@@ -364,6 +368,7 @@ class ResetPasswordTest(TestCase):
             rpr.save()
             response = Client().post(forget_password_url, {"email": self.user.username})
             self.assertEqual(response.status_code, 202)
+            mail.outbox.clear()
             self.assertEqual(ResetPasswordRequest.objects.filter(request_time__lt=now() - timedelta(days=1)).count(),
                              0)  # 保证过期的邮件有被清除
             response = Client().post(forget_password_url, {"email": self.user.username})

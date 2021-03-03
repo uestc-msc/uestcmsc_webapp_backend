@@ -4,7 +4,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from cloud.onedrive import onedrive
+from utils.onedrive.auth import OnedriveAuthentication
 from config import FRONTEND_URL
 
 
@@ -15,7 +15,7 @@ from config import FRONTEND_URL
 )
 @api_view(['GET'])
 def onedrive_login(request: WSGIRequest):
-    return redirect(onedrive.login_uri())
+    return redirect(OnedriveAuthentication.login_uri())
 
 
 @swagger_auto_schema(
@@ -28,9 +28,9 @@ def onedrive_login(request: WSGIRequest):
 def onedrive_login_callback(request: WSGIRequest):
     auth_code = request.GET.get('code', '')
     if auth_code == '':
-        return Response("都说了叫你没事别 xjb 打开这个啊", status=400)
+        return Response("都说了叫你没事别 xjb 打开这个", status=400)
     else:
-        onedrive.grant_access_token(auth_code)
+        OnedriveAuthentication.grant_access_token(auth_code)
         return redirect(FRONTEND_URL + '/cloud/status/')
 
 
