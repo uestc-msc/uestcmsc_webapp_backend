@@ -2,7 +2,9 @@ import os
 
 import requests
 from django.core.cache import cache
+from django.http import Http404
 from rest_framework import status
+from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 
 import config
@@ -93,7 +95,7 @@ class OnedriveAuthentication():
             log_info('Onedrive 获取 Access Token 和 Refresh Token 成功')
 
 
-class OnedriveNotAuthenticatedResponse(Response):
-    def __init__(self):
-        super().__init__(data={"detail": "Onedrive 服务未登录"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+class OnedriveUnavailableException(APIException):
+    status_code = 503
+    default_detail = 'Onedrive 服务未登录。'
 

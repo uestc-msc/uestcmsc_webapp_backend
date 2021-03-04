@@ -10,6 +10,7 @@ sudo pip3 install -r requirements.txt
 python3 manage.py makemigrations accounts activities cloud comment gallery users --noinput
 python3 manage.py migrate --noinput
 python3 manage.py collectstatic --noinput --clear --no-post-process
+python3 manage.py crontab add
 # 重启后端服务
 sudo systemctl stop uestcmsc_webapp_backend
 sudo systemctl start uestcmsc_webapp_backend
