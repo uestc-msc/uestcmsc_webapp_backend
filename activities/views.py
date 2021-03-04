@@ -4,9 +4,10 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters
 from rest_framework.generics import *
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.views import APIView
 
-from activities.models import Activity
-from activities.serializer import ActivitySerializer, ActivityAdminSerializer
+from activities.models import Activity, ActivityLink
+from activities.serializer import ActivitySerializer, ActivityAdminSerializer, LinkSerializer
 from utils import *
 from utils.permissions import *
 from utils.swagger import *
@@ -20,7 +21,7 @@ from utils.swagger import *
                           '注：如页码不正确或不存在，返回 404\n'
                           '注：如每页大小不正确或不存在，使用默认每页大小（15）\n'
                           '注：如无搜索结果，返回 200，其中 `results` 为空\n',
-                          # '注：需要登录，否则返回 403',
+    # '注：需要登录，否则返回 403',
     manual_parameters=[Param_search, Param_page, Param_page_size],
 ))
 @method_decorator(name='post', decorator=swagger_auto_schema(
@@ -44,14 +45,14 @@ class ActivityListView(ListCreateAPIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     queryset = Activity.objects.all().order_by("-datetime")
     filter_backends = (filters.SearchFilter,)
-    search_fields = ('title', 'datetime','location', 'presenter__first_name')
+    search_fields = ('title', 'datetime', 'location', 'presenter__first_name')
     pagination_class = Pagination
     serializer_class = ActivitySerializer
 
 
 @method_decorator(name="get", decorator=swagger_auto_schema(
-        operation_summary='获取沙龙信息',
-        operation_description='获取沙龙信息\n'
+    operation_summary='获取沙龙信息',
+    operation_description='获取沙龙信息\n'
 ))
 @method_decorator(name="put", decorator=swagger_auto_schema(
     operation_summary='更新沙龙信息',
@@ -61,8 +62,7 @@ class ActivityListView(ListCreateAPIView):
                                Schema_location,
                                Schema_presenter_ids,
                                Schema_check_in_open),
-    responses={201: ActivitySerializer()},
-    ))
+))
 @method_decorator(name="patch", decorator=swagger_auto_schema(
     operation_summary='更新沙龙部分信息',
     operation_description='更新沙龙信息，成功返回 200\n'
@@ -76,7 +76,6 @@ class ActivityListView(ListCreateAPIView):
                                Schema_location,
                                Schema_presenter_ids,
                                Schema_check_in_open),
-    responses={201: ActivitySerializer()}
 ))
 @method_decorator(name="delete", decorator=swagger_auto_schema(
     operation_summary='删除沙龙',
@@ -84,26 +83,71 @@ class ActivityListView(ListCreateAPIView):
                           '注：需要是沙龙演讲者或管理员，否则返回 403',
 ))
 class ActivityDetailView(RetrieveUpdateDestroyAPIView):
-    permission_classes = (IsPresenterOrAdminOrReadOnly, )
+    permission_classes = (IsPresenterOrAdminOrReadOnly,)
     queryset = Activity.objects.all()
     serializer_class = ActivitySerializer
     lookup_field = 'id'
 
 
+@method_decorator(name='post', decorator=swagger_auto_schema(
+    operation_summary='添加沙龙相关链接',
+    operation_description='对 `activity_id` 对应沙龙添加链接\n'
+                          '成功返回 201，沙龙不存在返回 404\n'
+                          '注：需要是沙龙演讲者或管理员，否则返回 403',
+    request_body=Schema_object(Schema_activity_id, Schema_url)
+))
+class ActivityLinkCreateView(GenericAPIView):
+    permission_classes = (IsPresenterOrAdminOrReadOnly,)
+    serializer_class = LinkSerializer
+
+    def post(self, request: WSGIRequest) -> Response:
+        activity_id = request.data.get('activity_id', None)
+        url = request.data.get('url', None)
+        if not activity_id or not url:
+            return Response({"detail": "activity_id 或 url 参数不存在"}, status=status.HTTP_400_BAD_REQUEST)
+        link = ActivityLink.objects.create(activity_id=activity_id, url=url)
+        serializer = LinkSerializer(link)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
 @method_decorator(name="get", decorator=swagger_auto_schema(
-        operation_summary='获取沙龙额外信息（管理员）',
-        operation_description='获取沙龙额外信息（如签到码）\n'
-                              '注：需要是沙龙演讲者或管理员，否则返回 403',
+    operation_summary='获取沙龙相关链接'
+))
+@method_decorator(name="put", decorator=swagger_auto_schema(
+    operation_summary='更新沙龙相关链接',
+    operation_description='用于更新对应链接，成功返回 200\n'
+                          '注：需要是沙龙演讲者或管理员，否则返回 403',
+))
+@method_decorator(name="patch", decorator=swagger_auto_schema(
+    operation_summary='更新沙龙相关链接（部分）',
+    operation_description='同 PUT',
+))
+@method_decorator(name="delete", decorator=swagger_auto_schema(
+    operation_summary='删除沙龙相关链接',
+    operation_description='删除 `id` 对应的沙龙相关链接，成功返回 204\n'
+                          '注：需要是沙龙演讲者或管理员，否则返回 403'
+))
+class ActivityLinkDetailView(RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsPresenterOrAdminOrReadOnly,)
+    queryset = ActivityLink.objects.all()
+    serializer_class = LinkSerializer
+    lookup_field = 'id'
+
+
+@method_decorator(name="get", decorator=swagger_auto_schema(
+    operation_summary='获取沙龙额外信息（管理员）',
+    operation_description='获取沙龙额外信息（如签到码）\n'
+                          '注：需要是沙龙演讲者或管理员，否则返回 403',
 ))
 class ActivityDetailAdminView(RetrieveAPIView):
-    permission_classes = (IsPresenterOrAdmin, )
+    permission_classes = (IsPresenterOrAdmin,)
     queryset = Activity.objects.all()
     serializer_class = ActivityAdminSerializer
     lookup_field = 'id'
 
 
 class ActivityCheckInView(GenericAPIView):
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     @swagger_auto_schema(
         operation_summary='用户签到',
@@ -125,7 +169,7 @@ class ActivityCheckInView(GenericAPIView):
         activity = Activity.objects.get(id=id)
         if activity.attender.filter(id=request.user.id):
             return Response({"detail": "您已经签过到了"}, status=status.HTTP_200_OK)
-        if not compare_date(activity.datetime, now()): #
+        if not compare_date(activity.datetime, now()):  #
             return Response({"detail": "非当日活动"}, status=status.HTTP_403_FORBIDDEN)
         if not activity.check_in_open:
             return Response({"detail": "演讲者已关闭签到"}, status=status.HTTP_403_FORBIDDEN)
@@ -149,7 +193,7 @@ class ActivityCheckInView(GenericAPIView):
     responses={200: ActivitySerializer()}
 ))
 class ActivityAttenderUpdateView(GenericAPIView):
-    permission_classes = (IsPresenterOrAdminOrReadOnly, )
+    permission_classes = (IsPresenterOrAdminOrReadOnly,)
 
     def patch(self, request: WSGIRequest, id: int) -> Response:
         if not Activity.objects.filter(id=id):
@@ -161,7 +205,7 @@ class ActivityAttenderUpdateView(GenericAPIView):
         remove_list = request.data.pop('remove', [])
         add_user_list = list(User.objects.filter(id__in=add_list))
         remove_user_list = list(User.objects.filter(id__in=remove_list))
-        if len(add_user_list) != len(add_list) or len(remove_user_list) != len(remove_list):    # 有 id 不存在
+        if len(add_user_list) != len(add_list) or len(remove_user_list) != len(remove_list):  # 有 id 不存在
             return Response({"detail": "用户不存在"}, status=status.HTTP_400_BAD_REQUEST)
         activity.attender.add(*add_user_list)
         activity.attender.remove(*remove_user_list)

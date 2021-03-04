@@ -27,7 +27,7 @@ def onedrive_http_request(uri: str,
     access_code = cache.get(onedrive_access_token_cache_name, '')
     if access_code == '':
         response = requests.Response()
-        response.status_code = 403
+        response.status_code = 401
         return response
     headers = extra_headers.copy() if extra_headers else {}
     headers['Content-Type'] = content_type

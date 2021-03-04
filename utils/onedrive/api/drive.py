@@ -27,4 +27,5 @@ class Drive:
         return onedrive_http_request(self.uri+f"/search(q='{keywords}')")
 
 
-my_drive = Drive(uri='/me/drive')
+drive = Drive(uri='/me/drive')
+drive_root = drive.root()

@@ -1,2 +1,2 @@
-from .drive import my_drive
-from .driveitem import app_root
+from .drive import Drive, drive, drive_root
+from .driveitem import DriveItem, app_root

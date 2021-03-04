@@ -10,3 +10,4 @@ django-cors-headers==3.7.0
 pytz~=2021.1
 django-crontab==0.7.1
 requests==2.25.1
+lxml==4.6.1

@@ -388,6 +388,11 @@ class ActivityDetailTest(TestCase):
     def test_delete_activity(self):
         pass
 
+
+class ActivityLinkTest(TestCase):
+    pass
+
+
 class ActivityDetailAdmin(TestCase):
     def setUp(self):
         # 设置用户的权限

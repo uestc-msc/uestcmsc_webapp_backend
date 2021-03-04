@@ -35,7 +35,7 @@ Schema_None = None
 Schema_count = {"count": openapi.Schema(type=openapi.TYPE_NUMBER, description="总数")}
 Schema_detail = {"detail": openapi.Schema(type=openapi.TYPE_STRING, description="错误信息")}
 Schema_string = {"string": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL)}
-Schema_id = {"id": openapi.Schema(type=openapi.TYPE_NUMBER, description="用户 id")}
+Schema_id = {"id": openapi.Schema(type=openapi.TYPE_NUMBER)}
 Schema_email = {"email": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description='邮箱')}
 Schema_password = {"password": openapi.Schema(type=openapi.TYPE_STRING, description='密码')}
 Schema_token = {'token': openapi.Schema(type=openapi.TYPE_STRING, description='由邮件提供')}
@@ -43,6 +43,7 @@ Schema_old_password = {'old_password': openapi.Schema(type=openapi.TYPE_STRING, 
 Schema_new_password = {'new_password': openapi.Schema(type=openapi.TYPE_STRING, description='新密码')}
 Schema_new_email = {"new_email": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description='新邮箱')}
 
+Schema_activity_id = {"activity_id": openapi.Schema(type=openapi.TYPE_NUMBER, description="沙龙 id")}
 Schema_title = {"title": openapi.Schema(type=openapi.TYPE_STRING, description='沙龙标题')}
 Schema_datetime = {"datetime": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description="日期时间")}
 Schema_location = {"location": openapi.Schema(type=openapi.TYPE_STRING, description='地点')}
@@ -51,6 +52,9 @@ Schema_check_in_code = {"check_in_code": openapi.Schema(type=openapi.TYPE_STRING
 Schema_check_in_open = {"check_in_open": openapi.Schema(type=openapi.TYPE_BOOLEAN, description="管理员开放签到")}
 Schema_add = {"add": Schema_array(openapi.Schema(type=openapi.TYPE_NUMBER, description="用户 id"))}
 Schema_remove = {"remove": Schema_array(openapi.Schema(type=openapi.TYPE_NUMBER, description="用户 id"))}
+Schema_url = {"url": openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_URI, description="链接")}
+
+Schema_status = {"status": openapi.Schema(type=openapi.TYPE_STRING, description='状态')}
 
 Param_search = openapi.Parameter("search", openapi.IN_QUERY, type=openapi.TYPE_STRING, description='搜索关键字（为空时表示不搜索）')
 Param_page = openapi.Parameter("page", openapi.IN_QUERY, type=openapi.TYPE_NUMBER, description='页数（不正确时返回 404）')
