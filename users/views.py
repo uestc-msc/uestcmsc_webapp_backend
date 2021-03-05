@@ -4,6 +4,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters
 from rest_framework.decorators import api_view
 from rest_framework.generics import *
+from rest_framework.request import Request
 
 from utils import Pagination
 from utils.permissions import *
@@ -80,7 +81,7 @@ class UserDetailView(RetrieveUpdateDestroyAPIView):
 )
 @api_view(['PATCH'])
 @login_required
-def change_password_view(request: WSGIRequest, id: int) -> Response:
+def change_password_view(request: Request, id: int) -> Response:
     user2 = get_object_or_404(User, id=id)
     # 权限判定
     if not hasGreaterPermissions(request.user, user2):
@@ -113,7 +114,7 @@ def change_password_view(request: WSGIRequest, id: int) -> Response:
     responses={200: UserSerializer()}
 )
 @api_view(['GET'])
-def whoami_view(request: WSGIRequest) -> Response:
+def whoami_view(request: Request) -> Response:
     if not request.user.is_authenticated:
         return Response(status=status.HTTP_401_UNAUTHORIZED)
     else:

@@ -3,7 +3,7 @@ from typing import Dict, Union, List
 import requests
 from django.core.cache import cache
 
-from utils.onedrive.auth import onedrive_access_token_cache_name
+from utils.onedrive.auth import onedrive_access_token_cache_name, OnedriveAuthentication, OnedriveUnavailableException
 
 base_url = 'https://graph.microsoft.com/v1.0'
 
@@ -24,11 +24,12 @@ def onedrive_http_request(uri: str,
                           content_type='application/json',
                           extra_headers: Dict = None,
                           **kwargs) -> requests.Response:
-    access_code = cache.get(onedrive_access_token_cache_name, '')
-    if access_code == '':
-        response = requests.Response()
-        response.status_code = 401
-        return response
+    access_code = cache.get(onedrive_access_token_cache_name, None)
+    if access_code is None:
+        OnedriveAuthentication.refresh_access_token()
+        access_code = cache.get(onedrive_access_token_cache_name, None)
+        if access_code is None:
+            raise OnedriveUnavailableException
     headers = extra_headers.copy() if extra_headers else {}
     headers['Content-Type'] = content_type
     headers['Authorization'] = f'bearer {access_code}'
@@ -36,4 +37,7 @@ def onedrive_http_request(uri: str,
         kwargs['data'] = data
     if json:
         kwargs['json'] = json
-    return requests.request(method=method, url=base_url + uri, headers=headers, **kwargs)
+    response = requests.request(method=method, url=base_url + uri, headers=headers, **kwargs)
+    if not response.ok:
+        raise OnedriveUnavailableException(response=response)
+    return response

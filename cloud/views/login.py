@@ -1,7 +1,8 @@
-from django.core.handlers.wsgi import WSGIRequest
+
 from django.shortcuts import redirect
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from config import FRONTEND_URL
@@ -16,7 +17,7 @@ from utils.swagger import *
     responses={301: OnedriveAuthentication.login_uri(), 200: Schema_None}
 )
 @api_view(['GET'])
-def onedrive_login(request: WSGIRequest):
+def onedrive_login(request: Request):
     return redirect(OnedriveAuthentication.login_uri(), permanent=True)
 
 
@@ -27,7 +28,7 @@ def onedrive_login(request: WSGIRequest):
     responses={302: FRONTEND_URL + '/cloud/status/', 200: Schema_None}
 )
 @api_view(['GET'])
-def onedrive_login_callback(request: WSGIRequest):
+def onedrive_login_callback(request: Request):
     auth_code = request.GET.get('code', '')
     if auth_code == '':
         return Response("都说了叫你没事别 xjb 打开这个", status=400)

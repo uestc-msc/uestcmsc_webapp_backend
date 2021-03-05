@@ -2,15 +2,16 @@ from functools import wraps
 from typing import Callable
 
 from django.contrib.auth.models import User
-from django.core.handlers.wsgi import WSGIRequest
+
 from rest_framework import status
 from rest_framework.permissions import *
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from activities.models import Activity
 
 
-def isOwnerOrAdmin(request: WSGIRequest, owner: User) -> bool:
+def isOwnerOrAdmin(request: Request, owner: User) -> bool:
     return request.user.is_staff or request.user.is_superuser or request.user == owner
 
 

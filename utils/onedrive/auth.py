@@ -1,4 +1,5 @@
 import os
+from typing import Union
 
 import requests
 from django.core.cache import cache
@@ -12,7 +13,7 @@ from uestcmsc_webapp_backend.settings import DEBUG
 from utils.log import log_error, log_info
 from utils.mail import send_system_alert_mail_to_managers
 
-onedrive_access_token_cache_name = 'onedrive_   _access_token'
+onedrive_access_token_cache_name = 'onedrive__access_token'
 onedrive_refresh_token_cache_name = 'onedrive__refresh_token'
 
 if DEBUG:
@@ -52,7 +53,7 @@ class OnedriveAuthentication():
                                        'grant_type': 'authorization_code'},
                                  headers=cls.headers)
         if response.status_code == 200:
-            cls._save_access_token(response)
+            cls._save_token(response)
         else:
             log_error(cls.generate_errormsg('获取 Onedrive Access Token 失败', response))
 
@@ -71,7 +72,7 @@ class OnedriveAuthentication():
                                        'grant_type': 'refresh_token'},
                                  headers=cls.headers)
         if response.status_code == 200:
-            cls._save_access_token(response)
+            cls._save_token(response)
         else:
             error_info = cls.generate_errormsg('刷新 Onedrive Access Token 失败', response)
             log_error(error_info)
@@ -79,7 +80,7 @@ class OnedriveAuthentication():
             return
 
     @classmethod
-    def _save_access_token(cls, response: requests.Response):
+    def _save_token(cls, response: requests.Response):
         response_json = response.json()
         access_token = response_json.get('access_token', None)
         access_token_expires_in = response_json.get('expires_in', 3600)
@@ -97,5 +98,18 @@ class OnedriveAuthentication():
 
 class OnedriveUnavailableException(APIException):
     status_code = 503
-    default_detail = 'Onedrive 服务未登录。'
+    default_detail = 'Onedrive 服务错误，请稍后再试或询问管理员。'
 
+    def __init__(self,
+                 status: int = None,
+                 detail: Union[str, bytes] = None,
+                 response: requests.Response = None):
+        if status:
+            self.status_code = status
+        if detail:
+            self.default_detail = detail
+        if response:
+            self.response = response
+
+    def __str__(self):
+        return self.default_detail

@@ -1,8 +1,9 @@
 from django.core.cache import cache
-from django.core.handlers.wsgi import WSGIRequest
+
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from utils.onedrive.auth import onedrive_access_token_cache_name, \
@@ -13,11 +14,11 @@ from utils.swagger import *
 @swagger_auto_schema(
     method='GET',
     operation_summary='Onedrive 状态',
-    operation_description='获取 Onedrive 状态，取值有四种：`login_required`, `active`, `refreshing`',
+    operation_description='获取 Onedrive 状态，取值有三种：`login_required`, `active`, `error`',
     responses={200: Schema_object(Schema_status)}
 )
 @api_view(['GET'])
-def onedrive_status(request: WSGIRequest) -> Response:
+def onedrive_status(request: Request) -> Response:
     access_token_available = cache.get(onedrive_access_token_cache_name, '') != ''
     refresh_token_available = cache.get(onedrive_refresh_token_cache_name, '') != ''
     if refresh_token_available and not access_token_available:

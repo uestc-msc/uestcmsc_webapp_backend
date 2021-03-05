@@ -32,10 +32,13 @@ def Schema_pagination(serializer: Type[Serializer]) -> Serializer:
 
 Schema_None = None
 
+# 通用
 Schema_count = {'count': openapi.Schema(type=openapi.TYPE_NUMBER, description='总数')}
 Schema_detail = {'detail': openapi.Schema(type=openapi.TYPE_STRING, description='错误信息')}
 Schema_string = {'string': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL)}
 Schema_id = {'id': openapi.Schema(type=openapi.TYPE_NUMBER)}
+
+# 用户
 Schema_email = {'email': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description='邮箱')}
 Schema_password = {'password': openapi.Schema(type=openapi.TYPE_STRING, description='密码')}
 Schema_token = {'token': openapi.Schema(type=openapi.TYPE_STRING, description='由邮件提供')}
@@ -43,6 +46,7 @@ Schema_old_password = {'old_password': openapi.Schema(type=openapi.TYPE_STRING, 
 Schema_new_password = {'new_password': openapi.Schema(type=openapi.TYPE_STRING, description='新密码')}
 Schema_new_email = {'new_email': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description='新邮箱')}
 
+# 沙龙
 Schema_activity_id = {'activity_id': openapi.Schema(type=openapi.TYPE_NUMBER, description='沙龙 id')}
 Schema_title = {'title': openapi.Schema(type=openapi.TYPE_STRING, description='沙龙标题')}
 Schema_datetime = {'datetime': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='日期时间')}
@@ -54,8 +58,12 @@ Schema_add = {'add': Schema_array(openapi.Schema(type=openapi.TYPE_NUMBER, descr
 Schema_remove = {'remove': Schema_array(openapi.Schema(type=openapi.TYPE_NUMBER, description='用户 id'))}
 Schema_url = {'url': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_URI, description='链接')}
 
+# 云盘
 Schema_status = {'status': openapi.Schema(type=openapi.TYPE_STRING, description='状态')}
+Schema_file_id = {'file_id': openapi.Schema(type=openapi.TYPE_STRING, description='文件 id')}
 Schema_filename = {'filename': openapi.Schema(type=openapi.TYPE_STRING, description='文件名')}
+Schema_filetype = {'filetype': openapi.Schema(type=openapi.TYPE_STRING,
+                                                 description='文件类型，可选 `activity_file` `photo`')}
 
 Param_search = openapi.Parameter('search', openapi.IN_QUERY, type=openapi.TYPE_STRING, description='搜索关键字（为空时表示不搜索）')
 Param_page = openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_NUMBER, description='页数（不正确时返回 404）')

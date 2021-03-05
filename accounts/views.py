@@ -1,13 +1,14 @@
 from datetime import timedelta
 
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
-from django.core.handlers.wsgi import WSGIRequest
+
 from django.middleware import csrf
 from django.utils.timezone import now
 from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from accounts.serializer import UserRegisterSerializer
@@ -32,7 +33,7 @@ from utils.validators import is_valid_password
 )
 @api_view(['POST'])
 @csrf_exempt
-def signup(request: WSGIRequest) -> Response:
+def signup(request: Request) -> Response:
     register_serializer = UserRegisterSerializer(data=request.data)
     if not register_serializer.is_valid():
         return Response(register_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -67,7 +68,7 @@ def signup(request: WSGIRequest) -> Response:
 )
 @api_view(['POST'])
 @csrf_exempt
-def login(request: WSGIRequest) -> Response:
+def login(request: Request) -> Response:
     err_response = Response(status=status.HTTP_401_UNAUTHORIZED)
     if 'username' not in request.data or 'password' not in request.data:
         return err_response
@@ -91,7 +92,7 @@ def login(request: WSGIRequest) -> Response:
 @api_view(['POST'])
 @login_required
 @csrf_exempt
-def logout(request: WSGIRequest) -> Response:
+def logout(request: Request) -> Response:
     django_logout(request)
     return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -109,7 +110,7 @@ def logout(request: WSGIRequest) -> Response:
 )
 @api_view(['POST'])
 @csrf_exempt
-def forget_password(request: WSGIRequest) -> Response:
+def forget_password(request: Request) -> Response:
     # 获取时间
     current = now()
     one_min_ago = current - timedelta(minutes=1)
@@ -155,7 +156,7 @@ def forget_password(request: WSGIRequest) -> Response:
 )
 @api_view(['POST'])
 @csrf_exempt
-def reset_password(request: WSGIRequest) -> Response:
+def reset_password(request: Request) -> Response:
     current = now()
     if "token" not in request.data:
         return Response({"detail": "缺少 token 参数"}, status=status.HTTP_400_BAD_REQUEST)

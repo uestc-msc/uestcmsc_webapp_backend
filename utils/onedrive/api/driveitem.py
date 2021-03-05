@@ -3,6 +3,7 @@ from __future__ import annotations
 import requests
 
 from .utils import validate_path, onedrive_http_request
+from .. import OnedriveUnavailableException
 
 
 class DriveItem:
@@ -14,6 +15,8 @@ class DriveItem:
 
     def find_file_by_path(self, path: str) -> DriveItem:
         path = validate_path(path)
+        if path == '/':
+            return DriveItem(uri=self.uri)
         uri = f"{self.uri}:{path}:"  # 如果 self.uri 自带 ':' 和后面形成了 '::'，应该去掉
         uri = uri.replace('::', '')
         return DriveItem(uri=uri)
@@ -41,6 +44,36 @@ class DriveItem:
             "@microsoft.graph.conflictBehavior": conflict_behavior
         })
 
+    def create_directory_recursive(self, path: str) -> requests.Response:
+        # 由于多数时候都只需要创建子文件夹
+        # 因此从尝试创建子文件夹开始，从下往上尝试创建
+        # 在某层成功后又逐步往下
+        path_list = path.strip('/').split('/')
+        depth = len(path_list)
+        response = requests.Response()
+        response.status_code = 500
+
+        while not response.ok:
+            depth -= 1
+            if depth < 0:
+                break
+            cur_path = '/'.join(path_list[0:depth])
+            new_dir = path_list[depth]
+            try:
+                response = self.find_file_by_path(cur_path).create_directory(new_dir, 'fail')
+            except OnedriveUnavailableException:
+                pass
+
+        while depth < len(path_list) - 1:
+            depth += 1
+            cur_path = '/'.join(path_list[0:depth])
+            new_dir = path_list[depth]
+            try:
+                response = self.find_file_by_path(cur_path).create_directory(new_dir, 'fail')
+            except OnedriveUnavailableException:
+                pass
+        return response
+
     # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_copy?view=odsp-graph-online
     def copy(self, destination: dict, new_filename: str = None):
         json = {"parentReference": destination}
@@ -66,6 +99,7 @@ class DriveItem:
         return onedrive_http_request(self.uri + f'/content?@microsoft.graph.conflictBehavior={conflict_behavior}',
                                      'PUT', data=data)
 
+    # 仅 Onedrive 个人可使用
     def upload_via_url(self, source_url: str, filename: str = None,
                        conflict_behavior: str = 'fail') -> requests.Response:
         assert conflict_behavior in ('fail', 'replace' 'rename')
@@ -79,7 +113,6 @@ class DriveItem:
         return onedrive_http_request(self.uri + '/children', 'POST', json,
                                      extra_headers={"Prefer": "respond-async"})
 
-    # ????
     # 上传大文件，创建会话后，需向返回的 uploadUrl 进行 PUT
     # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_createuploadsession?view=odsp-graph-online
     def create_upload_session(self, conflict_behavior: str = 'fail') -> requests.Response:
@@ -102,6 +135,3 @@ class DriveItem:
         share_link = response.json()['link']['webUrl']
         download_link = share_link.split('?')[0] + '?download=1'
         return download_link
-
-
-app_root = DriveItem(uri='/me/drive/special/approot')

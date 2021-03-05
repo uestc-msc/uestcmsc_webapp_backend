@@ -3,11 +3,10 @@ from django.utils.timezone import now
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters
 from rest_framework.generics import *
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.views import APIView
 
-from activities.models import Activity, ActivityLink
-from activities.serializer import ActivitySerializer, ActivityAdminSerializer, LinkSerializer
+from activities.models import ActivityLink
+from activities.serializer import ActivitySerializer, ActivityAdminSerializer
+from activities.serializer import LinkSerializer
 from utils import *
 from utils.permissions import *
 from utils.swagger import *
@@ -101,6 +100,35 @@ class ActivityDetailAdminView(RetrieveAPIView):
     lookup_field = 'id'
 
 
+@method_decorator(name="patch", decorator=swagger_auto_schema(
+    operation_summary='增量更新沙龙参与者名单',
+    operation_description='更新沙龙参与者，成功返回 200\n'
+                          '如更新的用户不存在，对请求不予执行，并返回 400\n'
+                          '更新方法：将 add 中用户全部设为已签到，将 remove 中用户全部设为未签到\n'
+                          '注：需要是管理员或沙龙演讲者，否则返回 403'
+                          '注：该接口不受“演讲者关闭了签到”影响',
+    request_body=Schema_object(Schema_add, Schema_remove),
+    responses={200: ActivitySerializer()}
+))
+class ActivityAttenderUpdateView(GenericAPIView):
+    permission_classes = (IsPresenterOrAdminOrReadOnly,)
+
+    def patch(self, request: Request, id: int) -> Response:
+        activity = get_object_or_404(Activity, id=id)
+        self.check_object_permissions(request, activity)
+
+        add_list = request.data.pop('add', [])
+        remove_list = request.data.pop('remove', [])
+        add_user_list = list(User.objects.filter(id__in=add_list))
+        remove_user_list = list(User.objects.filter(id__in=remove_list))
+        if len(add_user_list) != len(add_list) or len(remove_user_list) != len(remove_list):  # 有 id 不存在
+            return Response({"detail": "用户不存在"}, status=status.HTTP_400_BAD_REQUEST)
+        activity.attender.add(*add_user_list)
+        activity.attender.remove(*remove_user_list)
+
+        return Response(ActivitySerializer(activity).data, status=status.HTTP_200_OK)
+
+
 class ActivityCheckInView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
 
@@ -118,7 +146,7 @@ class ActivityCheckInView(GenericAPIView):
         request_body=Schema_object(Schema_check_in_code),
         responses={201: None, 403: Schema_object(Schema_detail)}
     )
-    def post(self, request: WSGIRequest, id: int) -> Response:
+    def post(self, request: Request, id: int) -> Response:
         if not Activity.objects.filter(id=id):
             return Response({"detail": "活动不存在"}, status=status.HTTP_404_NOT_FOUND)
         activity = Activity.objects.get(id=id)
@@ -137,30 +165,46 @@ class ActivityCheckInView(GenericAPIView):
         return Response({"detail": "签到成功，经验+50"}, status=status.HTTP_200_OK)
 
 
-@method_decorator(name="patch", decorator=swagger_auto_schema(
-    operation_summary='增量更新沙龙参与者名单',
-    operation_description='更新沙龙参与者，成功返回 200\n'
-                          '如更新的用户不存在，对请求不予执行，并返回 400\n'
-                          '更新方法：将 add 中用户全部设为已签到，将 remove 中用户全部设为未签到\n'
-                          '注：需要是管理员或沙龙演讲者，否则返回 403'
-                          '注：该接口不受“演讲者关闭了签到”影响',
-    request_body=Schema_object(Schema_add, Schema_remove),
-    responses={200: ActivitySerializer()}
+@method_decorator(name='post', decorator=swagger_auto_schema(
+    operation_summary='添加沙龙相关链接',
+    operation_description='对 `activity_id` 对应沙龙添加链接\n'
+                          '成功返回 201，沙龙不存在返回 404\n'
+                          '注：需要是沙龙演讲者或管理员，否则返回 403',
+    request_body=Schema_object(Schema_activity_id, Schema_url)
 ))
-class ActivityAttenderUpdateView(GenericAPIView):
+class ActivityLinkCreateView(GenericAPIView):
     permission_classes = (IsPresenterOrAdminOrReadOnly,)
+    serializer_class = LinkSerializer
 
-    def patch(self, request: WSGIRequest, id: int) -> Response:
-        activity = get_object_or_404(Activity, id=id)
-        self.check_object_permissions(request, activity)
+    def post(self, request: Request) -> Response:
+        activity_id = request.data.get('activity_id', None)
+        url = request.data.get('url', None)
+        if not activity_id or not url:
+            return Response({"detail": "activity_id 或 url 参数不存在"}, status=status.HTTP_400_BAD_REQUEST)
+        link = ActivityLink.objects.create(activity_id=activity_id, url=url)
+        serializer = LinkSerializer(link)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        add_list = request.data.pop('add', [])
-        remove_list = request.data.pop('remove', [])
-        add_user_list = list(User.objects.filter(id__in=add_list))
-        remove_user_list = list(User.objects.filter(id__in=remove_list))
-        if len(add_user_list) != len(add_list) or len(remove_user_list) != len(remove_list):  # 有 id 不存在
-            return Response({"detail": "用户不存在"}, status=status.HTTP_400_BAD_REQUEST)
-        activity.attender.add(*add_user_list)
-        activity.attender.remove(*remove_user_list)
 
-        return Response(ActivitySerializer(activity).data, status=status.HTTP_200_OK)
+@method_decorator(name="get", decorator=swagger_auto_schema(
+    operation_summary='获取沙龙相关链接'
+))
+@method_decorator(name="put", decorator=swagger_auto_schema(
+    operation_summary='更新沙龙相关链接',
+    operation_description='用于更新对应链接，成功返回 200\n'
+                          '注：需要是沙龙演讲者或管理员，否则返回 403',
+))
+@method_decorator(name="patch", decorator=swagger_auto_schema(
+    operation_summary='更新沙龙相关链接（部分）',
+    operation_description='同 PUT',
+))
+@method_decorator(name="delete", decorator=swagger_auto_schema(
+    operation_summary='删除沙龙相关链接',
+    operation_description='删除 `id` 对应的沙龙相关链接，成功返回 204\n'
+                          '注：需要是沙龙演讲者或管理员，否则返回 403'
+))
+class ActivityLinkDetailView(RetrieveUpdateDestroyAPIView):
+    permission_classes = (IsPresenterOrAdminOrReadOnly,)
+    queryset = ActivityLink.objects.all()
+    serializer_class = LinkSerializer
+    lookup_field = 'id'
