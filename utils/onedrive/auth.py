@@ -12,7 +12,7 @@ from uestcmsc_webapp_backend.settings import DEBUG
 from utils.log import log_error, log_info
 from utils.mail import send_system_alert_mail_to_managers
 
-onedrive_access_token_cache_name = 'onedrive__access_token'
+onedrive_access_token_cache_name = 'onedrive_   _access_token'
 onedrive_refresh_token_cache_name = 'onedrive__refresh_token'
 
 if DEBUG:

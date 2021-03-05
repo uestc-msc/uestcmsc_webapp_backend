@@ -164,11 +164,11 @@ MANAGERS = MANAGERS
 
 # Django crontab (not available for windows)
 CRONJOBS = [
-    ('*/40 * * * *', 'cloud.onedrive.onedrive_authentication.refresh_access_token')
+    ('*/40 * * * *', 'utils.onedrive.refresh_access_token')
 ]
 
 # Auto Append Slash
-APPEND_SLASH = False
+APPEND_SLASH = True
 
 # settings about Swagger (Document Generator)
 SWAGGER_SETTINGS = {
