@@ -35,6 +35,7 @@ class OnedriveAuthentication():
         return f'{event}，状态码 {response.status_code}，详细信息：{response.json()}'
 
     # 登录页面需要用户自行访问，于是这里只负责生成 uri，登录授权成功后跳转到指定链接，链接中 params 即是 auth_token
+    # 为方便使用，/cloud/login/ 页面将被重定向到该 uri（见 /cloud/views.py）
     @classmethod
     def login_uri(cls):
         return f"https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id={cls.client_id}" \
@@ -54,6 +55,8 @@ class OnedriveAuthentication():
                                  headers=cls.headers)
         if response.status_code == 200:
             cls._save_token(response)
+            from utils.onedrive import initialize_onedrive
+            initialize_onedrive()
         else:
             log_error(cls.generate_errormsg('获取 Onedrive Access Token 失败', response))
 

@@ -23,6 +23,7 @@ def onedrive_http_request(uri: str,
                           data=None,
                           content_type='application/json',
                           extra_headers: Dict = None,
+                          fail_silently=False,
                           **kwargs) -> requests.Response:
     access_code = cache.get(onedrive_access_token_cache_name, None)
     if access_code is None:
@@ -38,6 +39,6 @@ def onedrive_http_request(uri: str,
     if json:
         kwargs['json'] = json
     response = requests.request(method=method, url=base_url + uri, headers=headers, **kwargs)
-    if not response.ok:
+    if not response.ok and not fail_silently:
         raise OnedriveUnavailableException(response=response)
     return response

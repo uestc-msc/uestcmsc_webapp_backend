@@ -1,3 +1,4 @@
+from uestcmsc_webapp_backend.settings import DEBUG, APP_NAME
 from .driveitem import DriveItem
 from .utils import onedrive_http_request
 
@@ -31,4 +32,8 @@ class Drive:
 
 drive = Drive(uri='/me/drive')
 drive_root = drive.root
-app_root = drive.approot
+
+if not DEBUG:
+    app_root = drive.approot
+else:
+    app_root = drive.find_file_by_path(f'/应用/{APP_NAME}_dev')
