@@ -127,6 +127,18 @@ class IsPresenterOrAdminOrReadOnly(BasePermission):
         )
 
 
+class IsUploaderOrPresenterOrAdminOrReadOnly(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return bool(
+            request.method in SAFE_METHODS or
+            request.user and
+            (obj.uploader == request.user or
+             obj.activity.presenter.filter(id=request.user.id) or
+             request.user.is_staff or
+             request.user.is_superuser)
+        )
+
+
 class IsSelfOrAdminOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, user: User):
         return bool(

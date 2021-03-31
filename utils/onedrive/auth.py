@@ -3,10 +3,7 @@ from typing import Union
 
 import requests
 from django.core.cache import cache
-from django.http import Http404
-from rest_framework import status
 from rest_framework.exceptions import APIException
-from rest_framework.response import Response
 
 import config
 from uestcmsc_webapp_backend.settings import DEBUG
@@ -20,7 +17,7 @@ if DEBUG:
     os.environ['NO_PROXY'] = 'login.microsoftonline.com'
 
 
-class OnedriveAuthentication():
+class OnedriveAuthentication:
     client_id = config.ONEDRIVE_CLIENT_ID
     client_secret = config.ONEDRIVE_CLIENT_SECRET
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -60,7 +57,7 @@ class OnedriveAuthentication():
         else:
             log_error(cls.generate_errormsg('获取 Onedrive Access Token 失败', response))
 
-    # access_token 即将过期，用 refresh_token 获取新的 acess_token 和 refresh_token
+    # access_token 即将过期，用 refresh_token 获取新的 access_token 和 refresh_token
     @classmethod
     def refresh_access_token(cls, refresh_token=None):
         if refresh_token is None:

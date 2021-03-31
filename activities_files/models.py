@@ -3,7 +3,7 @@ from activities.models import Activity
 from cloud.models import OnedriveFolder, OnedriveFile
 
 
-class ActivityOnedriveFolder(OnedriveFolder):
+class ActivityFolder( ):
     class Meta:
         verbose_name = '沙龙文件夹'
         verbose_name_plural = '沙龙文件夹'

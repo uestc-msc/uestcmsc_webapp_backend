@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     'activities_comments.apps.ActivitiesCommentsConfig',
     'activities_files.apps.ActivitiesFilesConfig',
     'activities_links.apps.ActivitiesLinksConfig',
-    'gallery.apps.GalleryConfig',
+    'activities_photos.apps.ActivitiesPhotosConfig',
     'users.apps.UsersConfig',
 ]
 
