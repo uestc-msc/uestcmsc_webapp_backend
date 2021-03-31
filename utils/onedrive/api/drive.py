@@ -36,4 +36,5 @@ drive_root = drive.root
 if not DEBUG:
     app_root = drive.approot
 else:
+    # 开发时的测试文件会放到 名字_dev 文件夹下
     app_root = drive.find_file_by_path(f'/应用/{APP_NAME}_dev')

@@ -24,18 +24,23 @@ class DriveItem:
     def find_file_by_id(self, id: str) -> DriveItem:
         return DriveItem(uri=f"{self.uri}/items/{id}")
 
+    # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_search?view=odsp-graph-online
     def search(self, keywords: str, fail_silently=False) -> requests.Response:
         return onedrive_http_request(self.uri + f"/search(q='{keywords}')", fail_silently=fail_silently)
 
+    # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_get?view=odsp-graph-online
     def get_metadata(self, fail_silently=False) -> requests.Response:
         return onedrive_http_request(self.uri, fail_silently=fail_silently)
 
+    # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_list_thumbnails?view=odsp-graph-online
     def get_thumbnail(self, thumb_id=0, size='large', fail_silently=False) -> requests.Response:
         return onedrive_http_request(self.uri + f'/thumbnails/{thumb_id}/{size}', fail_silently=fail_silently)
 
+    # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_list_children?view=odsp-graph-online
     def list_children(self, fail_silently=False) -> requests.Response:
         return onedrive_http_request(self.uri + '/children', fail_silently=fail_silently)
 
+    # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_post_children?view=odsp-graph-online
     def create_directory(self,
                          dirname: str,
                          conflict_behavior: str = 'fail',
@@ -47,6 +52,9 @@ class DriveItem:
             "@microsoft.graph.conflictBehavior": conflict_behavior
         }, fail_silently=fail_silently)
 
+    # 可递归地创建多级文件夹
+    # 成功后返回最底层文件夹的信息，见：
+    # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_post_children?view=odsp-graph-online
     def create_directory_recursive(self, path: str) -> requests.Response:
         # 由于多数时候都只需要创建子文件夹
         # 因此从尝试创建子文件夹开始，从下往上尝试创建
@@ -81,6 +89,7 @@ class DriveItem:
             json['name'] = new_filename
         return onedrive_http_request(self.uri + '/copy', 'POST', json, fail_silently=fail_silently)
 
+    # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_move?view=odsp-graph-online
     def move(self,
              destination: dict,
              new_filename: str = None,
@@ -90,14 +99,17 @@ class DriveItem:
             json['name'] = new_filename
         return onedrive_http_request(self.uri, 'PATCH', json, fail_silently=fail_silently)
 
+    # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_delete?view=odsp-graph-online
     def delete(self, fail_silently=False) -> requests.Response:
         return onedrive_http_request(self.uri, 'DELETE', fail_silently=fail_silently)
 
+    # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_get_content?view=odsp-graph-online
     def download(self, fail_silently=False) -> requests.Response:
         return onedrive_http_request(self.uri + '/content', fail_silently=fail_silently)
 
     # filename 为空时，执行上传操作，文件内容放在 data 中，Onedrive 创建或更新 DriveItem（文件）
     # filename 不为空时，在 DriveItem（目录）上传该文件
+    # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_put_content?view=odsp-graph-online
     def upload(self, data, conflict_behavior: str = 'fail', fail_silently=False) -> requests.Response:
         return onedrive_http_request(self.uri + f'/content?@microsoft.graph.conflictBehavior={conflict_behavior}',
                                      'PUT', data=data, fail_silently=fail_silently)
@@ -129,13 +141,14 @@ class DriveItem:
             "item": {"@microsoft.graph.conflictBehavior": conflict_behavior}
         }, fail_silently=fail_silently)
 
+    # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_createlink?view=odsp-graph-online
     def create_link(self, fail_silently=False) -> requests.Response:
         return onedrive_http_request(self.uri + '/createLink', 'POST', {
             "type": "view",
             "scope": "anonymous"
         }, fail_silently=fail_silently)
 
-    # 注意这个链接还是有 redirect 的过程，所以
+    # 使用的时候需要注意这个链接还是有 redirect 的过程
     def get_download_link(self, fail_silently=False) -> str:
         response = self.create_link(fail_silently=fail_silently)
         share_link = response.json()['link']['webUrl']

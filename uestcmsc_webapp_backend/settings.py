@@ -50,7 +50,9 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'activities.apps.ActivitiesConfig',
     'cloud.apps.CloudConfig',
-    'comment.apps.CommentConfig',
+    'activities_comments.apps.ActivitiesCommentsConfig',
+    'activities_files.apps.ActivitiesFilesConfig',
+    'activities_links.apps.ActivitiesLinksConfig',
     'gallery.apps.GalleryConfig',
     'users.apps.UsersConfig',
 ]

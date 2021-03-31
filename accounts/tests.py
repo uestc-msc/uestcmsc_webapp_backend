@@ -133,13 +133,13 @@ class LoginTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.user, self.admin_user)
         self.admin_user.refresh_from_db()
-        assertUserDetailEqual(self, response.content, self.admin_user)  # 响应报文和实际数据相同
+        assertUserDetailEqual(self, response.content, self.admin_user)  # 应答和实际数据相同
 
         response = tester_login('admin@example.com', 'adminadmin')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.user, self.admin_user)
         self.admin_user.refresh_from_db()
-        assertUserDetailEqual(self, response.content, self.admin_user)  # 响应报文和实际数据相同
+        assertUserDetailEqual(self, response.content, self.admin_user)  # 应答和实际数据相同
 
     def test_login_with_less_argument(self):
         response = Client().post(login_url)

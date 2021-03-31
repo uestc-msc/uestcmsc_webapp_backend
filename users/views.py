@@ -39,7 +39,7 @@ class UserListView(ListAPIView):
 ))
 @method_decorator(name="put", decorator=swagger_auto_schema(
     operation_summary='更新用户信息',
-    operation_description='响应报文和 PATCH 方法相同，但 PUT 要求在请求中提交所有信息',
+    operation_description='应答和 PATCH 方法相同，但 PUT 要求在请求中提交所有信息',
     ))
 @method_decorator(name="patch", decorator=swagger_auto_schema(
     operation_summary='更新用户部分信息',
@@ -109,7 +109,7 @@ def change_password_view(request: Request, id: int) -> Response:
 @swagger_auto_schema(
     method='GET',
     operation_summary='获取用户自身信息',
-    operation_description='获取用户自身的信息，成功返回 200，响应报文和 `/users/<id>` 成功的响应报文相同\n'
+    operation_description='获取用户自身的信息，成功返回 200，应答和 `/users/<id>` 成功的应答相同\n'
                           '注：需要登录（即 Headers 中包含 Cookies: `sessionid: xxxx`），否则返回 403\n',
     responses={200: UserSerializer()}
 )

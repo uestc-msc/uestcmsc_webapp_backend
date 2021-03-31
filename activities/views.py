@@ -4,9 +4,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import filters
 from rest_framework.generics import *
 
-from activities.models import ActivityLink
 from activities.serializer import ActivitySerializer, ActivityAdminSerializer
-from activities.serializer import LinkSerializer
 from utils import *
 from utils.permissions import *
 from utils.swagger import *
@@ -55,7 +53,7 @@ class ActivityListView(ListCreateAPIView):
 ))
 @method_decorator(name="put", decorator=swagger_auto_schema(
     operation_summary='更新沙龙信息',
-    operation_description='响应报文和 PATCH 方法相同，但 PUT 要求在请求中提交所有信息',
+    operation_description='应答和 PATCH 方法相同，但 PUT 要求在请求中提交所有信息',
     request_body=Schema_object(Schema_title,
                                Schema_datetime,
                                Schema_location,
@@ -129,23 +127,23 @@ class ActivityAttenderUpdateView(GenericAPIView):
         return Response(ActivitySerializer(activity).data, status=status.HTTP_200_OK)
 
 
+@method_decorator(name="post", decorator=swagger_auto_schema(
+    operation_summary='用户签到',
+    operation_description='可能会有以下情况：\n'
+                          '1. 签到成功，用户经验+50，每位演讲者经验+10，返回 200'
+                          '2. 已经签过到了，返回 200\n'
+                          '2. 活动不存在，返回 404\n'
+                          '3. POST 数据不包含签到码，返回 400\n'
+                          '4. 非当日活动，返回 403\n'
+                          '5. 演讲者关闭了签到，返回 403\n'
+                          '6. 签到码错误，返回 403\n'
+                          '注：要求登录，否则返回 403',
+    request_body=Schema_object(Schema_check_in_code),
+    responses={201: None, 403: Schema_object(Schema_detail)}
+))
 class ActivityCheckInView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
 
-    @swagger_auto_schema(
-        operation_summary='用户签到',
-        operation_description='可能会有以下情况：\n'
-                              '1. 签到成功，用户经验+50，每位演讲者经验+10，返回 200'
-                              '2. 已经签过到了，返回 200\n'
-                              '2. 活动不存在，返回 404\n'
-                              '3. POST 数据不包含签到码，返回 400\n'
-                              '4. 非当日活动，返回 403\n'
-                              '5. 演讲者关闭了签到，返回 403\n'
-                              '6. 签到码错误，返回 403\n'
-                              '注：要求登录，否则返回 403',
-        request_body=Schema_object(Schema_check_in_code),
-        responses={201: None, 403: Schema_object(Schema_detail)}
-    )
     def post(self, request: Request, id: int) -> Response:
         if not Activity.objects.filter(id=id):
             return Response({"detail": "活动不存在"}, status=status.HTTP_404_NOT_FOUND)
@@ -163,48 +161,3 @@ class ActivityCheckInView(GenericAPIView):
         activity.attender.add(request.user)
         # 经验系统：在做了在做了
         return Response({"detail": "签到成功，经验+50"}, status=status.HTTP_200_OK)
-
-
-@method_decorator(name='post', decorator=swagger_auto_schema(
-    operation_summary='添加沙龙相关链接',
-    operation_description='对 `activity_id` 对应沙龙添加链接\n'
-                          '成功返回 201，沙龙不存在返回 404\n'
-                          '注：需要是沙龙演讲者或管理员，否则返回 403',
-    request_body=Schema_object(Schema_activity_id, Schema_url)
-))
-class ActivityLinkCreateView(GenericAPIView):
-    permission_classes = (IsPresenterOrAdminOrReadOnly,)
-    serializer_class = LinkSerializer
-
-    def post(self, request: Request) -> Response:
-        activity_id = request.data.get('activity_id', None)
-        url = request.data.get('url', None)
-        if not activity_id or not url:
-            return Response({"detail": "activity_id 或 url 参数不存在"}, status=status.HTTP_400_BAD_REQUEST)
-        link = ActivityLink.objects.create(activity_id=activity_id, url=url)
-        serializer = LinkSerializer(link)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-@method_decorator(name="get", decorator=swagger_auto_schema(
-    operation_summary='获取沙龙相关链接'
-))
-@method_decorator(name="put", decorator=swagger_auto_schema(
-    operation_summary='更新沙龙相关链接',
-    operation_description='用于更新对应链接，成功返回 200\n'
-                          '注：需要是沙龙演讲者或管理员，否则返回 403',
-))
-@method_decorator(name="patch", decorator=swagger_auto_schema(
-    operation_summary='更新沙龙相关链接（部分）',
-    operation_description='同 PUT',
-))
-@method_decorator(name="delete", decorator=swagger_auto_schema(
-    operation_summary='删除沙龙相关链接',
-    operation_description='删除 `id` 对应的沙龙相关链接，成功返回 204\n'
-                          '注：需要是沙龙演讲者或管理员，否则返回 403'
-))
-class ActivityLinkDetailView(RetrieveUpdateDestroyAPIView):
-    permission_classes = (IsPresenterOrAdminOrReadOnly,)
-    queryset = ActivityLink.objects.all()
-    serializer_class = LinkSerializer
-    lookup_field = 'id'

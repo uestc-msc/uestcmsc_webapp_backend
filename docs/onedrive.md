@@ -23,6 +23,6 @@
 为了省去文件经过服务器的流量，本后端使用 Onedrive 的[通过上传会话上传大文件](https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_createuploadsession?view=odsp-graph-online) 方案上传文件。前后端和 Onedrive 的交互过程如下：
 
 
-1. 在登陆状态下，前端向后端 `POST /api/cloud/create_upload_session` 发起请求，后端请求 Onedrive 生成一个临时上传对话，并将 Onedrive 的响应报文（格式见上面的链接）转发给前端；
+1. 在登陆状态下，前端向后端 `POST /api/cloud/create_upload_session` 发起请求，后端请求 Onedrive 生成一个临时上传对话，并将 Onedrive 的应答（格式见上面的链接）转发给前端；
 2. 前端按照上面链接所述方法，直接向 Onedrive 上传文件。上传完成后，Onedrive 返回文件的 id 等信息，文件将位于 `/(应用文件夹)/temp` 文件夹；
 3. 前端根据需求（如上传沙龙相关文件、沙龙照片）向对应接口发起请求（请求需包含文件 id），后端将文件移动至每个功能对应的文件夹，并完成后续操作（录入数据库等）。

@@ -62,8 +62,8 @@ Schema_url = {'url': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FOR
 Schema_status = {'status': openapi.Schema(type=openapi.TYPE_STRING, description='状态')}
 Schema_file_id = {'file_id': openapi.Schema(type=openapi.TYPE_STRING, description='文件 id')}
 Schema_filename = {'filename': openapi.Schema(type=openapi.TYPE_STRING, description='文件名')}
-Schema_filetype = {'filetype': openapi.Schema(type=openapi.TYPE_STRING,
-                                                 description='文件类型，可选 `activity_file` `photo`')}
+# Schema_filetype = {'filetype': openapi.Schema(type=openapi.TYPE_STRING,
+#                                                  description='文件类型，可选 `activity_file` `photo`')}
 
 Param_search = openapi.Parameter('search', openapi.IN_QUERY, type=openapi.TYPE_STRING, description='搜索关键字（为空时表示不搜索）')
 Param_page = openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_NUMBER, description='页数（不正确时返回 404）')

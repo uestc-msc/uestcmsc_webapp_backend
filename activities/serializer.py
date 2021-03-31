@@ -1,27 +1,11 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from activities.models import Activity, ActivityLink, ActivityFile
+from activities.models import Activity
+from activities_links.serializer import LinkSerializer
+from activities_files.serializer import ActivityFileSerializer
 from users.serializer import UserBriefSerializer
 from utils.validators import validate_user_id
-
-
-class LinkSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ActivityLink
-        fields = ("id", "url")
-
-    url = serializers.CharField(max_length=512, required=True)
-
-
-class ActivityFileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ActivityFile
-        fields = ('id', 'activity_id', 'filename', 'thumbnail', 'download_link', 'uploader')
-        read_only_fields = fields
-
-    activity_id = serializers.IntegerField(source='activity__id', read_only=True)
-    uploader = UserBriefSerializer(read_only=True)
 
 
 class ActivitySerializer(serializers.ModelSerializer):

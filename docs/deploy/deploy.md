@@ -29,7 +29,7 @@ cd uestcmsc_webapp_backend
 sudo apt-get install libmysqlclient-dev     # Ubuntu 需要安装 libmysqlclient-dev
 sudo yum install python3-devel maria-devel  # CentOS 需要安装 python3-devel maria-devel
 pip3 install -r requirements.txt
-python3 manage.py makemigrations accounts activities cloud comment gallery users --noinput
+python3 manage.py makemigrations accounts activities activities_files activities_link activities_comments cloud gallery users --noinput
 python3 manage.py migrate --noinput
 python3 manage.py collectstatic --noinput --clear
 python manage.py createcachetable

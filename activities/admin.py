@@ -1,7 +1,9 @@
 from django.contrib import admin
 
+from activities_files.models import ActivityFile
+from activities_links.models import ActivityLink
 from gallery.models import ActivityPhoto
-from .models import Activity, ActivityLink, ActivityFile
+from .models import Activity
 
 
 class LinkInline(admin.StackedInline):

@@ -7,7 +7,9 @@ git pull
 sudo python3 -m pip install --upgrade pip
 sudo pip3 install -r requirements.txt
 # 更新数据库、static files
-python3 manage.py makemigrations accounts activities cloud comment gallery users --noinput
+python3 manage.py makemigrations accounts activities \
+        activities_files activities_link activities_comments \
+        cloud gallery users --noinput
 python3 manage.py migrate --noinput
 python3 manage.py collectstatic --noinput --clear --no-post-process
 python3 manage.py crontab add
