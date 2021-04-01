@@ -2,12 +2,17 @@
 
 本文档描述了软件中使用的数据模型。
 
-* 超级用户可通过 Django 提供的 `后端url/admin/` 接口读取除密码外的所有数据、修改所有数据，但需要注意的是，由于前端向后端传输密码前经过 md5，所以绕过前端直接访问后端时，请提前将自己的密码跑 md5。可以在 Python 3 使用如下方法：
+* 超级用户可通过 Django 提供的 `<后端url>/admin/` 接口读取除密码外的所有数据、修改所有数据。
+* 由于前后端的 cookie 是通用的，在前端登录后，访问后端 admin 页面不再需要登录。
+* 如果需要绕过前端直接访问后端，注意到前端向后端传输密码前，经过了 md5 算法（`后端密码 == md5(前端密码)`），请提前计算 md5 值。可以在 Python3 使用如下方法：
 
 ```py
-import hashlib
+# 前端密码
 raw_password='password'
+
+import hashlib
 md5_password=hashlib.md5(raw_password.encode()).hexdigest()
+# 后端密码
 md5_password # '5f4dcc3b5aa765d61d8327deb882cf99'
 ```
 

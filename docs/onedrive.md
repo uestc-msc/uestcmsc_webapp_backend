@@ -8,13 +8,13 @@
 
 ## 前期工作
 
-可参考 [博客](https://blog.lyh543.cn/back-end/onedrive-rest-api/注册应用、用户登录授权)。请将 `重定向 URI` 设置为 `http://localhost:8000/api/cloud/login/` 和 `https://你的域名/api/cloud/login/`。
+可参考 [博客](https://blog.lyh543.cn/back-end/onedrive-rest-api/#注册应用、用户登录授权)。请将 `重定向 URI` 设置为 `http://localhost:8000/api/cloud/login_callback/` 和 `https://你的域名/api//cloud/login_callback/`。
 
-完成后将信息填在 `config.py` 中。
+完成后将 `ONEDRIVE_CLIENT_ID` 和 `ONEDRIVE_CLIENT_SECRET` 填在 `config.py` 中。
 
 运行后端，访问 `localhost:8000/api/cloud/login/` 将被重定向到 Microsoft 登陆界面。
 
-在 Microsoft 登陆授权后跳转到 `localhost:8000/api/cloud/login/`，Django 自动获取 Access Token 和 Refresh Token 后跳转到前端页面 `localhost:8080`（只要跳转成功即表示成功获取），之后就可以享用 Onedrive REST API 了。
+在 Microsoft 登陆授权后跳转到 `localhost:8000/api/cloud/login_callback/`，Django 自动获取 Access Token 和 Refresh Token 后跳转到前端页面 `localhost:8080`（只要跳转成功即表示成功获取），之后就可以享用 Onedrive REST API 了。
 
 ## 本后端提供的接口
 

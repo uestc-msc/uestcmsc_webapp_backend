@@ -2,9 +2,8 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import fields
 
-from utils.asynchronous import asynchronous
-from utils.onedrive import DriveItem, OnedriveUnavailableException
-from utils.onedrive.api import drive
+from cloud.onedrive import DriveItem
+from cloud.onedrive.api import drive
 
 
 class OnedriveFile(models.Model):

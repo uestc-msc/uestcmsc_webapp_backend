@@ -5,7 +5,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from utils.onedrive import temp_directory
+from cloud.onedrive import temp_directory
 from utils.permissions import IsAuthenticated
 from utils.swagger import *
 

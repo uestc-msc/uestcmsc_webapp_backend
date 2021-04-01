@@ -1,14 +1,10 @@
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.generics import *
 
 from activities.serializer import ActivityFileSerializer
-from activities_files.models import ActivityFile
 from activities_files.views import ActivityFileListView, ActivityFileDetailView
 from activities_photos.models import ActivityPhoto
 from activities_photos.serializer import ActivityPhotoSerializer
-from utils.onedrive import drive
-from utils.onedrive.activities import get_or_create_activity_folder
 from utils.permissions import *
 from utils.swagger import *
 

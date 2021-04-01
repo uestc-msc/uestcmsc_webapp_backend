@@ -9,4 +9,5 @@ urlpatterns = [
     path('<int:id>/checkin/', views.ActivityCheckInView.as_view(), name='activity_check_in'),
     path('link/', include('activities_links.urls')),
     path('file/', include('activities_files.urls')),
+    path('photo/', include('activities_photos.urls')),
 ]

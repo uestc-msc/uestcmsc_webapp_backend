@@ -6,7 +6,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from config import FRONTEND_URL
-from utils.onedrive.auth import OnedriveAuthentication
+from cloud.onedrive.auth import OnedriveAuthentication
 from utils.swagger import *
 
 

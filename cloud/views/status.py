@@ -1,13 +1,11 @@
-from django.core.cache import cache
-
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from utils.onedrive.auth import onedrive_access_token_cache_name, \
-    onedrive_refresh_token_cache_name, OnedriveAuthentication
+from cloud.onedrive.auth import OnedriveAuthentication
+from cloud.onedrive.cache import get_access_token
 from utils.swagger import *
 
 
@@ -19,7 +17,7 @@ from utils.swagger import *
 )
 @api_view(['GET'])
 def onedrive_status(request: Request) -> Response:
-    access_token_available = cache.get(onedrive_access_token_cache_name, '') != ''
+    access_token_available = get_access_token()
     refresh_token_available = cache.get(onedrive_refresh_token_cache_name, '') != ''
     if refresh_token_available and not access_token_available:
         OnedriveAuthentication.refresh_access_token()

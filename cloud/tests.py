@@ -1,7 +1,7 @@
 from django.test import SimpleTestCase
 from django.urls import reverse
 
-from utils.onedrive.auth import OnedriveAuthentication
+from cloud.onedrive.auth import OnedriveAuthentication
 
 
 class OnedriveLoginCallbackLinkTest(SimpleTestCase):

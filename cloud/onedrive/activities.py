@@ -2,7 +2,7 @@ from rest_framework.generics import get_object_or_404
 
 from activities.models import Activity
 from activities_files.models import ActivityFolder
-from utils.onedrive import app_root
+from cloud.onedrive import app_root
 
 
 # 获取某活动的文件夹。如果不存在，则创建

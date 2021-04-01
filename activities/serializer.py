@@ -11,7 +11,7 @@ from utils.validators import validate_user_id
 class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
-        fields = ("id", "title", "datetime", "location", "presenter", "attender", "check_in_open", "link", "file")
+        fields = ("id", "title", "datetime", "location", "presenter", "attender", "check_in_open", "link", "file", "photo")
         read_only_fields = ("id", "attender", "link", "file")
 
     title = serializers.CharField(max_length=150)

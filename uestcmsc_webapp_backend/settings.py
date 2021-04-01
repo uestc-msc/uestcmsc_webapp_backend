@@ -166,7 +166,7 @@ MANAGERS = MANAGERS
 
 # Django crontab (not available for windows)
 CRONJOBS = [
-    ('*/40 * * * *', 'utils.onedrive.refresh_access_token')
+    ('*/40 * * * *', 'cloud.onedrive.refresh_access_token')
 ]
 
 # Auto Append Slash

@@ -4,8 +4,8 @@ from rest_framework.generics import *
 
 from activities.serializer import ActivityFileSerializer
 from activities_files.models import ActivityFile
-from utils.onedrive import drive
-from utils.onedrive.activities import get_or_create_activity_folder
+from cloud.onedrive import drive
+from cloud.onedrive.activities import get_or_create_activity_folder
 from utils.permissions import *
 from utils.swagger import *
 

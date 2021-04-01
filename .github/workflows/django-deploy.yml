@@ -2,7 +2,7 @@ name: Deploy To Server
 
 env:
   ACTION_DEPLOY_KEY: ${{ secrets.ACTION_DEPLOY_KEY }}
-  SERVER_DOMAIN: api.uestc-msc.top
+  SERVER_DOMAIN: api.uestc-msc.com
   SERVER_USERNAME: root
 
 on:
