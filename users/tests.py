@@ -11,7 +11,8 @@ from django.utils.timezone import now
 
 from users.models import UserProfile
 from utils import Pagination
-from utils.tester import tester_signup, tester_login, assertUserDetailEqual
+from activities.tests import assertUserDetailEqual
+from accounts.tests import tester_signup, tester_login
 from utils.unittest import *
 
 user_list_url = reverse('user_list')

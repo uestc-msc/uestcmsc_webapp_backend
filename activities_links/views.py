@@ -21,10 +21,14 @@ class ActivityLinkListView(GenericAPIView):
 
     def post(self, request: Request) -> Response:
         activity_id = request.data.get('activity_id', None)
-        url = request.data.get('url', None)
-        if not activity_id or not url:
-            return Response({"detail": "activity_id 或 url 参数不存在"}, status=status.HTTP_400_BAD_REQUEST)
-        link = ActivityLink.objects.create(activity_id=activity_id, url=url)
+        if not activity_id:                                             # 检查 activity_id 参数是否存在
+            return Response({"detail": "activity_id 参数不存在"}, status=status.HTTP_400_BAD_REQUEST)
+        activity = get_object_or_404(Activity, id=activity_id)          # 检查沙龙是否存在
+        self.check_object_permissions(request, activity)                # 检查权限
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)                       # 检查其他参数是否合法
+
+        link = ActivityLink.objects.create(activity=activity, **serializer.data)
         serializer = LinkSerializer(link)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -47,7 +51,7 @@ class ActivityLinkListView(GenericAPIView):
                           '注：需要是沙龙演讲者或管理员，否则返回 403'
 ))
 class ActivityLinkDetailView(RetrieveUpdateDestroyAPIView):
-    permission_classes = (IsPresenterOrAdminOrReadOnly,)
+    permission_classes = (IsActivityPresenterOrAdminOrReadOnly,)
     queryset = ActivityLink.objects.all()
     serializer_class = LinkSerializer
     lookup_field = 'id'

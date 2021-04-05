@@ -4,7 +4,7 @@ import requests
 from rest_framework.exceptions import APIException
 
 import config
-from cloud.onedrive.cache import get_access_token, set_access_token, set_refresh_token
+from cloud.onedrive.cache import get_access_token, set_access_token, set_refresh_token, get_refresh_token
 from uestcmsc_webapp_backend.settings import DEBUG
 from utils.log import log_error, log_info
 from utils.mail import send_system_alert_mail_to_managers
@@ -54,7 +54,7 @@ class OnedriveAuthentication:
     @classmethod
     def refresh_access_token(cls, refresh_token=None):
         if refresh_token is None:
-            refresh_token = get_access_token()
+            refresh_token = get_refresh_token()
             if refresh_token is None:
                 return  # 如果本身没有 refresh_token，就不提醒管理员了；删除 refresh_token 已经提醒过了
         response = requests.post('https://login.microsoftonline.com/common/oauth2/v2.0/token',
@@ -87,6 +87,7 @@ class OnedriveAuthentication:
             set_access_token(access_token, timeout=access_token_expires_in)
             set_refresh_token(refresh_token, timeout=None)
             log_info('Onedrive 获取 Access Token 和 Refresh Token 成功')
+            return
 
 
 class OnedriveUnavailableException(APIException):

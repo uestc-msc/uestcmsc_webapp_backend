@@ -1,15 +1,18 @@
+import json
+import re
 from datetime import timedelta
 from time import sleep
 
 from django.contrib.auth.models import User
 from django.core import mail
+from django.http import response
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils.timezone import now
 
 from users.models import ResetPasswordRequest, UserProfile
+from users.serializer import UserSerializer
 from utils.random import generate_uuid
-from utils.tester import tester_signup, assertUserDetailEqual, tester_login, pop_token_from_virtual_mailbox
 
 signup_url = reverse('signup')
 login_url = reverse('login')
@@ -17,6 +20,63 @@ logout_url = reverse('logout')
 forget_password_url = reverse('forget_password')
 reset_password_url = reverse('reset_password')
 user_detail_url = lambda id: reverse('user_detail', args={id: id})
+
+#######################
+
+
+def assertUserDetailEqual(cls: TestCase, content: str, user: User):
+    """
+    比较 REST API 返回的 User 和数据库中 User 是否相同
+    """
+    # 时间正确性不能通过字符串比较
+    compare_fields = set(UserSerializer.Meta.fields) - {'last_login', 'date_joined', 'username', 'student_id'}
+    json1 = json.loads(content)
+    json2 = UserSerializer(user).data
+    for field in compare_fields:
+        cls.assertEqual(json1[field], json2[field])  # 获取的数据和数据库中的数据在 json 意义上等价
+    from activities.tests import assertDatetimeEqual
+    assertDatetimeEqual(cls, json1['date_joined'], user.date_joined)
+    assertDatetimeEqual(cls, json1['last_login'], user.last_login)
+    if not(user.is_staff or user.is_superuser or int(user.id) == int(json1['id'])):
+        cls.assertEqual(json1['username'], '***')
+        cls.assertEqual(cls, json1['student_id'], user.userprofile.student_id[0:4])
+    else:
+        cls.assertEqual(json1['username'], user.username)
+        cls.assertEqual(json1['student_id'], user.userprofile.student_id)
+
+
+def tester_signup(username: str = "admin@example.com", password: str = "adminadmin", first_name: str = 'admin',
+                  student_id: str = "20210101", client: Client = Client()) -> response:
+    """
+    测试时用于创建一个默认账户。也可以用于给定参数创建账户
+    """
+    url = reverse('signup')
+    return client.post(url, {'username': username, 'password': password, 'first_name': first_name,
+                             'student_id': student_id})
+
+
+def tester_login(username: str = 'admin@example.com', password: str = "adminadmin",
+                 client: Client = Client()) -> response:
+    """
+    测试时用于登录一个默认账户。也可以用于给定参数登录指定账户
+    """
+    url = reverse('login')
+    return client.post(url, {'username': username, 'password': password})
+
+
+def pop_token_from_virtual_mailbox(test_function):
+    """
+    测试时从虚拟的邮箱中找到验证码，并清空测试发件箱
+    虚拟邮箱：https://docs.djangoproject.com/zh-hans/3.1/topics/testing/tools/#email-services
+    """
+    sleep(1)
+    test_function.assertEqual(len(mail.outbox), 1)
+    message = mail.outbox[0].message().as_string()
+    mail.outbox = []
+    token = re.findall('token=.+', message)[0][6:]
+    return token
+
+########################################
 
 
 # 注册相关测试

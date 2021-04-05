@@ -1,27 +1,87 @@
 import json
+from datetime import datetime, timedelta
 from math import ceil
 from random import randrange
-from typing import List, Dict
+from typing import List, Dict, Union
 from unittest import mock
 
 import pytz
 from django.contrib.auth.models import User, AnonymousUser
+from django.http import response
 from django.test import TestCase, Client
 from django.urls import reverse
-from datetime import datetime, timedelta
-
 from django.utils.timezone import now
 
+from accounts.tests import tester_signup, tester_login
 from activities.models import Activity
+from activities.serializer import ActivitySerializer
 from users.models import UserProfile
+from users.serializer import UserBriefSerializer
 from utils import Pagination
-from utils.tester import tester_signup, tester_create_activity, tester_login, assertActivityDetailEqual, assertDatetimeEqual
 
 activity_list_url = reverse('activity_list')
 activity_detail_url = lambda id: reverse('activity_detail', args=[id])
 activity_detail_admin_url = lambda id: reverse('activity_detail_admin', args=[id])
 activity_check_in_url = lambda id: reverse('activity_check_in', args=[id])
 activity_detail_admin_check_in_url = lambda id: reverse('activity_detail_admin_check_in', args=[id])
+
+##########################
+
+
+def tester_create_activity(title: str = "测试沙龙", date_time: Union[str, datetime] = "2021-01-01T08:00:00.000+08:00",
+                           location: str = "GitHub", presenter_ids: List[int] = None,
+                           client: Client = None) -> response:
+    """
+    测试时用于创建一个默认活动。也可以用于给定参数创建活动
+    """
+    if client is None:
+        client = Client()
+        tester_signup(client=client)
+        tester_login(client=client)
+    if presenter_ids is None:
+        presenter_ids = [User.objects.first().id]
+    presenter = list(map(lambda id: {"id": id}, presenter_ids))
+    url = reverse('activity_list')
+    data = {'title': title, 'datetime': date_time, 'location': location, 'presenter': presenter}
+    return client.post(url, data, content_type='application/json')
+
+
+def assertDatetimeEqual(cls: TestCase, dt1: Union[datetime, str], dt2: datetime):
+    """
+    比较两个时间是否在误差 1s 内相等（因为 Django 模型的 datetime 只精确到 1ms）
+    """
+    if dt1 is None:
+        return dt2 is None
+    if type(dt1) is str:
+        dt1 = datetime.fromisoformat(dt1)
+    cls.assertLess(abs(dt1 - dt2), timedelta(seconds=1), f"{dt1}!={dt2}")
+
+def assertActivityDetailEqual(cls: TestCase, content: Union[str, Dict], activity: Activity):
+    """
+    比较 REST API 返回的 Activity 和数据库中的 Activity 是否相同
+    """
+    # 时间正确性不能通过字符串比较
+    compare_fields = set(ActivitySerializer.Meta.fields) - {'presenter', 'attender', 'datetime'}
+
+    if type(content) is dict:
+        json1 = content
+    else:
+        json1 = json.loads(content)
+    json2 = ActivitySerializer(activity).data
+    for field in compare_fields:
+        cls.assertEqual(json1[field], json2[field])  # 获取的数据和数据库中的数据在 json 意义上等价
+    # 比较 datetime 是否正确
+    assertDatetimeEqual(cls, json1['datetime'], activity.datetime)
+    # 比较 presenter 是否正确
+    presenter_data_response = set(map(lambda u: u['id'], json1['presenter']))
+    presenter_data_db = set(map(lambda u: u.id, activity.presenter.all()))
+    cls.assertEqual(presenter_data_response, presenter_data_db)
+    # 比较 attender 是否正确
+    attender_data_response = UserBriefSerializer(data=json1['attender'], many=True).initial_data
+    attender_data_db = UserBriefSerializer(activity.attender.all(), many=True).data
+    cls.assertEqual(attender_data_response, attender_data_db)
+
+#########################
 
 
 class ActivityListTest(TestCase):
@@ -294,7 +354,7 @@ class ActivityDetailTest(TestCase):
             response = client.get(activity_detail_url(23333))
             self.assertEqual(response.status_code, 404)
 
-    # 只测试 patch
+    # 只测试 patch，不测试 put
     def test_patch_unauthorized(self):
         response = tester_create_activity(presenter_ids=[self.presenter.id, self.another_presenter.id])
         activity_id = response.json()['id']
@@ -384,13 +444,47 @@ class ActivityDetailTest(TestCase):
             json_response = response.json()
             self.assertNotEqual(json_response[field], example)  # GET 的数据并没有被修改
 
-    # 删除就懒得写测试了
-    def test_delete_activity(self):
-        pass
+    def test_delete(self):
+        client = Client()
+        client.force_login(self.superuser)
+        first_id = Activity.objects.first().id
+        old_count = Activity.objects.count()
+        response = client.delete(activity_detail_url(first_id))
+        self.assertEqual(response.status_code, 204)                 # 删除成功 返回 204
+        self.assertEqual(Activity.objects.count(), old_count - 1)   # 活动数量--
 
+    def test_delete_404(self):
+        client = Client()
+        client.force_login(self.superuser)
+        old_count = Activity.objects.count()
+        response = client.delete(activity_detail_url(23333))
+        self.assertEqual(response.status_code, 404)             # 活动不存在 返回 404
+        self.assertEqual(Activity.objects.count(), old_count)   # 活动数量不变
 
-class ActivityLinkTest(TestCase):
-    pass
+    def test_delete_unauthorized(self):
+        user_permissions = [  # 以六种用户身份去遍历
+            [AnonymousUser, False],
+            [self.superuser, True],
+            [self.admin, True],
+            [self.simple_user, False],
+            [self.presenter, True],
+            [self.another_presenter, True]
+        ]
+
+        for user, permission in user_permissions:
+            response = tester_create_activity(presenter_ids=[self.presenter.id, self.another_presenter.id])
+            activity_id = response.json()['id']
+
+            client = Client()
+            if user != AnonymousUser:
+                client.force_login(user)
+
+            response = client.delete(activity_detail_url(activity_id))
+            if permission:
+                self.assertEqual(response.status_code, 204, f"user={user}")
+            else:
+                self.assertEqual(response.status_code, 403, f"user={user}")
+                Activity.objects.get(id=activity_id).delete()
 
 
 class ActivityDetailAdmin(TestCase):

@@ -12,7 +12,7 @@ class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
         fields = ("id", "title", "datetime", "location", "presenter", "attender", "check_in_open", "link", "file", "photo")
-        read_only_fields = ("id", "attender", "link", "file")
+        read_only_fields = ("id", "attender", "link", "file", "photo")
 
     title = serializers.CharField(max_length=150)
     location = serializers.CharField(max_length=50)

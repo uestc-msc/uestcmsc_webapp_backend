@@ -63,8 +63,11 @@ def superuser_required(function: Callable = None):
     actual_decorator = __user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
     return actual_decorator(function)
 
+#######################################
 
-# 一系列 Django REST Framework 权限 (Permission)
+# 一系列 Django REST Framework 权限 (Accounts 部分)
+
+
 class IsAuthenticatedOrPostOnly(BasePermission):
     def has_permission(self, request, view):
         return bool(
@@ -110,6 +113,19 @@ class IsOwnerOrAdminOrReadOnly(BasePermission):
         )
 
 
+class IsSelfOrAdminOrReadOnly(BasePermission):
+    def has_object_permission(self, request, view, user: User):
+        return bool(
+            request.method in SAFE_METHODS or
+            request.user and
+            (user == request.user or request.user.is_staff or request.user.is_superuser)
+        )
+
+#######################################
+
+# 一系列 Django REST Framework 权限 (Activities 部分)
+
+
 class IsPresenterOrAdmin(BasePermission):
     def has_object_permission(self, request, view, activity: Activity):
         return bool(
@@ -126,6 +142,10 @@ class IsPresenterOrAdminOrReadOnly(BasePermission):
             (activity.presenter.filter(id=request.user.id) or request.user.is_staff or request.user.is_superuser)
         )
 
+#######################################
+
+# 一系列 Django REST Framework 权限 (Activity things 部分)
+
 
 class IsUploaderOrPresenterOrAdminOrReadOnly(BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -139,10 +159,10 @@ class IsUploaderOrPresenterOrAdminOrReadOnly(BasePermission):
         )
 
 
-class IsSelfOrAdminOrReadOnly(BasePermission):
-    def has_object_permission(self, request, view, user: User):
+class IsActivityPresenterOrAdminOrReadOnly(BasePermission):
+    def has_object_permission(self, request, view, obj):
         return bool(
             request.method in SAFE_METHODS or
             request.user and
-            (user == request.user or request.user.is_staff or request.user.is_superuser)
+            (obj.activity.presenter.filter(id=request.user.id) or request.user.is_staff or request.user.is_superuser)
         )
