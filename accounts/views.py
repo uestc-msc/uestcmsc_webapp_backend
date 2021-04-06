@@ -61,7 +61,8 @@ def signup(request: Request) -> Response:
     operation_summary='登录',
     operation_description='成功返回 200\n'
                           '失败（账户或密码错误）返回 401\n'
-                          '注 1：成功返回的字段中还包含了 csrftoken，请将其按照[文档](https://docs.djangoproject.com/zh-hans/3.1/ref/csrf/)所示方法加入 cookie 和 header'
+                          '注 1：成功返回的字段中还包含了 csrftoken，请将其按照'
+                          '[文档](https://docs.djangoproject.com/zh-hans/3.1/ref/csrf/)所示方法加入 cookie 和 header'
                           '注 2：一个已登录的用户 A 尝试 login 账户 B 失败后，仍具有账户 A 的凭证。',
     request_body=Schema_object(Schema_email, Schema_password),
     responses={200: UserSerializer()}
@@ -134,10 +135,10 @@ def forget_password(request: Request) -> Response:
             ResetPasswordRequest.objects \
                     .filter(ipv4addr=ipv4addr, request_time__gte=one_day_ago) \
                     .count() >= 10:
-        return Response({"detail": "发送邮件过于频繁"}, status=status.HTTP_403_FORBIDDEN)
+        return Response({"detail": "发送邮件过于频繁（同 IP 1 分钟内只能发送 1 封，24 小时内只能发送 10 封）"}, status=status.HTTP_403_FORBIDDEN)
     # 生成 token
     token = generate_uuid()
-    # 发送邮件并存储记录
+    # （异步）发送邮件并存储记录
     send_reset_password_email(email, user.first_name, token)
     reset_password_request = ResetPasswordRequest(user=user, ipv4addr=ipv4addr, token=token, request_time=current)
     reset_password_request.save()

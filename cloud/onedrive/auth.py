@@ -1,13 +1,16 @@
+import logging
 from typing import Union
 
 import requests
 from rest_framework.exceptions import APIException
 
 import config
-from cloud.onedrive.cache import get_access_token, set_access_token, set_refresh_token, get_refresh_token
+from cloud.onedrive.cache import set_access_token, set_refresh_token, get_refresh_token
 from uestcmsc_webapp_backend.settings import DEBUG
-from utils.log import log_error, log_info
 from utils.mail import send_system_alert_mail_to_managers
+
+
+logger = logging.getLogger(__name__)
 
 
 class OnedriveAuthentication:
@@ -48,7 +51,8 @@ class OnedriveAuthentication:
             from cloud.onedrive import initialize_onedrive
             initialize_onedrive()
         else:
-            log_error(cls.generate_errormsg('获取 Onedrive Access Token 失败', response))
+            error_info = cls.generate_errormsg('获取 Onedrive Access Token 失败', response)
+            logger.error(error_info)
 
     # access_token 即将过期，用 refresh_token 获取新的 access_token 和 refresh_token
     @classmethod
@@ -68,7 +72,7 @@ class OnedriveAuthentication:
             cls._save_token(response)
         else:
             error_info = cls.generate_errormsg('刷新 Onedrive Access Token 失败', response)
-            log_error(error_info)
+            logger.error(error_info)
             send_system_alert_mail_to_managers(error_info)
             return
 
@@ -80,13 +84,13 @@ class OnedriveAuthentication:
         refresh_token = response_json.get('refresh_token', None)
         if access_token is None or refresh_token is None:
             error_info = cls.generate_errormsg('获取的 Onedrive Access Token 或 Refresh Token 为 None', response)
-            log_error(error_info)
+            logger.error(error_info)
             send_system_alert_mail_to_managers(error_info)
             return
         else:
             set_access_token(access_token, timeout=access_token_expires_in)
             set_refresh_token(refresh_token, timeout=None)
-            log_info('Onedrive 获取 Access Token 和 Refresh Token 成功')
+            logger.info('Onedrive 获取 Access Token 和 Refresh Token 成功')
             return
 
 

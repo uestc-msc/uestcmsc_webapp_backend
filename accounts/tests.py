@@ -5,7 +5,6 @@ from time import sleep
 
 from django.contrib.auth.models import User
 from django.core import mail
-from django.http import response
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils.timezone import now
@@ -46,7 +45,7 @@ def assertUserDetailEqual(cls: TestCase, content: str, user: User):
 
 
 def tester_signup(username: str = "admin@example.com", password: str = "adminadmin", first_name: str = 'admin',
-                  student_id: str = "20210101", client: Client = Client()) -> response:
+                  student_id: str = "20210101", client: Client = Client()):
     """
     测试时用于创建一个默认账户。也可以用于给定参数创建账户
     """
@@ -56,25 +55,12 @@ def tester_signup(username: str = "admin@example.com", password: str = "adminadm
 
 
 def tester_login(username: str = 'admin@example.com', password: str = "adminadmin",
-                 client: Client = Client()) -> response:
+                 client: Client = Client()):
     """
     测试时用于登录一个默认账户。也可以用于给定参数登录指定账户
     """
     url = reverse('login')
     return client.post(url, {'username': username, 'password': password})
-
-
-def pop_token_from_virtual_mailbox(test_function):
-    """
-    测试时从虚拟的邮箱中找到验证码，并清空测试发件箱
-    虚拟邮箱：https://docs.djangoproject.com/zh-hans/3.1/topics/testing/tools/#email-services
-    """
-    sleep(1)
-    test_function.assertEqual(len(mail.outbox), 1)
-    message = mail.outbox[0].message().as_string()
-    mail.outbox = []
-    token = re.findall('token=.+', message)[0][6:]
-    return token
 
 ########################################
 
@@ -151,10 +137,8 @@ class SignUpTests(TestCase):
         self.assertSetEqual(error_argument, {'username'})
 
     def test_wechat_user_sign_up_and_bind_account(self):
-        u = User.objects.create(username='qwerty',
-                                first_name='wechat_user')
-        up = UserProfile.objects.create(user=u,
-                                        student_id='6789')
+        u = User.objects.create(username='qwerty', first_name='wechat_user')
+        UserProfile.objects.create(user=u, student_id='6789')
 
         response = tester_signup('wechat_user@example.com', 'wechat_user0', 'wechat_user', '6789')
         self.assertEqual(response.status_code, 200)
@@ -163,10 +147,8 @@ class SignUpTests(TestCase):
         assertUserDetailEqual(self, response.content, u)
 
     def test_wechat_user_sign_up_with_invalid_field(self):
-        u = User.objects.create_user(username='qwerty',
-                                     first_name='wechat_user')
-        up = UserProfile.objects.create(user=u,
-                                        student_id='6789')
+        u = User.objects.create_user(username='qwerty', first_name='wechat_user')
+        UserProfile.objects.create(user=u, student_id='6789')
 
         response = tester_signup('wechat_user@example.com', 'wechat_user0', 'wechatuser', '6789')  # 姓名错误
         self.assertEqual(response.status_code, 400)
@@ -183,7 +165,7 @@ class SignUpTests(TestCase):
 # 登录相关测试
 class LoginTest(TestCase):
     def setUp(self):
-        response = tester_signup('admin@example.com', 'adminadmin', 'Admin', '20210101')
+        tester_signup('admin@example.com', 'adminadmin', 'Admin', '20210101')
         self.admin_user = User.objects.get(username='admin@example.com')
         tester_signup('user@example.com', 'useruser', 'User', '20210104')
         self.another_user = User.objects.get(username='user@example.com')
@@ -291,6 +273,28 @@ class ResetPasswordTest(TestCase):
         tester_signup(self.email, self.password, 'Admin', '20210101')
         self.user = User.objects.first()
 
+    def pop_token_from_virtual_mailbox(self) -> str:
+        """
+        测试时从虚拟的邮箱中找到验证码，并清空测试发件箱
+        无论有没有用到 token，发送了邮件后都需要调用该函数，否则可能因为没有 sleep 导致邮件堆积，产生错误
+        虚拟邮箱：https://docs.djangoproject.com/zh-hans/3.1/topics/testing/tools/#email-services
+        """
+        timeout = 10
+        while len(mail.outbox) == 0:
+            sleep(0.5)  # 由于发送邮件是异步操作，所以要等待直至邮件到达
+            timeout -= 0.5
+            self.assertGreater(timeout, 0, "No mail sent, timeout.")
+
+        self.assertEqual(len(mail.outbox), 1, mail.outbox)
+        message = mail.outbox[0].message().as_string()
+        mail.outbox = []
+        token = re.findall('token=.+', message)[0][6:]
+        return token
+
+    def assertNoEmailSent(self):
+        sleep(1)
+        self.assertEqual(len(mail.outbox), 0)
+
     # Django test 中不会真的发送邮件
     # 文档：https://docs.djangoproject.com/zh-hans/3.1/topics/testing/tools/#email-services
     def test_forget_password_whole_process(self):
@@ -303,18 +307,15 @@ class ResetPasswordTest(TestCase):
         c2 = Client()
         response = c2.post(forget_password_url, {"email": self.email})
         self.assertEqual(response.status_code, 202)
-
-        token = pop_token_from_virtual_mailbox(self)
-        response = c2.post(reset_password_url, {
-            "token": token
-        })
-        self.assertEqual(response.status_code, 200)  # token 有效
+        token = self.pop_token_from_virtual_mailbox()   # 获取 token
+        response = c2.post(reset_password_url, {"token": token})
+        self.assertEqual(response.status_code, 200)     # 验证 token 有效
 
         response = c2.post(reset_password_url, {
             "token": token,
             "new_password": "new_password"
         })
-        self.assertEqual(response.status_code, 204)  # 修改成功
+        self.assertEqual(response.status_code, 204)  # 修改密码成功
 
         response = client.get('/')
         self.assertEqual(response.wsgi_request.user.is_authenticated, False)  # 此时第一个 Client 理应被下线
@@ -323,10 +324,8 @@ class ResetPasswordTest(TestCase):
 
         response = tester_login(self.email, self.password)
         self.assertEqual(response.status_code, 401)
-
         response = tester_login(self.email, 'new_password')
         self.assertEqual(response.status_code, 200)
-
         response = tester_login(self.email, self.password)
         self.assertEqual(response.status_code, 401)
 
@@ -343,7 +342,7 @@ class ResetPasswordTest(TestCase):
         self.assertEqual(response.status_code, 400)
         response = client.post(forget_password_url, {"email": self.email})
         self.assertEqual(response.status_code, 202)
-        mail.outbox.clear()
+        self.pop_token_from_virtual_mailbox()
 
     def test_validate_token_with_invalid_field(self):
         tester_signup("another@example.com", "anotheruser", "another", "20201231")
@@ -352,7 +351,7 @@ class ResetPasswordTest(TestCase):
         client = Client()
         response = client.post(forget_password_url, {"email": self.email})
         self.assertEqual(response.status_code, 202)
-        user_token = pop_token_from_virtual_mailbox(self)
+        user_token = self.pop_token_from_virtual_mailbox()
 
         # 假 token
         response = client.post(reset_password_url, {
@@ -419,7 +418,7 @@ class ResetPasswordTest(TestCase):
             # 发两封，assert第一封成功第二封失败
             response = Client().post(forget_password_url, {"email": self.user.username})
             self.assertEqual(response.status_code, 202)
-            mail.outbox.clear()
+            self.pop_token_from_virtual_mailbox()
             response = Client().post(forget_password_url, {"email": self.user.username})
             self.assertEqual(response.status_code, 403)
             # 将最近一封改为更远的时间，重新发两封，第一封成功第二封失败
@@ -428,9 +427,10 @@ class ResetPasswordTest(TestCase):
             rpr.save()
             response = Client().post(forget_password_url, {"email": self.user.username})
             self.assertEqual(response.status_code, 202)
-            mail.outbox.clear()
+            self.pop_token_from_virtual_mailbox()
             self.assertEqual(ResetPasswordRequest.objects.filter(request_time__lt=now() - timedelta(days=1)).count(),
                              0)  # 保证过期的邮件有被清除
+
             response = Client().post(forget_password_url, {"email": self.user.username})
             self.assertEqual(response.status_code, 403)
             ResetPasswordRequest.objects.all().delete()

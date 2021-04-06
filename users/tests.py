@@ -6,14 +6,11 @@ from typing import List, Dict
 from django.contrib.auth.models import AnonymousUser, User
 from django.test import TestCase, Client
 from django.urls import reverse
-
 from django.utils.timezone import now
 
+from accounts.tests import tester_signup, tester_login, assertUserDetailEqual
 from users.models import UserProfile
 from utils import Pagination
-from activities.tests import assertUserDetailEqual
-from accounts.tests import tester_signup, tester_login
-from utils.unittest import *
 
 user_list_url = reverse('user_list')
 user_detail_url = lambda user_id: reverse('user_detail', args=[user_id])
@@ -34,14 +31,12 @@ class UserListTest(TestCase):
 
     def test_get_user_list(self):
         tester_signup('account@example.com', 'qwerty', 'account', '1234567')
-        u = User.objects.filter(username='account@example.com')[0]
-        u.userprofile.experience = 1
-        u.userprofile.save()
+        user = User.objects.filter(username='account@example.com')[0]
+        user.userprofile.experience = 1
+        user.userprofile.save()
         tester_signup('account1@example.com', 'qwerty', 'account1', '12345678')
-        u = User(username="user@example.com", first_name="user")
-        up = UserProfile(user=u, student_id='233', about="你好，世界！", experience="5")
-        u.save()
-        up.save()
+        user = User.objects.create(username="user@example.com", first_name="user")
+        UserProfile.objects.create(user=user, student_id='233', about="你好，世界！", experience="5")
         self.assertEqual(User.objects.count(), 4)
 
         client = Client()
@@ -51,7 +46,6 @@ class UserListTest(TestCase):
         tester_login(client=client)
         response = client.get(user_list_url)
         self.assertEqual(response.status_code, 200)
-        import json
         json_content = response.json()
         results = json_content['results']
         self.check_order(results)
@@ -61,7 +55,7 @@ class UserListTest(TestCase):
         # 定义验证返回结果的函数
         def check_search_queryset(_results: List[Dict], keywords: str):
             self.check_order(_results)
-            results_id = list(map(lambda u: str(u['id']), _results))
+            results_id = list(map(lambda _u: str(_u['id']), _results))
             for u in User.objects.all():  # 检查 user 是否应当出现在搜索结果中，结果是否和预期相同
                 self.assertEqual(str(u.id) in results_id,
                                  keywords in (u.username + u.first_name + u.userprofile.student_id),
@@ -71,10 +65,8 @@ class UserListTest(TestCase):
                                  "student_id=%s" % (keywords, u.username, u.first_name, u.userprofile.student_id))
 
         for i in range(1, 40):
-            u = User(username="user%d@example.com" % i, first_name="user%d" % (i + 78))
-            up = UserProfile(user=u, student_id=str(i + 55), about="你好，世界！", experience=randrange(1, 1000))
-            u.save()
-            up.save()
+            user = User.objects.create(username="user%d@example.com" % i, first_name="user%d" % (i + 78))
+            UserProfile.objects.create(user=user, student_id=str(i + 55), about="你好，世界！", experience=randrange(1, 1000))
         self.assertEqual(User.objects.count(), 40)
 
         client = Client()
@@ -98,10 +90,8 @@ class UserListTest(TestCase):
     def test_pagination(self):
         total_users = 56
         for i in range(1, total_users):
-            u = User(username="user%d@example.com" % i, first_name="user")
-            up = UserProfile(user=u, student_id=str(i), experience=randrange(0, 1000))
-            u.save()
-            up.save()
+            user = User.objects.create(username="user%d@example.com" % i, first_name="user")
+            UserProfile.objects.create(user=user, student_id=str(i), experience=randrange(0, 1000))
         self.assertEqual(User.objects.count(), total_users)
 
         client = Client()
@@ -225,7 +215,6 @@ class UserDetailTest(TestCase):
                                     data={field: example},
                                     content_type='application/json')
             self.assertEqual(response.status_code, 200)
-            modify_user = User.objects.get(first_name="user")
             response = client.get(user_detail_url(user.id))
             json_response = response.json()
             self.assertNotEqual(json_response[field], example)
@@ -274,7 +263,6 @@ class UserDetailTest(TestCase):
                                     data={field: example},
                                     content_type='application/json')
             self.assertEqual(response.status_code, 400, field + example)
-            modify_user = User.objects.get(first_name="user")
             response = client.get(user_detail_url(user.id))
             json_response = response.json()
             self.assertNotEqual(json_response[field], example)
@@ -373,7 +361,7 @@ class ChangePasswordTest(TestCase):
         response = c1.patch(change_password_url(self.user.id),
                             {"old_password": "ADMINADMIN",
                              "new_password": self.password},
-                                content_type='application/json')
+                            content_type='application/json')
         self.assertEqual(response.status_code, 204)  # 将密码改回来
         response = tester_login(self.email, self.password, c1)
         self.assertEqual(response.status_code, 200)
@@ -383,10 +371,10 @@ class ChangePasswordTest(TestCase):
         response = tester_login(self.email, self.password, c1)
         self.assertEqual(response.wsgi_request.user, self.user)
         response = c1.patch(change_password_url(self.user.id),
-                     {"old_password": self.password,
-                      "new_password": "ADMINADMIN",
-                      "new_email": "qwerty@example.com"},
-                     content_type='application/json')
+                            {"old_password": self.password,
+                             "new_password": "ADMINADMIN",
+                             "new_email": "qwerty@example.com"},
+                            content_type='application/json')
         self.assertEqual(response.status_code, 204)
 
         response = tester_login(self.email, self.password)
@@ -397,7 +385,6 @@ class ChangePasswordTest(TestCase):
 
     def test_reset_password_with_invalid_field(self):
         tester_signup("another@example.com", "anotheruser", "another", "20201231")
-        anotheruser = User.objects.filter(username="another@example.com").first()
         # 没上线
         client = Client()
         response = client.patch(change_password_url(self.user.id),

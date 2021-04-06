@@ -1,3 +1,4 @@
+import logging
 from smtplib import SMTPException
 
 from django.core.mail import send_mail, mail_admins
@@ -5,7 +6,8 @@ from django.core.mail import send_mail, mail_admins
 from config import *
 from uestcmsc_webapp_backend.settings import APP_NAME
 from utils.asynchronous import asynchronous
-from utils.log import log_error, log_info
+
+logger = logging.getLogger(__name__)
 
 
 @asynchronous
@@ -28,9 +30,9 @@ def send_reset_password_email(receipt_email: str, name: str, token: str):
                   from_email=MAILBOX_EMAIL,
                   recipient_list=[receipt_email],
                   fail_silently=False)
-        log_info(f"向 {name} ({receipt_email}) 发送邮件成功")
+        logger.info(f"向 {name} ({receipt_email}) 发送邮件成功")
     except SMTPException as e:
-        log_error(f"向 {name} ({receipt_email}) 发送邮件失败：{e}")
+        logger.error(f"向 {name} ({receipt_email}) 发送邮件失败：{e}")
 
 
 @asynchronous
@@ -42,9 +44,7 @@ def send_system_alert_mail_to_managers(info: str):
               f"请及时处理。感谢您对{APP_NAME}的维护！\n" \
               f"电子科技大学微软学生俱乐部"
     try:
-        success_count = mail_admins(subject=f"[{APP_NAME}] 系统警告",
-                                    message=message,
-                                    fail_silently=True)
-        log_info(f"向 MANAGERS（共 {len(MANAGERS)} 人）发送邮件")
+        mail_admins(subject=f"[{APP_NAME}] 系统警告", message=message, fail_silently=True)
+        logger.info(f"向 MANAGERS（共 {len(MANAGERS)} 人）发送邮件")
     except SMTPException as e:
-        log_error(f"向 MANAGERS 发送邮件失败：{e}")
+        logger.error(f"向 MANAGERS 发送邮件失败：{e}")
