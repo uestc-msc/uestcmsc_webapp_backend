@@ -6,45 +6,12 @@ env:
   SERVER_USERNAME: root
 
 on:
-  push:
-    branches: [ master, dev ]
+  pull_request:
+    types: [labeled]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    services:
-      mysql:
-        image: mysql:8
-        env:
-          MYSQL_ROOT_PASSWORD: testtest
-          MYSQL_DATABASE: uestcmsc_webapp
-        ports:
-          - 3306:3306
-
-    strategy:
-      max-parallel: 3
-      matrix:
-        python-version: [3.7, 3.8, 3.9]
-
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install Dependencies
-        run: |
-          cp config.template.py config.py
-          python3 -m pip install --upgrade pip
-          pip3 install -r requirements.txt
-      - name: Run Tests
-        run: |
-          python3 manage.py makemigrations accounts activities cloud comment gallery users --noinput
-          python3 manage.py migrate --noinput
-          python3 manage.py test --noinput --parallel 4 # push 时不跑 coverage
-
   deploy:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'deploy') }}
     needs: test
     runs-on: ubuntu-latest
 
