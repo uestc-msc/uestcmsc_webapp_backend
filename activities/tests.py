@@ -2,22 +2,19 @@ import json
 from datetime import datetime, timedelta
 from math import ceil
 from random import randrange
-from typing import List, Dict, Union
+from typing import List, Dict
 from unittest import mock
 
 import pytz
 from django.contrib.auth.models import User, AnonymousUser
-from django.http import response
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils.timezone import now
 
-from accounts.tests import tester_signup, tester_login
 from activities.models import Activity
-from activities.serializer import ActivitySerializer
 from users.models import UserProfile
-from users.serializer import UserBriefSerializer
 from utils import Pagination
+from utils.tests import tester_create_activity, ActivityTestCase, tester_signup, tester_login
 
 activity_list_url = reverse('activity_list')
 activity_detail_url = lambda id: reverse('activity_detail', args=[id])
@@ -25,78 +22,18 @@ activity_detail_admin_url = lambda id: reverse('activity_detail_admin', args=[id
 activity_check_in_url = lambda id: reverse('activity_check_in', args=[id])
 activity_detail_admin_check_in_url = lambda id: reverse('activity_detail_admin_check_in', args=[id])
 
-##########################
 
-
-def tester_create_activity(title: str = "测试沙龙", date_time: Union[str, datetime] = "2021-01-01T08:00:00.000+08:00",
-                           location: str = "GitHub", presenter_ids: List[int] = None,
-                           client: Client = None) -> response:
-    """
-    测试时用于创建一个默认活动。也可以用于给定参数创建活动
-    """
-    if client is None:
-        client = Client()
-        tester_signup(client=client)
-        tester_login(client=client)
-    if presenter_ids is None:
-        presenter_ids = [User.objects.first().id]
-    presenter = list(map(lambda id: {"id": id}, presenter_ids))
-    url = reverse('activity_list')
-    data = {'title': title, 'datetime': date_time, 'location': location, 'presenter': presenter}
-    return client.post(url, data, content_type='application/json')
-
-
-def assertDatetimeEqual(cls: TestCase, dt1: Union[datetime, str], dt2: datetime):
-    """
-    比较两个时间是否在误差 1s 内相等（因为 Django 模型的 datetime 只精确到 1ms）
-    """
-    if dt1 is None:
-        return dt2 is None
-    if type(dt1) is str:
-        dt1 = datetime.fromisoformat(dt1)
-    cls.assertLess(abs(dt1 - dt2), timedelta(seconds=1), f"{dt1}!={dt2}")
-
-def assertActivityDetailEqual(cls: TestCase, content: Union[str, Dict], activity: Activity):
-    """
-    比较 REST API 返回的 Activity 和数据库中的 Activity 是否相同
-    """
-    # 时间正确性不能通过字符串比较
-    compare_fields = set(ActivitySerializer.Meta.fields) - {'presenter', 'attender', 'datetime'}
-
-    if type(content) is dict:
-        json1 = content
-    else:
-        json1 = json.loads(content)
-    json2 = ActivitySerializer(activity).data
-    for field in compare_fields:
-        cls.assertEqual(json1[field], json2[field])  # 获取的数据和数据库中的数据在 json 意义上等价
-    # 比较 datetime 是否正确
-    assertDatetimeEqual(cls, json1['datetime'], activity.datetime)
-    # 比较 presenter 是否正确
-    presenter_data_response = set(map(lambda u: u['id'], json1['presenter']))
-    presenter_data_db = set(map(lambda u: u.id, activity.presenter.all()))
-    cls.assertEqual(presenter_data_response, presenter_data_db)
-    # 比较 attender 是否正确
-    attender_data_response = UserBriefSerializer(data=json1['attender'], many=True).initial_data
-    attender_data_db = UserBriefSerializer(activity.attender.all(), many=True).data
-    cls.assertEqual(attender_data_response, attender_data_db)
-
-#########################
-
-
-class ActivityListTest(TestCase):
+class ActivityListTest(ActivityTestCase):
+    # 检查 results 是否是按时间、地点降序排列的
     def check_order(self, results: List[Dict]):
-        """
-        检查 results 是否是按时间、地点降序排列的
-        """
         date_time = list(map(lambda a: datetime.fromisoformat(a["datetime"]), results))
         self.assertEqual(sorted(date_time, reverse=True), date_time)
 
     def setUp(self):
-        response = tester_signup()
-        response = tester_signup("superuser@example.com", "supersuper", "superuser", "1297391")
-        response = tester_signup("user@example.com", "useruser", "user", "1297392")
-        response = tester_signup("anotheruser@example.com", "anotheruser", "anotheruser", "1297393")
+        tester_signup()
+        tester_signup("superuser@example.com", "supersuper", "superuser", "1297391")
+        tester_signup("user@example.com", "useruser", "user", "1297392")
+        tester_signup("anotheruser@example.com", "anotheruser", "anotheruser", "1297393")
         self.ids = list(map(lambda u: u.id, User.objects.all()))
         self.assertEqual(Activity.objects.count(), 0)
 
@@ -111,7 +48,7 @@ class ActivityListTest(TestCase):
         # 比较 POST 值和数据库中的值
         activity = Activity.objects.first()
         self.assertEqual(activity.title, "First Activity")
-        assertDatetimeEqual(self, activity.datetime, date_time)
+        self.assertDatetimeEqual(activity.datetime, date_time)
         self.assertEqual(activity.location, "MSFT")
         presenter_ids = set(map(lambda u: u.id, activity.presenter.all()))
         self.assertSetEqual(presenter_ids, set(self.ids[0:2]))
@@ -119,7 +56,7 @@ class ActivityListTest(TestCase):
         self.assertEqual(bool(activity.check_in_code), True)
         self.assertEqual(activity.attender.count(), 0)
         # 比较数据库中的值和返回值
-        assertActivityDetailEqual(self, response.content, activity)
+        self.assertActivityDetailEqual(response.content, activity)
 
     def test_create_activity_unauthorized(self):
         response = tester_create_activity(client=Client())
@@ -230,7 +167,7 @@ class ActivityListTest(TestCase):
 
         for activity_dict in results:  # 检查每一个活动
             activity = Activity.objects.get(id=activity_dict['id'])
-            assertActivityDetailEqual(self, activity_dict, activity)
+            self.assertActivityDetailEqual(activity_dict, activity)
 
     def test_search(self):
         # 定义验证返回结果的函数
@@ -315,7 +252,7 @@ class ActivityListTest(TestCase):
                 self.assertEqual(r1.status_code, 404, f"page={page}, page_size={page_size}")
 
 
-class ActivityDetailTest(TestCase):
+class ActivityDetailTest(ActivityTestCase):
     def setUp(self):
         # 设置用户的权限
         self.superuser = User.objects.create_user(username="superuser@aka.ms", first_name="superuser",
@@ -345,7 +282,7 @@ class ActivityDetailTest(TestCase):
         tester_login(client=client)
         for a in Activity.objects.all():
             response = client.get(activity_detail_url(a.id))
-            assertActivityDetailEqual(self, response.content, a)
+            self.assertActivityDetailEqual(response.content, a)
 
     def test_get_404(self):
         client = Client()
@@ -413,7 +350,7 @@ class ActivityDetailTest(TestCase):
             self.assertEqual(response.status_code, 200)
             last_json[field] = example
             activity = Activity.objects.first()
-            assertActivityDetailEqual(self, last_json, activity)  # 比较更新后数据库和预期值
+            self.assertActivityDetailEqual(last_json, activity)  # 比较更新后数据库和预期值
 
     def test_patch_with_invalid_value(self):
         field_and_invalid_example = [
@@ -606,7 +543,7 @@ class ActivityCheckInTest(TestCase):
         client.force_login(self.user)
         for example in invalid_examples:
             response = client.post(activity_check_in_url(self.activity.id), {
-                "check_in_code": invalid_examples
+                "check_in_code": example
             })
             self.assertEqual(response.status_code, 403)  # 签到码错误，签到失败
             self.activity.refresh_from_db()

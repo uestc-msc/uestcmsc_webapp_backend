@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.core.cache import cache
 
 __onedrive_access_token_name = 'onedrive__access_token'
@@ -5,12 +7,12 @@ __onedrive_refresh_token_name = 'onedrive__refresh_token'
 
 
 # 从缓存获取 access_token，不存在则返回 None
-def get_access_token() -> str:
+def get_access_token() -> Optional[str]:
     return cache.get(__onedrive_access_token_name, None)
 
 
 # 从缓存获取 refresh_token，不存在则返回 None
-def get_refresh_token() -> str:
+def get_refresh_token() -> Optional[str]:
     return cache.get(__onedrive_refresh_token_name, None)
 
 

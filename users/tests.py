@@ -8,7 +8,8 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils.timezone import now
 
-from accounts.tests import tester_signup, tester_login, assertUserDetailEqual
+from accounts.tests import assertUserDetailEqual
+from utils.tests import tester_signup, tester_login
 from users.models import UserProfile
 from utils import Pagination
 
@@ -163,7 +164,7 @@ class UserDetailTest(TestCase):
         tester_login(client=client)
         for u in User.objects.all():
             response = client.get(user_detail_url(u.id))
-            assertUserDetailEqual(self, response.content, u)
+            self.assertUserDetailEqual(response.content, u)
 
     # 只测试 patch
     def test_patch_unauthorized(self):

@@ -1,11 +1,11 @@
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
+from rest_framework.generics import GenericAPIView
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from cloud.onedrive import temp_directory
+from cloud.onedrive import onedrive_temp_directory
 from utils.permissions import IsAuthenticated
 from utils.swagger import *
 
@@ -20,7 +20,7 @@ from utils.swagger import *
     request_body=Schema_object(Schema_filename),
     responses={200: Schema_None}
 ))
-class OnedriveFileView(APIView):
+class OnedriveFileView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request: Request) -> Response:
@@ -28,5 +28,5 @@ class OnedriveFileView(APIView):
         if filename is None:
             return Response({"detail":"需要参数 filename"}, status=status.HTTP_400_BAD_REQUEST)
         # 先将文件上传至 temp 文件夹，在 done 时再将文件移动至对应位置
-        response = temp_directory.find_file_by_path(filename).create_upload_session('replace')
+        response = onedrive_temp_directory.find_file_by_path(filename).create_upload_session('replace')
         return Response(response.content, status=status.HTTP_200_OK)

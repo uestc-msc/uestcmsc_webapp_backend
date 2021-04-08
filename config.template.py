@@ -31,7 +31,3 @@ MANAGERS = [('小灰晖', 'lyh543@outlook.com')]
 # OneDrive 部分配置
 ONEDRIVE_CLIENT_ID = "815e752f-945e-11eb-8b82-8cc84bbcb0e4"
 ONEDRIVE_CLIENT_SECRET = "1234567890!#$%^&*()qwertyuio"
-
-# CI 部分 Onedrive 的测试邮箱
-ONEDRIVE_TEST_EMAIL = "uestcmsc_test@outlook.com"
-ONEDRIVE_TEST_PASSWORD = "HelloWorld!"

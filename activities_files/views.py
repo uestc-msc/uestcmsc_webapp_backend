@@ -4,12 +4,13 @@ from rest_framework.generics import *
 
 from activities.serializer import ActivityFileSerializer
 from activities_files.models import ActivityFile
-from cloud.onedrive import drive
+from cloud.onedrive import onedrive_drive
 from cloud.onedrive.activities import get_or_create_activity_folder
 from utils.permissions import *
 from utils.swagger import *
 
 
+# 该类被 ActivityPhotoListView 复用
 @method_decorator(name='post', decorator=swagger_auto_schema(
     operation_summary='添加沙龙文件',
     operation_description='对 `activity_id` 对应沙龙添加文件\n'
@@ -22,7 +23,6 @@ from utils.swagger import *
 class ActivityFileListView(GenericAPIView):
     permission_classes = (IsPresenterOrAdminOrReadOnly,)
     serializer_class = ActivityFileSerializer
-    model_class = ActivityFile
 
     def post(self, request: Request) -> Response:
         activity_id = request.data.get('activity_id', None)
@@ -32,9 +32,9 @@ class ActivityFileListView(GenericAPIView):
         # 获取活动文件夹
         folder = get_or_create_activity_folder(activity_id)
         # 将文件移动至活动文件夹（并验证有效性）
-        filename = drive.find_file_by_id(file_id).move(folder.id, fail_silently=False).json()['name']
+        filename = onedrive_drive.find_file_by_id(file_id).move(folder.id, fail_silently=False).json()['name']
         # 创建数据库记录
-        file = self.model_class.objects.create(file_id=file_id, filename=filename, user=request.user)
+        file = self.serializer_class.Meta.model.objects.create(file_id=file_id, filename=filename, user=request.user)
         # 获取文件其他信息
         file.collect_info()
 

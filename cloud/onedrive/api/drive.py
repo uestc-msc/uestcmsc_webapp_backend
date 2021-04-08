@@ -1,9 +1,9 @@
 from uestcmsc_webapp_backend.settings import DEBUG, APP_NAME
-from .driveitem import DriveItem
+from .driveitem import OnedriveDriveItem
 from .request import onedrive_http_request
 
 
-class Drive:
+class OnedriveDrive:
     uri = ''
 
     def __init__(self, uri):
@@ -13,28 +13,28 @@ class Drive:
         return self.uri
 
     @property
-    def root(self) -> DriveItem:
-        return DriveItem(uri=f"{self.uri}/root")
+    def root(self) -> OnedriveDriveItem:
+        return OnedriveDriveItem(uri=f"{self.uri}/root")
 
     @property
-    def approot(self) -> DriveItem:
-        return DriveItem(uri=f"{self.uri}/special/approot")
+    def _approot(self) -> OnedriveDriveItem:
+        return OnedriveDriveItem(uri=f"{self.uri}/special/approot")
 
-    def find_file_by_id(self, id: str) -> DriveItem:
-        return DriveItem(uri=f"{self.uri}/items/{id}")
+    def find_file_by_id(self, id: str) -> OnedriveDriveItem:
+        return OnedriveDriveItem(uri=f"{self.uri}/items/{id}")
 
-    def find_file_by_path(self, path: str) -> DriveItem:
+    def find_file_by_path(self, path: str) -> OnedriveDriveItem:
         return self.root.find_file_by_path(path)
 
     def search(self, keywords: str):
         return onedrive_http_request(self.uri+f"/search(q='{keywords}')")
 
 
-drive = Drive(uri='/me/drive')
-drive_root = drive.root
+onedrive_drive = OnedriveDrive(uri='/me/drive')
+onedrive_root = onedrive_drive.root
 
-if not DEBUG:
-    app_root = drive.approot
-else:
+if DEBUG:
     # 开发时的测试文件会放到 名字_dev 文件夹下
-    app_root = drive.find_file_by_path(f'/应用/{APP_NAME}_dev')
+    onedrive_approot = onedrive_drive.find_file_by_path(f'/应用/{APP_NAME}_dev')
+else:
+    onedrive_approot = onedrive_drive._approot

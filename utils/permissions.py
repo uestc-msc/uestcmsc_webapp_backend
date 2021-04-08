@@ -63,7 +63,7 @@ def superuser_required(function: Callable = None):
     actual_decorator = __user_passes_test(lambda u: u.is_authenticated and u.is_superuser)
     return actual_decorator(function)
 
-#######################################
+########################################
 
 # 一系列 Django REST Framework 权限 (Accounts 部分)
 
@@ -121,7 +121,7 @@ class IsSelfOrAdminOrReadOnly(BasePermission):
             (user == request.user or request.user.is_staff or request.user.is_superuser)
         )
 
-#######################################
+########################################
 
 # 一系列 Django REST Framework 权限 (Activities 部分)
 
@@ -142,7 +142,7 @@ class IsPresenterOrAdminOrReadOnly(BasePermission):
             (activity.presenter.filter(id=request.user.id) or request.user.is_staff or request.user.is_superuser)
         )
 
-#######################################
+########################################
 
 # 一系列 Django REST Framework 权限 (Activity things 部分)
 

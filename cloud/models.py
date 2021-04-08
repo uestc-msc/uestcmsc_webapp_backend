@@ -2,8 +2,8 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import fields
 
-from cloud.onedrive import DriveItem
-from cloud.onedrive.api import drive
+from cloud.onedrive import OnedriveDriveItem
+from cloud.onedrive.api import onedrive_drive
 
 
 class OnedriveFile(models.Model):
@@ -18,8 +18,8 @@ class OnedriveFile(models.Model):
 
     # 链接到 onedrive file
     @property
-    def driveitem(self) -> DriveItem:
-        return drive.find_file_by_id(self.id)
+    def driveitem(self) -> OnedriveDriveItem:
+        return onedrive_drive.find_file_by_id(self.id)
 
     # 获取 thumbnail 和 download_link
     def collect_info(self):
@@ -36,5 +36,5 @@ class OnedriveFolder(models.Model):
 
     # 链接到 onedrive file
     @property
-    def driveitem(self) -> DriveItem:
-        return drive.find_file_by_id(self.id)
+    def driveitem(self) -> OnedriveDriveItem:
+        return onedrive_drive.find_file_by_id(self.id)

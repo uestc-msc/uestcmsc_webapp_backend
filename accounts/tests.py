@@ -1,4 +1,3 @@
-import json
 import re
 from datetime import timedelta
 from time import sleep
@@ -10,8 +9,8 @@ from django.urls import reverse
 from django.utils.timezone import now
 
 from users.models import ResetPasswordRequest, UserProfile
-from users.serializer import UserSerializer
 from utils.random import generate_uuid
+from utils.tests import tester_signup, tester_login, UserTestCase
 
 signup_url = reverse('signup')
 login_url = reverse('login')
@@ -20,57 +19,13 @@ forget_password_url = reverse('forget_password')
 reset_password_url = reverse('reset_password')
 user_detail_url = lambda id: reverse('user_detail', args={id: id})
 
-#######################
-
-
-def assertUserDetailEqual(cls: TestCase, content: str, user: User):
-    """
-    比较 REST API 返回的 User 和数据库中 User 是否相同
-    """
-    # 时间正确性不能通过字符串比较
-    compare_fields = set(UserSerializer.Meta.fields) - {'last_login', 'date_joined', 'username', 'student_id'}
-    json1 = json.loads(content)
-    json2 = UserSerializer(user).data
-    for field in compare_fields:
-        cls.assertEqual(json1[field], json2[field])  # 获取的数据和数据库中的数据在 json 意义上等价
-    from activities.tests import assertDatetimeEqual
-    assertDatetimeEqual(cls, json1['date_joined'], user.date_joined)
-    assertDatetimeEqual(cls, json1['last_login'], user.last_login)
-    if not(user.is_staff or user.is_superuser or int(user.id) == int(json1['id'])):
-        cls.assertEqual(json1['username'], '***')
-        cls.assertEqual(cls, json1['student_id'], user.userprofile.student_id[0:4])
-    else:
-        cls.assertEqual(json1['username'], user.username)
-        cls.assertEqual(json1['student_id'], user.userprofile.student_id)
-
-
-def tester_signup(username: str = "admin@example.com", password: str = "adminadmin", first_name: str = 'admin',
-                  student_id: str = "20210101", client: Client = Client()):
-    """
-    测试时用于创建一个默认账户。也可以用于给定参数创建账户
-    """
-    url = reverse('signup')
-    return client.post(url, {'username': username, 'password': password, 'first_name': first_name,
-                             'student_id': student_id})
-
-
-def tester_login(username: str = 'admin@example.com', password: str = "adminadmin",
-                 client: Client = Client()):
-    """
-    测试时用于登录一个默认账户。也可以用于给定参数登录指定账户
-    """
-    url = reverse('login')
-    return client.post(url, {'username': username, 'password': password})
-
-########################################
-
 
 # 注册相关测试
-class SignUpTests(TestCase):
+class SignUpTests(UserTestCase):
     def test_sign_up(self):
         response = tester_signup()
         self.assertEqual(User.objects.count(), 1)
-        assertUserDetailEqual(self, response.content, User.objects.first())
+        self.assertUserDetailEqual(response.content, User.objects.first())
 
     def test_sign_up_with_empty_field(self):
         response = Client().post(signup_url)
@@ -144,7 +99,7 @@ class SignUpTests(TestCase):
         self.assertEqual(response.status_code, 200)
         u.refresh_from_db()
         self.assertEqual(u.username, 'wechat_user@example.com')
-        assertUserDetailEqual(self, response.content, u)
+        self.assertUserDetailEqual(response.content, u)
 
     def test_wechat_user_sign_up_with_invalid_field(self):
         u = User.objects.create_user(username='qwerty', first_name='wechat_user')
@@ -163,7 +118,7 @@ class SignUpTests(TestCase):
 
 
 # 登录相关测试
-class LoginTest(TestCase):
+class LoginTest(UserTestCase):
     def setUp(self):
         tester_signup('admin@example.com', 'adminadmin', 'Admin', '20210101')
         self.admin_user = User.objects.get(username='admin@example.com')
@@ -175,13 +130,13 @@ class LoginTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.user, self.admin_user)
         self.admin_user.refresh_from_db()
-        assertUserDetailEqual(self, response.content, self.admin_user)  # 应答和实际数据相同
+        self.assertUserDetailEqual(response.content, self.admin_user)  # 应答和实际数据相同
 
         response = tester_login('admin@example.com', 'adminadmin')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.wsgi_request.user, self.admin_user)
         self.admin_user.refresh_from_db()
-        assertUserDetailEqual(self, response.content, self.admin_user)  # 应答和实际数据相同
+        self.assertUserDetailEqual(response.content, self.admin_user)  # 应答和实际数据相同
 
     def test_login_with_less_argument(self):
         response = Client().post(login_url)
@@ -307,9 +262,9 @@ class ResetPasswordTest(TestCase):
         c2 = Client()
         response = c2.post(forget_password_url, {"email": self.email})
         self.assertEqual(response.status_code, 202)
-        token = self.pop_token_from_virtual_mailbox()   # 获取 token
+        token = self.pop_token_from_virtual_mailbox()  # 获取 token
         response = c2.post(reset_password_url, {"token": token})
-        self.assertEqual(response.status_code, 200)     # 验证 token 有效
+        self.assertEqual(response.status_code, 200)  # 验证 token 有效
 
         response = c2.post(reset_password_url, {
             "token": token,

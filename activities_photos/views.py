@@ -22,7 +22,6 @@ from utils.swagger import *
 class ActivityPhotoListView(ActivityFileListView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = ActivityPhotoSerializer
-    model_class = ActivityPhoto
 
 
 # 连视图也复用 ActivityFileDetailView 了

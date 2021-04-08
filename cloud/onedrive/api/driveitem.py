@@ -5,7 +5,7 @@ import requests
 from .request import validate_path, onedrive_http_request
 
 
-class DriveItem:
+class OnedriveDriveItem:
     def __init__(self, uri: str = None):
         self.uri = uri
 
@@ -13,17 +13,17 @@ class DriveItem:
         return self.uri
 
     # 根据路径找到文件（夹）
-    def find_file_by_path(self, path: str) -> DriveItem:
+    def find_file_by_path(self, path: str) -> OnedriveDriveItem:
         path = validate_path(path)
         if path == '/':
-            return DriveItem(uri=self.uri)
+            return OnedriveDriveItem(uri=self.uri)
         uri = f"{self.uri}:{path}:"  # 如果 self.uri 自带 ':' 和后面形成了 '::'，应该去掉
         uri = uri.replace('::', '')
-        return DriveItem(uri=uri)
+        return OnedriveDriveItem(uri=uri)
 
     # 根据 DriveItem id 找到文件（夹）
-    def find_file_by_id(self, id: str) -> DriveItem:
-        return DriveItem(uri=f"{self.uri}/items/{id}")
+    def find_file_by_id(self, id: str) -> OnedriveDriveItem:
+        return OnedriveDriveItem(uri=f"{self.uri}/items/{id}")
 
     # 在当前目录下进行搜索
     # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_search?view=odsp-graph-online

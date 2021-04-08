@@ -1,5 +1,6 @@
+from utils.tests import OnedriveTestCase
 
 
-from django.test import TestCase
-
-# Create your tests here.
+class ActivityFileTest(OnedriveTestCase):
+    def test(self):
+        self.upload_file()
