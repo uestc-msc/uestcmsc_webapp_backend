@@ -12,6 +12,7 @@ python3 manage.py makemigrations accounts activities \
         cloud users --noinput
 python3 manage.py migrate --noinput
 python3 manage.py collectstatic --noinput --clear --no-post-process
+python3 manage.py createcachetable
 # python3 manage.py crontab add
 # 重启后端服务
 sudo systemctl stop uestcmsc_webapp_backend

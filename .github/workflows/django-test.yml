@@ -40,6 +40,7 @@ jobs:
                 activities_files activities_photos activities_links activities_comments \
                 cloud users --noinput
         python3 manage.py migrate --noinput
+        python3 manage.py createcachetable
         coverage run --source=./ manage.py test --noinput
     - name: Coverage Report
       run: |
