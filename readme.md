@@ -1,8 +1,12 @@
 # 阮薇薇点名啦 后端
 
-![Deploy To Server](https://github.com/uestc-msc/uestcmsc_webapp_backend/workflows/Deploy%20To%20Server/badge.svg)
+![Django Test](https://github.com/uestc-msc/uestcmsc_webapp_backend/workflows/Django%20Test/badge.svg)
+
+![Language](https://img.shields.io/badge/Language-Python%203.9-yellow.svg)
 
 <a href="http://www.djangoproject.com/"><img src="https://www.djangoproject.com/m/img/badges/djangomade124x25.gif" border="0" alt="Made with Django." title="Made with Django." /></a>
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 本 API 遵循[语义化版本控制](https://semver.org/lang/zh-CN/)。
 

@@ -4,8 +4,8 @@ from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from cloud.onedrive.auth import OnedriveAuthentication
-from cloud.onedrive.cache import get_access_token, get_refresh_token
+from cloud.onedrive.api.auth import OnedriveAuthentication
+from cloud.onedrive.api.cache import get_access_token, get_refresh_token
 from utils.swagger import *
 
 

@@ -15,7 +15,7 @@ from config import *
 
 # 应用名称和版本号
 APP_NAME = "阮薇薇点名啦"
-API_VERSION = "v0.1.1"
+API_VERSION = "v0.2.0 alpha"
 USER_DEFAULT_AVATAR = "https://raw.githubusercontent.com/uestc-msc/uestcmsc_webapp_backend/lyh543/static/ruanweiwei.jpg"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -165,9 +165,9 @@ EMAIL_USE_SSL = MAILBOX_USE_SSL
 MANAGERS = MANAGERS
 
 # Django crontab (not available for windows)
-CRONJOBS = [
-    ('*/40 * * * *', 'cloud.onedrive.refresh_access_token')
-]
+# CRONJOBS = [
+#     ('*/40 * * * *', 'cloud.onedrive.refresh_access_token') # 目前采用使用时刷新 access_token 替代定时刷新
+# ]
 
 # Auto Append Slash
 APPEND_SLASH = True

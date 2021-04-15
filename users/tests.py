@@ -8,7 +8,6 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils.timezone import now
 
-from accounts.tests import assertUserDetailEqual
 from utils.tests import tester_signup, tester_login
 from users.models import UserProfile
 from utils import Pagination

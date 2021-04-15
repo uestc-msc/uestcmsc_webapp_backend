@@ -32,12 +32,14 @@ class ActivityFileListView(GenericAPIView):
         # 获取活动文件夹
         folder = get_or_create_activity_folder(activity_id)
         # 将文件移动至活动文件夹（并验证有效性）
+        # 这里懒得考虑活动文件夹在 Onedrive 被删的异常情况
+        # TODO: 考虑重名的情况
         filename = onedrive_drive.find_file_by_id(file_id).move(folder.id, fail_silently=False).json()['name']
         # 创建数据库记录
         file = self.serializer_class.Meta.model.objects.create(file_id=file_id, filename=filename, user=request.user)
         # 获取文件其他信息
         file.collect_info()
-
+        # 获取全部信息后返回 serializer
         serializer = self.serializer_class(file)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 

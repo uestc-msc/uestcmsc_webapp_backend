@@ -52,7 +52,7 @@ class OnedriveDriveItem:
                          dirname: str,
                          conflict_behavior: str = 'fail',
                          fail_silently=False) -> requests.Response:
-        assert conflict_behavior in ('fail', 'replace' 'rename')
+        assert conflict_behavior in ('fail', 'replace', 'rename')
         return onedrive_http_request(self.uri + '/children', 'POST', {
             "name": dirname,
             "folder": {},
@@ -87,23 +87,25 @@ class OnedriveDriveItem:
         return response
 
     # 复制文件，可指定新文件名
+    # 如果发生文件冲突，会 fail
     # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_copy?view=odsp-graph-online
     def copy(self,
-             destination_id: str,
+             dest_dir_id: str,
              new_filename: str = None,
              fail_silently=False) -> requests.Response:
-        json = {"parentReference": {"id": destination_id}}
+        json = {"parentReference": {"id": dest_dir_id}}
         if new_filename:
             json['name'] = new_filename
         return onedrive_http_request(self.uri + '/copy', 'POST', json, fail_silently=fail_silently)
 
     # 移动文件，可指定新文件名
+    # 如果发生文件冲突，会 fail
     # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_move?view=odsp-graph-online
     def move(self,
-             destination_id: str,
+             dest_dir_id: str,
              new_filename: str = None,
              fail_silently=False) -> requests.Response:
-        json = {"parentReference": {"id": destination_id}}
+        json = {"parentReference": {"id": dest_dir_id}}
         if new_filename:
             json['name'] = new_filename
         return onedrive_http_request(self.uri, 'PATCH', json, fail_silently=fail_silently)
@@ -132,7 +134,7 @@ class OnedriveDriveItem:
                        filename: str = None,
                        conflict_behavior: str = 'fail',
                        fail_silently=False) -> requests.Response:
-        assert conflict_behavior in ('fail', 'replace' 'rename')
+        assert conflict_behavior in ('fail', 'replace', 'rename')
         json = {
             "@microsoft.graph.sourceUrl": source_url,
             "@microsoft.graph.conflictBehavior": conflict_behavior,
@@ -148,7 +150,7 @@ class OnedriveDriveItem:
     def create_upload_session(self,
                               conflict_behavior: str = 'fail',
                               fail_silently=False) -> requests.Response:
-        assert conflict_behavior in ('fail', 'replace' 'rename')
+        assert conflict_behavior in ('fail', 'replace', 'rename')
         return onedrive_http_request(self.uri + '/createUploadSession', 'POST', {
             "item": {"@microsoft.graph.conflictBehavior": conflict_behavior}
         }, fail_silently=fail_silently)

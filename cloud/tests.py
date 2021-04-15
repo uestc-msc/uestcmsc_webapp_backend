@@ -2,7 +2,7 @@ from django.test import SimpleTestCase, Client
 from django.urls import reverse
 
 from cloud.onedrive import *
-from cloud.onedrive.auth import OnedriveAuthentication
+from cloud.onedrive.api.auth import OnedriveAuthentication
 from utils.tests import OnedriveTestCase
 
 onedrive_status_url = reverse('onedrive_status')

@@ -1,6 +1,8 @@
 # config.py 包含了密码等信息，不应当公开！！！！！
 # 务必把 config.py 加入 .gitignore!
 
+import os
+
 # DJANGO_SECRET_KEY，见 https://docs.djangoproject.com/en/3.1/ref/settings/#std:setting-SECRET_KEY
 DJANGO_SECRET_KEY = "23333333333333333333333333333333333333333333333333"
 DJANGO_DEBUGGING_MODE = True

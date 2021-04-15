@@ -4,15 +4,15 @@ from os import path
 from typing import Union, List, Dict
 from unittest.case import skipIf
 
+import requests.models
 from django.contrib.auth.models import User
 from django.test import Client, SimpleTestCase, TestCase
 from django.urls import reverse
 
-from accounts.tests import signup_url, login_url
 from activities.models import Activity
 from activities.serializer import ActivitySerializer
 from cloud.onedrive import *
-from cloud.onedrive.cache import get_access_token, get_refresh_token, set_access_token, set_refresh_token
+from cloud.onedrive.api.cache import get_access_token, get_refresh_token, set_access_token, set_refresh_token
 from uestcmsc_webapp_backend.settings import APP_NAME
 from users.serializer import UserBriefSerializer, UserSerializer
 
@@ -22,23 +22,27 @@ from users.serializer import UserBriefSerializer, UserSerializer
 
 # 测试时用于创建一个默认账户。也可以用于给定参数创建账户
 def tester_signup(username: str = "admin@example.com", password: str = "adminadmin", first_name: str = 'admin',
-                  student_id: str = "20210101", client: Client = None):
+                  student_id: str = "20210101", client: Client = None) -> requests.Response:
     if client is None:
         client = Client()
+    from accounts.tests import signup_url
     return client.post(signup_url, {'username': username, 'password': password,
                                     'first_name': first_name, 'student_id': student_id})
 
 
 # 测试时用于登录一个默认账户。也可以用于给定参数登录指定账户
-def tester_login(username: str = 'admin@example.com', password: str = "adminadmin", client: Client = None):
+def tester_login(username: str = 'admin@example.com', password: str = "adminadmin",
+                 client: Client = None) -> requests.Response:
     if client is None:
         client = Client()
+    from accounts.tests import login_url
     return client.post(login_url, {'username': username, 'password': password})
 
 
 # 测试时用于创建一个默认活动。也可以用于给定参数创建活动
 def tester_create_activity(title: str = "测试沙龙", date_time: Union[str, datetime] = "2021-01-01T08:00:00.000+08:00",
-                           location: str = "GitHub", presenter_ids: List[int] = None, client: Client = None):
+                           location: str = "GitHub", presenter_ids: List[int] = None, client: Client = None
+                           ) -> requests.Response:
     if client is None:
         client = Client()
         tester_signup(client=client)
@@ -136,14 +140,28 @@ class OnedriveTestCase(TestCase):
     @classmethod
     def tearDownClass(cls):
         # 删除应用 test 文件夹
-        cls.assertRegexpMatches(onedrive_approot.uri, '_test')
         onedrive_approot.delete()
         super().tearDownClass()
 
     # 使用本后端的文件上传 API 上传文件，上传完成后返回 id
-    def upload_file(self, filepath: str = 'static/ruanweiwei.png', client: Client = None) -> int:
+    def upload_file(self, filepath: str = 'static/ruanweiwei.png', client: Client = None) -> str:
         if client is None:
             client = Client()
             tester_signup(client=client)
             tester_login(client=client)
         self.assertIs(path.isfile(filepath), True, f"{filepath} does not exists.")
+        filename = filepath.split('/')[-1]
+        # 创造上传会话
+        from cloud.tests import onedrive_file_url
+        response = client.post(onedrive_file_url, {"filename": filename})
+        self.assertEqual(response.status_code, 200)
+        upload_url = response.json()['uploadUrl']
+        # 上传文件
+        with open(filepath, 'rb') as file:
+            filedata = file.read()
+            file_length = len(filedata)
+            self.assertLessEqual(file_length, 60 * (2 ** 20), "上传文件应当需要小于 60 MiB")
+            headers = {"Content-Range": f"bytes 0-{file_length - 1}/{file_length}"}
+            response = requests.put(upload_url, data=filedata, headers=headers)
+            self.assertEqual(response.status_code, 201, f"上传错误，response.content 为：\n{response.json()}")
+            return response.json()['id']
