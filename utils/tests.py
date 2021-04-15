@@ -4,7 +4,6 @@ from os import path
 from typing import Union, List, Dict
 from unittest.case import skipIf
 
-import requests.models
 from django.contrib.auth.models import User
 from django.test import Client, SimpleTestCase, TestCase
 from django.urls import reverse
@@ -22,7 +21,7 @@ from users.serializer import UserBriefSerializer, UserSerializer
 
 # 测试时用于创建一个默认账户。也可以用于给定参数创建账户
 def tester_signup(username: str = "admin@example.com", password: str = "adminadmin", first_name: str = 'admin',
-                  student_id: str = "20210101", client: Client = None) -> requests.Response:
+                  student_id: str = "20210101", client: Client = None):
     if client is None:
         client = Client()
     from accounts.tests import signup_url
@@ -32,7 +31,7 @@ def tester_signup(username: str = "admin@example.com", password: str = "adminadm
 
 # 测试时用于登录一个默认账户。也可以用于给定参数登录指定账户
 def tester_login(username: str = 'admin@example.com', password: str = "adminadmin",
-                 client: Client = None) -> requests.Response:
+                 client: Client = None):
     if client is None:
         client = Client()
     from accounts.tests import login_url
@@ -41,8 +40,7 @@ def tester_login(username: str = 'admin@example.com', password: str = "adminadmi
 
 # 测试时用于创建一个默认活动。也可以用于给定参数创建活动
 def tester_create_activity(title: str = "测试沙龙", date_time: Union[str, datetime] = "2021-01-01T08:00:00.000+08:00",
-                           location: str = "GitHub", presenter_ids: List[int] = None, client: Client = None
-                           ) -> requests.Response:
+                           location: str = "GitHub", presenter_ids: List[int] = None, client: Client = None):
     if client is None:
         client = Client()
         tester_signup(client=client)

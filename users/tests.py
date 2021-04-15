@@ -8,7 +8,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils.timezone import now
 
-from utils.tests import tester_signup, tester_login
+from utils.tests import tester_signup, tester_login, UserTestCase
 from users.models import UserProfile
 from utils import Pagination
 
@@ -128,7 +128,7 @@ class UserListTest(TestCase):
         pass
 
 
-class UserDetailTest(TestCase):
+class UserDetailTest(UserTestCase):
     def setUp(self):
         tester_signup("admin@example.com", "adminadmin", 'admin', "20210101", )
         u = User.objects.get(first_name='admin')
