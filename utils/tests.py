@@ -4,6 +4,7 @@ from os import path
 from typing import Union, List, Dict
 from unittest.case import skipIf
 
+import requests
 from django.contrib.auth.models import User
 from django.test import Client, SimpleTestCase, TestCase
 from django.urls import reverse
@@ -153,7 +154,12 @@ class OnedriveTestCase(TestCase):
         from cloud.tests import onedrive_file_url
         response = client.post(onedrive_file_url, {"filename": filename})
         self.assertEqual(response.status_code, 200)
-        upload_url = response.json()['uploadUrl']
+        content = eval(response.content)
+        if type(content) is str:    # 有时候是 dict 有时候是 str 我也不知道为什么会这样
+            content = eval(content)
+        else:
+            print('content is dict')
+        upload_url = content['uploadUrl']
         # 上传文件
         with open(filepath, 'rb') as file:
             filedata = file.read()
