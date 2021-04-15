@@ -2,7 +2,6 @@
 
 
 [![Django Test](https://github.com/uestc-msc/uestcmsc_webapp_backend/actions/workflows/django-test.yml/badge.svg)](https://github.com/uestc-msc/uestcmsc_webapp_backend/actions/workflows/django-test.yml)
-[![Deploy To Server](https://github.com/uestc-msc/uestcmsc_webapp_backend/actions/workflows/django-deploy.yml/badge.svg)](https://github.com/uestc-msc/uestcmsc_webapp_backend/actions/workflows/django-deploy.yml)
 ![Language](https://img.shields.io/badge/Python-3.7~3.9-blue.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <a href="http://www.djangoproject.com/"><img src="https://www.djangoproject.com/m/img/badges/djangomade124x25.gif" border="0" alt="Made with Django." title="Made with Django." /></a>

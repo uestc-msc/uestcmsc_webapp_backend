@@ -6,7 +6,7 @@ git pull
 # 安装依赖
 sudo python3 -m pip install --upgrade pip
 sudo pip3 install -r requirements.txt
-# 更新数据库、static files
+# 更新数据库、static files、缓存数据库
 python3 manage.py makemigrations accounts activities \
         activities_files activities_photos activities_links activities_comments \
         cloud users --noinput
