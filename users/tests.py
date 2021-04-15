@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils.timezone import now
 
 from utils.tests import tester_signup, tester_login, UserTestCase
+from utils.unittest import *
 from users.models import UserProfile
 from utils import Pagination
 
