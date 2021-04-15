@@ -159,6 +159,7 @@ class OnedriveTestCase(TestCase):
             content = eval(content)
         else:
             print('content is dict')
+        self.assertEqual(type(content), dict)
         upload_url = content['uploadUrl']
         # 上传文件
         with open(filepath, 'rb') as file:
