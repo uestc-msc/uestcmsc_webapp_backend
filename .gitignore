@@ -7,3 +7,16 @@ __pycache__/
 
 # ignore private profiles
 config.py
+
+# ignore migrations file
+migrations/
+
+# ignore coverage file
+.coverage
+htmlcov/
+
+# ignore temp static file
+.static/
+
+## 测试 Onedrive 时会将原数据库中的 refresh token 导出至 refresh_token_for_test.txt
+#cloud/onedrive/refresh_token_for_test.txt

@@ -1,0 +1,17 @@
+example.com {
+    handle /api/static/* {
+        uri strip_prefix /api/static
+        root * /etc/uestcmsc_webapp/backend/.static
+        file_server
+    }
+
+    handle /api/* {
+        reverse_proxy localhost:8000
+    }
+    
+    handle {
+        root * /etc/uestcmsc_webapp/frontend
+        try_files {path} /index.html
+        file_server
+    }
+}
