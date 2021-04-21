@@ -21,9 +21,9 @@ class OnedriveDriveItem:
         uri = uri.replace('::', '')
         return OnedriveDriveItem(uri=uri)
 
-    # 根据 DriveItem id 找到文件（夹）
-    def find_file_by_id(self, id: str) -> OnedriveDriveItem:
-        return OnedriveDriveItem(uri=f"{self.uri}/items/{id}")
+    # 根据 DriveItem id 找到文件（夹），此 API 只可以在 root 下使用，故直接取消，请使用 Drive.find_file_by_id 代替
+    # def find_file_by_id(self, id: str) -> OnedriveDriveItem:
+    #     return OnedriveDriveItem(uri=f"{self.uri}/items/{id}")
 
     # 在当前目录下进行搜索
     # https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/api/driveitem_search?view=odsp-graph-online

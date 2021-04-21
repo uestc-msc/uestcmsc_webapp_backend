@@ -19,5 +19,5 @@ def get_or_create_activity_folder(activity_id: int) -> ActivityFolder:
         activity_title = re.sub(onedrive_business_reserved_re, '', activity.title)
         # 按 “日期_标题”的格式创建沙龙文件夹
         response = onedrive_approot.create_directory_recursive(f'/沙龙/{activity_date}_{activity.title}')
-        onedrive_folder = ActivityFolder.objects.create(activity_id=activity_id, id=response.json().id)
+        onedrive_folder = ActivityFolder.objects.create(activity_id=activity_id, id=response.json()['id'])
     return onedrive_folder

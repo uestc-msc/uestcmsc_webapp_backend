@@ -6,3 +6,5 @@ from .models import ActivityPhoto
 class ActivityPhotoSerializer(ActivityFileSerializer):
     class Meta:
         model = ActivityPhoto
+        fields = ('id', 'activity_id', 'filename', 'size', 'thumbnail', 'download_link', 'uploader')
+        read_only_fields = fields
