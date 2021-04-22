@@ -10,14 +10,14 @@ from django.utils.timezone import now
 
 from users.models import ResetPasswordRequest, UserProfile
 from utils.random import generate_uuid
-from utils.tests import tester_signup, tester_login, UserTestCase
+from utils.tester import tester_signup, tester_login, UserTestCase
 
 signup_url = reverse('signup')
 login_url = reverse('login')
 logout_url = reverse('logout')
 forget_password_url = reverse('forget_password')
 reset_password_url = reverse('reset_password')
-user_detail_url = lambda id: reverse('user_detail', args={id: id})
+user_detail_url = lambda id: reverse('user_detail', args=[id])
 
 
 # 注册相关测试

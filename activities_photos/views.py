@@ -17,7 +17,8 @@ from utils.swagger import *
                           '注：需要登录，否则返回 403'
                           '注 2：需先调用“创建文件上传会话”接口，上传完文件后才可以调用该接口'
                           '注 3：`file_id` 在向 Onedrive 上传完成的响应中',
-    request_body=Schema_object(Schema_activity_id, Schema_file_id)
+    request_body=Schema_object(Schema_activity_id, Schema_file_id),
+    responses={201: ActivityPhotoSerializer()}
 ))
 class ActivityPhotoListView(ActivityFileListView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -32,5 +33,4 @@ class ActivityPhotoListView(ActivityFileListView):
                           '注：需要是上传者/沙龙主讲人/管理员，否则返回 403'
 ))
 class ActivityPhotoDetailView(ActivityFileDetailView):
-    permission_classes = (IsUploaderOrPresenterOrAdminOrReadOnly,)
-    serializer_class = ActivityFileSerializer
+    serializer_class = ActivityPhotoSerializer

@@ -1,22 +1,29 @@
 import functools
 import logging
+import urllib.parse
 from typing import Dict, Callable
 
 import requests
-
-from cloud.onedrive.api.cache import get_access_token
 
 base_url = 'https://graph.microsoft.com/v1.0'
 logger = logging.getLogger(__name__)
 
 
 # 纠正 path 语法，使其以 '/' 开头，且不以 '/' 结尾
+# 然后 url encode:
+# https://docs.microsoft.com/zh-cn/onedrive/developer/rest-api/concepts/addressing-driveitems#encoding-characters
 def validate_path(path: str) -> str:
     if path.endswith('/'):
         path = path[0:-1]
     if not path.startswith('/'):
         path = '/' + path
-    return path
+    return urllib.parse.quote(path)     # url encode
+
+
+def log_onedrive_error(response: requests.Response):
+    logger.error(f"Onedrive 请求失败：{response.request.url}, "
+                 f"status_code={response.status_code}, "
+                 f"response={response.content.decode()}", stack_info=True)
 
 
 def catchConnectionError(func: Callable):
@@ -44,6 +51,7 @@ def onedrive_http_request(uri: str,
                           fail_silently=False,
                           **kwargs) -> requests.Response:
     from cloud.onedrive.api.auth import OnedriveAuthentication, OnedriveUnavailableException
+    from cloud.onedrive.api.cache import get_access_token
     access_code = get_access_token()
     if access_code is None:
         # 尝试用 refresh_token 刷新 access_token
@@ -62,7 +70,6 @@ def onedrive_http_request(uri: str,
         kwargs['json'] = json
     response = requests.request(method=method, url=base_url + uri, headers=headers, **kwargs)
     if not response.ok and not fail_silently:
-        logger.error(f"Onedrive 请求失败：{response.request.url}, "
-                     f"status_code={response.status_code}, response={response.content.decode()}", stack_info=True)
+        log_onedrive_error(response)
         raise OnedriveUnavailableException
     return response

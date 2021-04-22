@@ -6,7 +6,7 @@ from django.utils.timezone import now
 
 from activities.models import Activity
 from activities.tests import activity_detail_url
-from utils.tests import tester_create_activity
+from utils.tester import tester_create_activity
 
 activity_link_list_url = reverse('activity_link_list')
 activity_link_detail_url = lambda id: reverse('activity_link_detail', args=[id])

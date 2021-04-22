@@ -27,6 +27,9 @@ class OnedriveFileView(APIView):
         filename = request.data.get('filename', None)
         if filename is None:
             return Response({"detail":"需要参数 filename"}, status=status.HTTP_400_BAD_REQUEST)
+        user_id = request.user.id
+        # 使用 /temp/user_id/filename 作为上传路径。避免上传冲突
+        onedrive_temp_directory.create_directory(str(user_id), fail_silently=True)
         # 先将文件上传至 temp 文件夹，在 done 时再将文件移动至对应位置
-        response = onedrive_temp_directory.find_file_by_path(filename).create_upload_session('replace')
+        response = onedrive_temp_directory.find_file_by_path(f"/{user_id}/{filename}").create_upload_session('replace')
         return Response(response.content, status=status.HTTP_200_OK)

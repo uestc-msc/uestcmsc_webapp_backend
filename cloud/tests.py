@@ -3,7 +3,7 @@ from django.urls import reverse
 
 from cloud.onedrive import *
 from cloud.onedrive.api.auth import OnedriveAuthentication
-from utils.tests import OnedriveTestCase
+from utils.tester import OnedriveTestCase
 
 onedrive_status_url = reverse('onedrive_status')
 onedrive_file_url = reverse('onedrive_file')

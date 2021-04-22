@@ -1,5 +1,4 @@
 import logging
-from typing import Union
 
 import requests
 from rest_framework.exceptions import APIException

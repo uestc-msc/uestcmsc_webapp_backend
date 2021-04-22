@@ -1,0 +1,29 @@
+name: Deploy To Server
+
+env:
+  ACTION_DEPLOY_KEY: ${{ secrets.ACTION_DEPLOY_KEY }}
+  SERVER_DOMAIN: api.uestc-msc.com
+  SERVER_USERNAME: lyh543
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  deploy:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'deploy') }}
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Git Checkout
+      uses: actions/checkout@v2
+    - name: Setup SSH Environment
+      run: |
+        mkdir -p ~/.ssh/
+        echo "$ACTION_DEPLOY_KEY" | tr -d '\r' > ~/.ssh/id_rsa # 配置秘钥
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan $SERVER_DOMAIN >> ~/.ssh/known_hosts
+
+    - name: Run SSH Command
+      run: |
+        ssh ${SERVER_USERNAME}@${SERVER_DOMAIN} < .github/workflows/django-deploy.sh
