@@ -1,4 +1,4 @@
-from rest_framework import serializers, fields
+from rest_framework import serializers
 
 from .models import ActivityFile
 from users.serializer import UserBriefSerializer
