@@ -437,6 +437,6 @@ class ChangePasswordTest(TestCase):
         response = tester_login("another@example.com", "anotheruser", client)
         self.assertEqual(response.status_code, 200)  # 密码没有被修改
 
-    # 管理员修改普通用户/管理员/超级用户的信息、超级用户修改其他用户的信息
+    # TODO: 管理员修改普通用户/管理员/超级用户的信息、超级用户修改其他用户的信息
     def admin_change_email_and_password(self):
         pass

@@ -27,10 +27,9 @@ class UserSerializer(serializers.ModelSerializer):
     experience = serializers.ReadOnlyField(source='userprofile.experience')
     avatar_url = serializers.ReadOnlyField(source='userprofile.get_avatar')
 
+    # 对于非管理员 返回值将隐藏 username 和 student_id
     def to_representation(self, instance):
         ret = super().to_representation(instance)
-
-        # 隐藏 username 和 student_id
         request = self.context.get('request')
         if request is None:     # django shell 时会出现 request is None
             return ret

@@ -35,7 +35,7 @@ class UserListView(ListAPIView):
 @method_decorator(name="get", decorator=swagger_auto_schema(
     operation_summary='获取用户信息',
     operation_description='获取一个的用户信息，成功返回 200\n'
-                          # '注：需要登录，否则返回 403',
+                          '注：非管理员获取非本人信息时，邮箱会被替换为 `***`，学号会被替换为入学年份'
 ))
 @method_decorator(name="put", decorator=swagger_auto_schema(
     operation_summary='更新用户信息',
@@ -75,7 +75,7 @@ class UserDetailView(RetrieveUpdateDestroyAPIView):
                           '验证正确性后，修改邮箱及密码，返回 204\n'
                           '注 1：new_email 和 new_password 可以不同时存在\n'
                           '注 2：若 new_email 和 new_password 其中一项错误，对另一项的修改也不会生效\n'
-                          '注 3：修改密码会使得已有的登录失效',
+                          '注 3：修改密码会使得已有的登录失效，如果修改本人的',
     request_body=Schema_object(Schema_old_password, Schema_new_email, Schema_new_password),
     responses={200: Schema_None}
 )
@@ -89,7 +89,7 @@ def change_password_view(request: Request, id: int) -> Response:
                 and "old_password" in request.data
                 and authenticate(request, username=request.user.username, password=request.data["old_password"])):
             return Response(status=status.HTTP_403_FORBIDDEN)
-    # 对更新数据的判定
+    # 对更新数据合法性的判定
     new_email = request.data.pop('new_email', None)
     new_password = request.data.pop('new_password', None)
     if new_email and \
@@ -99,10 +99,10 @@ def change_password_view(request: Request, id: int) -> Response:
         return Response({"detail": "新密码不合法"}, status=status.HTTP_400_BAD_REQUEST)
     # 更新数据
     if new_email:
-        request.user.username = new_email
+        user2.username = new_email
     if new_password:
-        request.user.set_password(new_password)
-    request.user.save()
+        user2.set_password(new_password)
+    user2.save()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
