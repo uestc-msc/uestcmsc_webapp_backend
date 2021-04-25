@@ -383,6 +383,7 @@ class ChangePasswordTest(TestCase):
         response = tester_login("qwerty@example.com", "ADMINADMIN")
         self.assertEqual(response.status_code, 200)  # 新账号可以登陆
 
+    # TODO: 修改 API 后，重写这个测试
     def test_change_password_with_invalid_field(self):
         tester_signup("another@example.com", "anotheruser", "another", "20201231")
         # 没上线

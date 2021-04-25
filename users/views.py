@@ -64,15 +64,18 @@ class UserDetailView(RetrieveUpdateDestroyAPIView):
 
 @swagger_auto_schema(
     method='PATCH',
-    operation_summary='修改密码',
-    operation_description='修改者需要满足以下两个条件之一：\n'
-                          'a. 修改的是本人的邮箱密码\n'
-                          'b. 修改者是管理员或超级用户，且修改对象的权限比自己低\n\n'
-                          '修改者需要同时提交自身当前的密码（old_password 字段）'
-                          '若 id 不存在，返回 404\n'
-                          '若无权修改或密码错误，或，返回 403\n'
-                          '若 new_password 不合法，返回 400 `{"detail": "新密码不合法"}`\n'
-                          '若 new_email 不合法或已存在，返回 400 `{"detail": "新邮箱不合法或已存在"}`\n'
+    operation_summary='修改密码及邮箱',
+    operation_description='1. 用户可以修改自己的密码及邮箱\n'
+                          '2. 管理员还可以修改普通用户的密码及邮箱\n'
+                          '3. 超级用户有权修改所有用户的密码及邮箱\n'
+                          '为确保安全，修改者需要同时提交自身当前的密码（old_password 字段）\n\n'
+                          '异常情况：'
+                          '1. 若 id 不存在，返回 404\n'
+                          '2. 若无权修改，返回 403 `{"detail": "没有权限修改"}`\n'
+                          '3. 若自身密码错误，返回 403 `{"detail": "密码错误"}`\n'
+                          '4. 若 new_password 不合法，返回 400 `{"detail": "新密码不合法"}`\n'
+                          '5. 若 new_email 不合法，返回 400 `{"detail": "新邮箱不合法"}`\n'
+                          '6. 若 new_email 已存在，返回 400 `{"detail": "新邮箱已存在"}`\n'
                           '验证正确性后，修改邮箱及密码，返回 204\n'
                           '注 1：new_email 和 new_password 可以不同时存在\n'
                           '注 2：若 new_email 和 new_password 其中一项错误，对另一项的修改也不会生效\n'
