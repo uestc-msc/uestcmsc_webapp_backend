@@ -1,9 +1,7 @@
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 
-from activities.serializer import ActivityFileSerializer
 from activities_files.views import ActivityFileListView, ActivityFileDetailView
-from activities_photos.models import ActivityPhoto
 from activities_photos.serializer import ActivityPhotoSerializer
 from utils.permissions import *
 from utils.swagger import *

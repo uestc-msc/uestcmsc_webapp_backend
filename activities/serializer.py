@@ -4,6 +4,7 @@ from rest_framework import serializers
 from activities.models import Activity
 from activities_links.serializer import LinkSerializer
 from activities_files.serializer import ActivityFileSerializer
+from activities_photos.serializer import ActivityPhotoSerializer
 from users.serializer import UserBriefSerializer
 from utils.validators import validate_user_id
 
@@ -16,10 +17,15 @@ class ActivitySerializer(serializers.ModelSerializer):
 
     title = serializers.CharField(max_length=150)
     location = serializers.CharField(max_length=50)
+
+    # 这样套娃很可能因为活动 presenter、attender 过多导致一个报文太大
+    # 但是想了想，俱乐部哪有这么大的活动规模呢
+    # 于是懒得改了
     presenter = UserBriefSerializer(read_only=False, many=True)
     attender = UserBriefSerializer(read_only=True, many=True)
     link = LinkSerializer(read_only=True, many=True)
     file = ActivityFileSerializer(read_only=True, many=True)
+    photo = ActivityPhotoSerializer(read_only=True, many=True)
 
     def validate_presenter(self, presenter_list):
         if len(presenter_list) == 0:

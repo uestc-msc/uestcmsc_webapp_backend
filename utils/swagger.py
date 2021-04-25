@@ -42,7 +42,7 @@ Schema_id = {'id': openapi.Schema(type=openapi.TYPE_NUMBER)}
 Schema_email = {'email': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description='邮箱')}
 Schema_password = {'password': openapi.Schema(type=openapi.TYPE_STRING, description='密码')}
 Schema_token = {'token': openapi.Schema(type=openapi.TYPE_STRING, description='由邮件提供')}
-Schema_old_password = {'old_password': openapi.Schema(type=openapi.TYPE_STRING, description='旧密码')}
+Schema_old_password = {'old_password': openapi.Schema(type=openapi.TYPE_STRING, description='修改者的密码')}
 Schema_new_password = {'new_password': openapi.Schema(type=openapi.TYPE_STRING, description='新密码')}
 Schema_new_email = {'new_email': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description='新邮箱')}
 

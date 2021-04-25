@@ -1,7 +1,7 @@
 from functools import wraps
 from typing import Callable
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AnonymousUser
 
 from rest_framework import status
 from rest_framework.permissions import *
@@ -19,8 +19,10 @@ def isOwnerOrAdmin(request: Request, owner: User) -> bool:
 def hasGreaterPermissions(user1: User, user2: User) -> bool:
     def permission_value(user: User):
         if user.is_superuser:
-            return 2
+            return 3
         elif user.is_staff:
+            return 2
+        elif user != AnonymousUser:
             return 1
         else:
             return 0
