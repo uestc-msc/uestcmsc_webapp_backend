@@ -109,8 +109,8 @@ class ActivityTestCase(TestCase, TimeTestCase):
         presenter_data_db = set(map(lambda u: u.id, activity.presenter.all()))
         self.assertEqual(presenter_data_response, presenter_data_db)
         # 比较 attender 是否正确
-        attender_data_response = UserBriefSerializer(data=json1['attender'], many=True).initial_data
-        attender_data_db = UserBriefSerializer(activity.attender.all(), many=True).data
+        attender_data_response = set(map(lambda u: u['id'], json1['attender']))
+        attender_data_db = set(map(lambda u: u.id, activity.attender.all()))
         self.assertEqual(attender_data_response, attender_data_db)
 
 

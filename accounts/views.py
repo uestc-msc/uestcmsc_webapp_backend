@@ -83,6 +83,9 @@ def login(request: Request) -> Response:
     serializer_data['csrftoken'] = csrf.get_token(request)
     return Response(serializer_data, status=status.HTTP_200_OK)
 
+# TODO: GitHub 登录！
+#  思路：login/github/；注册页面加一行 GitHub，未注册用户登录后跳转到注册页面
+
 
 @swagger_auto_schema(
     method='POST',

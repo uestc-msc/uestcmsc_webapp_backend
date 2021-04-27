@@ -24,7 +24,8 @@ from utils.swagger import *
 @method_decorator(name='post', decorator=swagger_auto_schema(
     operation_summary='创建沙龙',
     operation_description='成功返回 201，参数错误返回 400\n'
-                          '注：如果没有指明时区，datetime的输入输出默认使用东八区。\n'
+                          '注：创建沙龙时不允许修改主讲人，因此 `attender` 字段无效\n'
+                          '注 2：如果没有指明时区，datetime的输入输出默认使用东八区。\n'
                           '示例输入（以下输入均等价，输出 `2020-01-01T08:00:00+08:00`）：\n'
                           '`2020-01-01T00:00:00.000Z`\n'
                           '`2020-01-01T08:00:00.000+08:00`\n'
