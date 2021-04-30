@@ -14,7 +14,7 @@ FRONTEND_TRUSTED_ORIGINS = ['.uestc-msc.com']
 
 # Gravatar 镜像站，为 None 表示不使用
 # GRAVATAR_MIRROR = "https://dn-qiniu-avatar.qbox.me/avatar/"   # 七牛的延迟最低，但不支持 query
-GRAVATAR_MIRROR = "https://gravatar.w3tt.com/avatar/"
+GRAVATAR_MIRROR = "https://sdn.geekzu.org/avatar/"
 USER_DEFAULT_AVATAR = "https://raw.githubusercontent.com/uestc-msc/uestcmsc_webapp_backend/lyh543/static/ruanweiwei.jpg"
 
 # 数据库的相关配置

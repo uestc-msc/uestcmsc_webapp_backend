@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from django.contrib.auth import authenticate, login as django_login, logout as django_logout
+from django.contrib.auth import authenticate, login, logout
 
 from django.middleware import csrf
 from django.utils.timezone import now
@@ -33,7 +33,7 @@ from utils.validators import is_valid_password
 )
 @api_view(['POST'])
 @csrf_exempt
-def signup(request: Request) -> Response:
+def signup_view(request: Request) -> Response:
     register_serializer = UserRegisterSerializer(data=request.data)
     if not register_serializer.is_valid():
         return Response(register_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -69,7 +69,7 @@ def signup(request: Request) -> Response:
 )
 @api_view(['POST'])
 @csrf_exempt
-def login(request: Request) -> Response:
+def login_view(request: Request) -> Response:
     err_response = Response(status=status.HTTP_401_UNAUTHORIZED)
     if 'username' not in request.data or 'password' not in request.data:
         return err_response
@@ -78,7 +78,7 @@ def login(request: Request) -> Response:
     user = authenticate(request, username=username, password=password)
     if user is None:
         return err_response
-    django_login(request, user)
+    login(request, user)
     serializer_data = UserSerializer(user).data
     serializer_data['csrftoken'] = csrf.get_token(request)
     return Response(serializer_data, status=status.HTTP_200_OK)
@@ -94,10 +94,9 @@ def login(request: Request) -> Response:
     responses={200: Schema_None}
 )
 @api_view(['POST'])
-@login_required
 @csrf_exempt
-def logout(request: Request) -> Response:
-    django_logout(request)
+def logout_view(request: Request) -> Response:
+    logout(request)
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -114,7 +113,7 @@ def logout(request: Request) -> Response:
 )
 @api_view(['POST'])
 @csrf_exempt
-def forget_password(request: Request) -> Response:
+def forget_password_view(request: Request) -> Response:
     # 获取时间
     current = now()
     one_min_ago = current - timedelta(minutes=1)
@@ -160,7 +159,7 @@ def forget_password(request: Request) -> Response:
 )
 @api_view(['POST'])
 @csrf_exempt
-def reset_password(request: Request) -> Response:
+def reset_password_view(request: Request) -> Response:
     current = now()
     if "token" not in request.data:
         return Response({"detail": "缺少 token 参数"}, status=status.HTTP_400_BAD_REQUEST)

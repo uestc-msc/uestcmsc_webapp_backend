@@ -17,7 +17,7 @@ from utils.swagger import *
     responses={301: OnedriveAuthentication.login_uri(), 200: Schema_None}
 )
 @api_view(['GET'])
-def onedrive_login(request: Request):
+def onedrive_login_view(request: Request):
     if not request.user.is_staff:
         return Response(status=status.HTTP_403_FORBIDDEN)
     return redirect(OnedriveAuthentication.login_uri(), permanent=True)
@@ -30,7 +30,7 @@ def onedrive_login(request: Request):
     responses={302: FRONTEND_URL + '/cloud/status/', 200: Schema_None}
 )
 @api_view(['GET'])
-def onedrive_login_callback(request: Request):
+def onedrive_login_callback_view(request: Request):
     auth_code = request.GET.get('code', '')
     if auth_code == '':
         return Response("都说了叫你没事别 xjb 打开这个", status=400)
