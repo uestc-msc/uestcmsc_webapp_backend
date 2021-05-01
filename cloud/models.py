@@ -27,9 +27,8 @@ class OnedriveFile(models.Model):
     def driveitem(self) -> OnedriveDriveItem:
         return onedrive_drive.find_file_by_id(self.id)
 
-    # 获取 thumbnail 和 download_link
+    # 获取 download_link
     def collect_info(self):
-        self.thumbnail = self.driveitem.get_single_thumbnail()
         self.download_link = self.driveitem.get_download_link()
         self.save()
 

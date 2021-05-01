@@ -42,7 +42,6 @@ class ActivityFileTest(OnedriveTestCase):
         with open(self.filepath, 'rb') as f:
             self.assertEqual(content['size'], len(f.read()))
         self.assertEqual(not content["download_link"], False)
-        self.assertEqual(not content["thumbnail"], False)
         # 删除文件
         response = client.delete(activity_file_detail_url(file_id))
         self.assertEqual(response.status_code, 204)     # 删除成功
