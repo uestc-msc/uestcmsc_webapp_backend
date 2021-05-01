@@ -30,10 +30,13 @@ class OnedriveFileView(APIView):
         if filename is None:
             return Response({"detail": "需要参数 filename"}, status=status.HTTP_400_BAD_REQUEST)
         user_id = request.user.id
-        # 使用 /temp/user_id/filename 作为上传路径。避免上传冲突
-        onedrive_temp_directory.create_directory(str(user_id), fail_silently=True)
-        # 先将文件上传至 temp 文件夹，在 done 时再将文件移动至对应位置
-        response = onedrive_temp_directory.find_file_by_path(f"/{user_id}/{filename}").create_upload_session('replace')
+        user_directory = f'user{user_id}'
+        # 使用 /temp/user{id}/filename 作为上传路径。避免上传冲突
+        onedrive_temp_directory.create_directory(user_directory, fail_silently=True)
+        # 要求前端先将文件上传至 temp 文件夹，完成后再发对应请求，后端将文件移动至对应位置
+        response = onedrive_temp_directory \
+            .find_file_by_path(f"/{user_directory}/{filename}") \
+            .create_upload_session('replace')
         return Response(response.content, status=status.HTTP_200_OK)
 
 
@@ -43,7 +46,7 @@ class OnedriveFileView(APIView):
                           '如果 id 对应的文件不存在，返回 404\n'
                           '如果 id 对应的文件存在，响应报文为 `302 Found`，`Location` 为一个下载 URL。\n'
                           '该 URL 仅在较短的一段时间 （几分钟后）内有效，不需要认证即可下载。\n'
-                          '注：为减少对 Onedrive API 的调用，本 API 对 file_id 进行 300s 的缓存，如获取内容未刷新，请稍后再试',
+                          '注：为减少对 Onedrive API 的调                 用，本 API 对 file_id 进行 300s 的缓存，如获取内容未刷新，请稍后再试',
     responses={302: 'Found', 200: Schema_None}
 ))
 class OnedriveFileDownloadView(APIView):
