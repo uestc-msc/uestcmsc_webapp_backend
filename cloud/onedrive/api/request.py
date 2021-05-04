@@ -69,8 +69,11 @@ def onedrive_http_request(uri: str,
         kwargs['data'] = data
     if json:
         kwargs['json'] = json
-    response = requests.request(method=method, url=base_url + uri, headers=headers, **kwargs)
-    if not response.ok and not fail_silently:
-        log_onedrive_error(response)
+    try:
+        response = requests.request(method=method, url=base_url + uri, headers=headers, **kwargs)
+        if not response.ok and not fail_silently:
+            log_onedrive_error(response)
+            raise OnedriveUnavailableException
+        return response
+    except:
         raise OnedriveUnavailableException
-    return response

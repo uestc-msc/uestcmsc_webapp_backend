@@ -1,3 +1,5 @@
+import os
+
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.generics import *
@@ -42,17 +44,20 @@ class ActivityFileListView(GenericAPIView):
         folder = get_or_create_activity_folder(activity_id)
         # 将文件移动至活动文件夹（并验证有效性）
         # 这里懒得考虑活动文件夹在 Onedrive 被删的异常情况
-        # 考虑重名的问题：先尝试文件移动，如果冲突再作处理
+        # 考虑重名的问题：由于本地没有文件信息，假设重名是小概率事件，所以先尝试文件移动，如果冲突再获取文件信息、进一步处理
         response = onedrive_drive.find_file_by_id(file_id).move(folder.id, fail_silently=True)
-        if response.status_code == status.HTTP_409_CONFLICT:    # 发生重名，获取完整名单然后改名
-            filename = onedrive_drive.find_file_by_id(file_id).get_metadata().json()['name']
+        if response.status_code == status.HTTP_409_CONFLICT:
+            # 如果发生重名，直接从 Onedrive 获取完整名单，然后对着名单改名
+            fullname = onedrive_drive.find_file_by_id(file_id).get_metadata().json()['name']
+            filename, file_extension = os.path.splitext(fullname)
             response = onedrive_drive.find_file_by_id(folder.id).list_children()
             exist_filenames = list(map(lambda f: f['name'], response.json()['value']))
             i = 1
-            while f'{filename} ({i})' in exist_filenames:
+            # 重命名格式: oldname(1).jpg
+            while fullname in exist_filenames:
+                fullname = f'{filename} ({i}){file_extension}'
                 i += 1
-            filename = f'{filename} ({i})'
-            response = onedrive_drive.find_file_by_id(file_id).move(folder.id, filename)
+            response = onedrive_drive.find_file_by_id(file_id).move(folder.id, fullname)
         elif not response.ok:
             log_onedrive_error(response)
             raise OnedriveUnavailableException

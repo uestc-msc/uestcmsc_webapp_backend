@@ -15,7 +15,7 @@ class ActivitySerializer(serializers.ModelSerializer):
         fields = ("id", "title", "datetime", "location",
                   "presenter", "attender", "check_in_open",
                   "link", "file", "photo")
-        read_only_fields = ("id", "link", "file", "photo")
+        read_only_fields = ("id", "attender", "link", "file", "photo")
 
     title = serializers.CharField(max_length=150)
     location = serializers.CharField(max_length=50)
@@ -24,7 +24,9 @@ class ActivitySerializer(serializers.ModelSerializer):
     # 但是想了想，俱乐部哪有这么大的活动规模呢
     # 于是懒得改了
     presenter = UserBriefSerializer(read_only=False, many=True)
-    attender = UserBriefSerializer(read_only=False, required=False, many=True)
+    # 不能通过 PATCH activity 提交 attender，否则修改名单时签到的同学又会被删掉
+    # 必须使用 PATCH /activities/{id}/attender/ 增量更新名单
+    # attender = UserBriefSerializer(read_only=True, many=True)
     link = LinkSerializer(read_only=True, many=True)
     file = ActivityFileSerializer(read_only=True, many=True)
     photo = ActivityPhotoSerializer(read_only=True, many=True)
