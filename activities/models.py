@@ -1,3 +1,5 @@
+from typing import List
+
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -20,3 +22,20 @@ class Activity(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def presenter_id(self) -> List[int]:
+        queryset = self.presenter.all().values('id')
+        return list(map(lambda u: u['id'], queryset))
+
+    @presenter_id.setter
+    def presenter_id(self, value: List[int]):
+        self.presenter.clear()
+        self.presenter.add(*value)
+
+    @property
+    def attender_id(self) -> List[int]:
+        queryset = self.attender.all().values('id')
+        return list(map(lambda u: u['id'], queryset))
+
+    # 为数据安全起见，不提供 attender 的 setter

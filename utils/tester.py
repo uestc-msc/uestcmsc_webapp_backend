@@ -14,7 +14,7 @@ from activities.serializer import ActivitySerializer
 from cloud.onedrive import *
 from cloud.onedrive.api.cache import get_access_token, get_refresh_token, set_access_token, set_refresh_token
 from uestcmsc_webapp_backend.settings import APP_NAME
-from users.serializer import UserBriefSerializer, UserSerializer
+from users.serializer import UserSerializer
 
 
 ########################################

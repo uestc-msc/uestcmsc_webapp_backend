@@ -4,6 +4,7 @@ from django.forms import CharField
 from drf_yasg import openapi
 from rest_framework.serializers import Serializer, CharField
 
+# todo 测试通过以后 检查 swagger
 
 # 本文件为简写 @swagger_auto_schema 的语法而生
 # drf_yasg 文档：https://drf-yasg.readthedocs.io/en/stable/index.html
@@ -36,7 +37,6 @@ Schema_None = None
 Schema_count = {'count': openapi.Schema(type=openapi.TYPE_NUMBER, description='总数')}
 Schema_detail = {'detail': openapi.Schema(type=openapi.TYPE_STRING, description='错误信息')}
 Schema_string = {'string': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL)}
-Schema_id = {'id': openapi.Schema(type=openapi.TYPE_NUMBER)}
 
 # 用户
 Schema_email = {'email': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_EMAIL, description='邮箱')}
@@ -51,7 +51,7 @@ Schema_activity_id = {'activity_id': openapi.Schema(type=openapi.TYPE_NUMBER, de
 Schema_title = {'title': openapi.Schema(type=openapi.TYPE_STRING, description='沙龙标题')}
 Schema_datetime = {'datetime': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_DATETIME, description='日期时间')}
 Schema_location = {'location': openapi.Schema(type=openapi.TYPE_STRING, description='地点')}
-Schema_presenter_ids = {'presenter': Schema_array(Schema_object(Schema_id))}  # POST 只需要提交 id
+# Schema_presenter_ids = {'presenter': Schema_array(Schema_object(Schema_id))}  # POST 只需要提交 id
 Schema_check_in_code = {'check_in_code': openapi.Schema(type=openapi.TYPE_STRING, description='签到码')}
 Schema_check_in_open = {'check_in_open': openapi.Schema(type=openapi.TYPE_BOOLEAN, description='管理员开放签到')}
 Schema_add = {'add': Schema_array(openapi.Schema(type=openapi.TYPE_NUMBER, description='用户 id'))}
@@ -62,8 +62,6 @@ Schema_url = {'url': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FOR
 Schema_status = {'status': openapi.Schema(type=openapi.TYPE_STRING, description='状态')}
 Schema_file_id = {'file_id': openapi.Schema(type=openapi.TYPE_STRING, description='文件 id')}
 Schema_filename = {'filename': openapi.Schema(type=openapi.TYPE_STRING, description='文件名')}
-# Schema_filetype = {'filetype': openapi.Schema(type=openapi.TYPE_STRING,
-#                                                  description='文件类型，可选 `activity_file` `photo`')}
 
 Param_search = openapi.Parameter('search', openapi.IN_QUERY, type=openapi.TYPE_STRING, description='搜索关键字（为空时表示不搜索）')
 Param_page = openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_NUMBER, description='页数（不正确时返回 404）')

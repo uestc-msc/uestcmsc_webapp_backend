@@ -1,13 +1,15 @@
 from django.utils.decorators import method_decorator
 from django.utils.timezone import now
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import filters
+from rest_framework import filters, serializers
 from rest_framework.generics import *
+from rest_framework.views import APIView
 
 from activities.serializer import ActivitySerializer, ActivityAdminSerializer
 from utils import *
 from utils.permissions import *
 from utils.swagger import *
+from utils.validators import validate_user_id, validate_user_ids
 
 
 @method_decorator(name='get', decorator=swagger_auto_schema(
@@ -33,11 +35,11 @@ from utils.swagger import *
                           '`2020-01-01T08:00`\n'
                           '`2020-01-01 08:00`\n'
                           '`2020-01-01 08:00+08:00`',
-    request_body=Schema_object(Schema_title,
-                               Schema_datetime,
-                               Schema_location,
-                               Schema_presenter_ids),
-    responses={201: ActivitySerializer()}
+    # request_body=Schema_object(Schema_title,
+    #                            Schema_datetime,
+    #                            Schema_location,
+    #                            Schema_presenter_ids),
+    # responses={201: ActivitySerializer()}
 ))
 class ActivityListView(ListCreateAPIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -55,11 +57,11 @@ class ActivityListView(ListCreateAPIView):
 @method_decorator(name="put", decorator=swagger_auto_schema(
     operation_summary='更新沙龙信息',
     operation_description='应答和 PATCH 方法相同，但 PUT 要求在请求中提交所有信息',
-    request_body=Schema_object(Schema_title,
-                               Schema_datetime,
-                               Schema_location,
-                               Schema_presenter_ids,
-                               Schema_check_in_open),
+    # request_body=Schema_object(Schema_title,
+    #                            Schema_datetime,
+    #                            Schema_location,
+    #                            Schema_presenter_ids,
+    #                            Schema_check_in_open),
 ))
 @method_decorator(name="patch", decorator=swagger_auto_schema(
     operation_summary='更新沙龙部分信息',
@@ -69,11 +71,11 @@ class ActivityListView(ListCreateAPIView):
                           '注：更新参与者名单请使用 `/users/check_in/` 或 `/users/check_in_admin/` 接口\n'
                           '注：需要是沙龙演讲者或管理员，否则返回 403\n'
                           '注：PATCH 方法可以只提交更新的值，也可以提交所有值',
-    request_body=Schema_object(Schema_title,
-                               Schema_datetime,
-                               Schema_location,
-                               Schema_presenter_ids,
-                               Schema_check_in_open),
+    # request_body=Schema_object(Schema_title,
+    #                            Schema_datetime,
+    #                            Schema_location,
+    #                            Schema_presenter_ids,
+    #                            Schema_check_in_open),
 ))
 @method_decorator(name="delete", decorator=swagger_auto_schema(
     operation_summary='删除沙龙',
@@ -109,22 +111,21 @@ class ActivityDetailAdminView(RetrieveAPIView):
     request_body=Schema_object(Schema_add, Schema_remove),
     responses={200: ActivitySerializer()}
 ))
-class ActivityAttenderUpdateView(GenericAPIView):
+class ActivityAttenderUpdateView(APIView):
     permission_classes = (IsPresenterOrAdminOrReadOnly,)
 
     def patch(self, request: Request, id: int) -> Response:
         activity = get_object_or_404(Activity, id=id)
         self.check_object_permissions(request, activity)
 
-        add_list = request.data.pop('add', [])
-        remove_list = request.data.pop('remove', [])
-        add_user_list = list(User.objects.filter(id__in=add_list))
-        remove_user_list = list(User.objects.filter(id__in=remove_list))
-        if len(add_user_list) != len(add_list) or len(remove_user_list) != len(remove_list):  # 有 id 不存在
-            return Response({"detail": "用户不存在"}, status=status.HTTP_400_BAD_REQUEST)
-        activity.attender.add(*add_user_list)
-        activity.attender.remove(*remove_user_list)
+        try:
+            add_list = validate_user_ids(request.data.pop('add', []))
+            remove_list = validate_user_ids(request.data.pop('remove', []))
+        except serializers.ValidationError as e:
+            return Response({"detail":e.detail[0]}, status=status.HTTP_400_BAD_REQUEST)
 
+        activity.attender.add(*add_list)
+        activity.attender.remove(*remove_list)
         return Response(ActivitySerializer(activity).data, status=status.HTTP_200_OK)
 
 

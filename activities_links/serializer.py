@@ -11,4 +11,4 @@ class LinkSerializer(serializers.ModelSerializer):
         # TODO 测试返回字段是否有 activity_id
 
     url = serializers.CharField(max_length=512, required=True)
-    activity_id = serializers.ReadOnlyField(source='activity.id')
+    activity_id = serializers.IntegerField(read_only=True)

@@ -1,13 +1,11 @@
 from rest_framework import serializers
 
 from cloud.models import OnedriveFile
-from users.serializer import UserBriefSerializer
 
 
 class OnedriveFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = OnedriveFile
-        fields = ('id', 'filename', 'size', 'thumbnail', 'download_link', 'uploader')
+        fields = ('id', 'filename', 'size', 'thumbnail', 'download_link', 'uploader_id')
         read_only_fields = fields
 
-    uploader = UserBriefSerializer(read_only=True)
