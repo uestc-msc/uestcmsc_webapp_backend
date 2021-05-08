@@ -1,13 +1,24 @@
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.generics import ListAPIView
 
 from activities_files.views import ActivityFileListView, ActivityFileDetailView
 from activities_photos.serializer import ActivityPhotoSerializer
+from utils import Pagination
 from utils.permissions import *
 from utils.swagger import *
 
 
 # 连视图也复用 ActivityFileListView 了
+@method_decorator(name='get', decorator=swagger_auto_schema(
+    operation_summary='获取沙龙图片列表',
+    operation_description='获取沙龙图片列表（以及总长度），并可指定沙龙id、页码和每页大小\n'
+                          '数据作为 list 返回在 `results` 中，返回值的 `count` 为搜索结果的总数\n'
+                          '注：如页码不正确或不存在，返回 404\n'
+                          '注：如每页大小不正确或不存在，使用默认每页大小（15）\n'
+                          '注：如无搜索结果，返回 200，其中 `results` 为空\n',
+    manual_parameters=[Param_activity, Param_page, Param_page_size],
+))
 @method_decorator(name='post', decorator=swagger_auto_schema(
     operation_summary='添加沙龙图片',
     operation_description='对 `activity_id` 对应沙龙添加图片\n'
@@ -19,9 +30,17 @@ from utils.swagger import *
     request_body=Schema_object(Schema_activity_id, Schema_file_id),
     responses={201: ActivityPhotoSerializer()}
 ))
-class ActivityPhotoListView(ActivityFileListView):
+class ActivityPhotoListView(ActivityFileListView, ListAPIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     serializer_class = ActivityPhotoSerializer
+    pagination_class = Pagination
+
+    def get_queryset(self):
+        queryset = self.model_class.objects.all().order_by('created_datetime')
+        activity_id = self.request.query_params.get('activity', None)
+        if activity_id:
+            queryset = queryset.filter(activity_id=activity_id)
+        return queryset
 
 
 # 连视图也复用 ActivityFileDetailView 了
