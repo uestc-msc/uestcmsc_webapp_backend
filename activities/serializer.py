@@ -6,7 +6,6 @@ from activities.models import Activity
 from activities_files.serializer import ActivityFileSerializer
 from activities_links.serializer import LinkSerializer
 from activities_photos.models import ActivityPhoto
-from activities_photos.serializer import ActivityPhotoSerializer
 from utils.validators import validate_user_ids
 
 
@@ -29,12 +28,15 @@ class ActivitySerializer(serializers.ModelSerializer):
     file = ActivityFileSerializer(read_only=True, many=True)
     # 图片可能因为过多导致一个 activity 的 json 过大
     # photo = ActivityPhotoSerializer(read_only=True, many=True)
-    banner_id = serializers.CharField(allow_null=True, read_only=False)
+    banner_id = serializers.CharField(allow_null=True, required=False, read_only=False)
 
     def validate_presenter(self, presenter: List[int]):
         if len(presenter) == 0:
             raise serializers.ValidationError("活动没有演讲者")
         validate_user_ids(presenter)
+        user = self.context['view'].request.user
+        if not (user.is_staff or user.is_superuser) and presenter != [user.id]:
+            raise serializers.ValidationError("非管理员创建活动，只能选择自己为主讲人")
         return presenter
 
     def validate_banner_id(self, banner_id: str):

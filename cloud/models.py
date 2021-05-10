@@ -15,7 +15,6 @@ class OnedriveFile(models.Model):
     filename = fields.CharField("文件名", max_length=256)
     size = fields.IntegerField("文件大小")
     created_datetime = models.DateTimeField('创建时间', db_index=True)
-    thumbnail = fields.CharField("缩略图", max_length=4096)
     download_link = fields.CharField("下载链接", max_length=512)
     uploader = models.ForeignKey(to=User, null=True, on_delete=models.SET_NULL, verbose_name="上传者")
 

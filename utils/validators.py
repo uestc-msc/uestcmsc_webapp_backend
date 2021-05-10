@@ -39,12 +39,14 @@ def validate_student_id(student_id: str):
     return student_id
 
 
+# 检测用户存在
 def validate_user_id(id: int):
     if not User.objects.filter(id=id):
         raise serializers.ValidationError("用户不存在")
     return id
 
 
+# 检测名单中的用户均存在
 def validate_user_ids(ids: List[int]):
     filters = User.objects.filter(id__in=ids)
     if len(filters) != len(ids):

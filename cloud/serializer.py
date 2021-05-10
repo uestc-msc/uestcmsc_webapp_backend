@@ -6,6 +6,6 @@ from cloud.models import OnedriveFile
 class OnedriveFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = OnedriveFile
-        fields = ('id', 'filename', 'size', 'created_datetime', 'thumbnail', 'download_link', 'uploader_id')
+        fields = ('id', 'filename', 'size', 'created_datetime', 'download_link', 'uploader_id')
         read_only_fields = fields
 

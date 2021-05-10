@@ -36,7 +36,7 @@ class OnedriveDriveItem:
     def get_metadata(self, fail_silently=False) -> requests.Response:
         return onedrive_http_request(self.uri, fail_silently=fail_silently)
 
-    # 获取大缩略图
+    # 获取大缩略图（获取的缩略图似乎会很快过期，还是别用了）
     # https://docs.microsoft.com/zh-cn/graph/api/driveitem-list-thumbnails#get-a-single-thumbnail
     def get_single_thumbnail(self, thumb_id=0, size='large', fail_silently=False) -> str:
         response = onedrive_http_request(self.uri + f'/thumbnails/{thumb_id}/{size}', fail_silently=fail_silently)
