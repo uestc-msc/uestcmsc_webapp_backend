@@ -10,6 +10,9 @@ from utils.swagger import *
 
 
 # 连视图也复用 ActivityFileListView 了
+from utils.validators import is_number
+
+
 @method_decorator(name='get', decorator=swagger_auto_schema(
     operation_summary='获取沙龙图片列表',
     operation_description='获取沙龙图片列表（以及总长度），并可指定沙龙id、页码和每页大小\n'
@@ -36,9 +39,12 @@ class ActivityPhotoListView(ActivityFileListView, ListAPIView):
     pagination_class = Pagination
 
     def get_queryset(self):
-        queryset = self.model_class.objects.all().order_by('created_datetime')
+        # 按创建日期降序排序
+        queryset = self.model_class.objects.all().order_by('-created_datetime')
         activity_id = self.request.query_params.get('activity', None)
         if activity_id:
+            if not is_number(activity_id):
+                raise Http404
             queryset = queryset.filter(activity_id=activity_id)
         return queryset
 
