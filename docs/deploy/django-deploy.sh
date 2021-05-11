@@ -9,9 +9,9 @@ sudo pip3 install -r requirements.txt
 # 更新数据库、static files、缓存数据库
 python3 manage.py makemigrations accounts activities \
         activities_files activities_photos activities_links activities_comments \
-        cloud users --noinput
-python3 manage.py migrate --noinput
-python3 manage.py collectstatic --noinput --clear --no-post-process
+        cloud users
+python3 manage.py migrate
+python3 manage.py collectstatic --clear --no-post-process
 python3 manage.py createcachetable
 # python3 manage.py crontab add
 # 重启后端服务
