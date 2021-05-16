@@ -132,7 +132,7 @@ class ActivityAttenderUpdateView(APIView):
 @method_decorator(name="post", decorator=swagger_auto_schema(
     operation_summary='用户签到',
     operation_description='可能会有以下情况：\n'
-                          '1. 签到成功，用户经验+50，每位演讲者经验+10，返回 200'
+                          '1. 签到成功，用户经验+50，每位演讲者经验+10，返回 200\n'
                           '2. 已经签过到了，返回 200\n'
                           '2. 活动不存在，返回 404\n'
                           '3. POST 数据不包含签到码，返回 400\n'
@@ -151,7 +151,7 @@ class ActivityCheckInView(GenericAPIView):
             return Response({"detail": "活动不存在"}, status=status.HTTP_404_NOT_FOUND)
         activity = Activity.objects.get(id=id)
         if activity.attender.filter(id=request.user.id):
-            return Response({"detail": "您已经签过到了"}, status=status.HTTP_200_OK)
+            return Response({"detail": "您已经签过到了~"}, status=status.HTTP_200_OK)
         if not compare_date(activity.datetime, now()):  #
             return Response({"detail": "非当日活动"}, status=status.HTTP_403_FORBIDDEN)
         if not activity.check_in_open:
@@ -162,4 +162,4 @@ class ActivityCheckInView(GenericAPIView):
             return Response({"detail": "签到码错误"}, status=status.HTTP_403_FORBIDDEN)
         activity.attender.add(request.user)
         # 经验系统：在做了在做了
-        return Response({"detail": "签到成功，经验+50"}, status=status.HTTP_200_OK)
+        return Response({"detail": "签到成功~"}, status=status.HTTP_200_OK)

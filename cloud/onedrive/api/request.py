@@ -49,6 +49,7 @@ def onedrive_http_request(uri: str,
                           content_type='application/json',
                           extra_headers: Dict = None,
                           fail_silently=False,
+                          try_times=5,
                           *args,
                           **kwargs) -> requests.Response:
     from cloud.onedrive.api.auth import OnedriveAuthentication, OnedriveUnavailableException
@@ -69,11 +70,10 @@ def onedrive_http_request(uri: str,
         kwargs['data'] = data
     if json:
         kwargs['json'] = json
-    try:
-        response = requests.request(method=method, url=base_url + uri, headers=headers, **kwargs)
-        if not response.ok and not fail_silently:
+    for i in range(try_times):
+            response = requests.request(method=method, url=base_url + uri, headers=headers, **kwargs)
+            if response.ok or fail_silently:
+                return response
             log_onedrive_error(response)
-            raise OnedriveUnavailableException
-        return response
-    except:
-        raise OnedriveUnavailableException
+
+    raise OnedriveUnavailableException

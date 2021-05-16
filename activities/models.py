@@ -20,8 +20,7 @@ class Activity(models.Model):
     presenter = models.ManyToManyField(User, verbose_name="主讲人", related_name="present_activity")
     attender = models.ManyToManyField(User, verbose_name="参与者", related_name="attend_activity")
     banner = models.ForeignKey('activities_photos.ActivityPhoto', null=True, default=None, on_delete=models.SET_NULL,
-                               verbose_name="首页图", related_name="banner_of")
-
+                               verbose_name="封面", related_name="banner_of")
 
     def __str__(self):
         return self.title

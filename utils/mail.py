@@ -17,7 +17,7 @@ def send_reset_password_email(receipt_email: str, name: str, token: str):
     参考文档：https://docs.djangoproject.com/zh-hans/3.1/topics/email/
     测试参考文档：https://docs.djangoproject.com/zh-hans/3.1/topics/testing/tools/#topics-testing-email
     """
-    message = f"亲爱的 {name}：\n\n" \
+    message = f"亲爱的{name}：\n\n" \
               f"您似乎忘记了您在“{APP_NAME}”的密码。您可以点击以下链接（或粘贴到浏览器访问）来重置您的密码：\n\n" \
               f"{FRONTEND_URL}/resetpassword?token={token}\n\n" \
               f"该链接 24 小时内有效。\n" \

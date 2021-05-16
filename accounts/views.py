@@ -48,6 +48,9 @@ def signup_view(request: Request) -> Response:
             u = origin_wechat_user[0]
             user_serializer = UserSerializer(u)
             user_serializer.update(u, register_serializer.validated_data)
+            u.set_password(register_serializer.validated_data['password'])
+            u.save()
+            # 更新密码并不影响 user_serializer 所以不需要更新 user_serializer
             return Response(user_serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(data={"student_id": "学号已存在"}, status=status.HTTP_400_BAD_REQUEST)

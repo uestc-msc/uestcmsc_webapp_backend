@@ -59,7 +59,7 @@ class OnedriveFileDownloadView(APIView):
         if onedrive_response.status_code == 302:
             headers = {'Location': onedrive_response.headers['Location']}
             response = Response(status=302, headers=headers)
+            self.cache_responses[id] = response     # 只对正确报文做缓存
         else:
             response = Response(status=onedrive_response.status_code, data=onedrive_response.content)
-        self.cache_responses[id] = response
         return response
