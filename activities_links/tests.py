@@ -243,3 +243,5 @@ class ActivityLinkDetailTest(TestCase):
             else:
                 self.assertEqual(response.status_code, 403, f"user={user}")
                 link.delete()
+
+# TODO: link 重名的情况：测试 & 文档说明

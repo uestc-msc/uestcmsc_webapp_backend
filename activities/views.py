@@ -1,13 +1,15 @@
 from django.utils.decorators import method_decorator
 from django.utils.timezone import now
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import filters
+from rest_framework import filters, serializers
 from rest_framework.generics import *
+from rest_framework.views import APIView
 
 from activities.serializer import ActivitySerializer, ActivityAdminSerializer
 from utils import *
 from utils.permissions import *
 from utils.swagger import *
+from utils.validators import validate_user_id, validate_user_ids
 
 
 @method_decorator(name='get', decorator=swagger_auto_schema(
@@ -24,7 +26,8 @@ from utils.swagger import *
 @method_decorator(name='post', decorator=swagger_auto_schema(
     operation_summary='创建沙龙',
     operation_description='成功返回 201，参数错误返回 400\n'
-                          '注：如果没有指明时区，datetime的输入输出默认使用东八区。\n'
+                          '注：创建沙龙时不允许修改主讲人，因此 `attender` 字段无效\n'
+                          '注 2：如果没有指明时区，datetime的输入输出默认使用东八区。\n'
                           '示例输入（以下输入均等价，输出 `2020-01-01T08:00:00+08:00`）：\n'
                           '`2020-01-01T00:00:00.000Z`\n'
                           '`2020-01-01T08:00:00.000+08:00`\n'
@@ -32,11 +35,11 @@ from utils.swagger import *
                           '`2020-01-01T08:00`\n'
                           '`2020-01-01 08:00`\n'
                           '`2020-01-01 08:00+08:00`',
-    request_body=Schema_object(Schema_title,
-                               Schema_datetime,
-                               Schema_location,
-                               Schema_presenter_ids),
-    responses={201: ActivitySerializer()}
+    # request_body=Schema_object(Schema_title,
+    #                            Schema_datetime,
+    #                            Schema_location,
+    #                            Schema_presenter_ids),
+    # responses={201: ActivitySerializer()}
 ))
 class ActivityListView(ListCreateAPIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -54,11 +57,11 @@ class ActivityListView(ListCreateAPIView):
 @method_decorator(name="put", decorator=swagger_auto_schema(
     operation_summary='更新沙龙信息',
     operation_description='应答和 PATCH 方法相同，但 PUT 要求在请求中提交所有信息',
-    request_body=Schema_object(Schema_title,
-                               Schema_datetime,
-                               Schema_location,
-                               Schema_presenter_ids,
-                               Schema_check_in_open),
+    # request_body=Schema_object(Schema_title,
+    #                            Schema_datetime,
+    #                            Schema_location,
+    #                            Schema_presenter_ids,
+    #                            Schema_check_in_open),
 ))
 @method_decorator(name="patch", decorator=swagger_auto_schema(
     operation_summary='更新沙龙部分信息',
@@ -68,11 +71,11 @@ class ActivityListView(ListCreateAPIView):
                           '注：更新参与者名单请使用 `/users/check_in/` 或 `/users/check_in_admin/` 接口\n'
                           '注：需要是沙龙演讲者或管理员，否则返回 403\n'
                           '注：PATCH 方法可以只提交更新的值，也可以提交所有值',
-    request_body=Schema_object(Schema_title,
-                               Schema_datetime,
-                               Schema_location,
-                               Schema_presenter_ids,
-                               Schema_check_in_open),
+    # request_body=Schema_object(Schema_title,
+    #                            Schema_datetime,
+    #                            Schema_location,
+    #                            Schema_presenter_ids,
+    #                            Schema_check_in_open),
 ))
 @method_decorator(name="delete", decorator=swagger_auto_schema(
     operation_summary='删除沙龙',
@@ -108,29 +111,28 @@ class ActivityDetailAdminView(RetrieveAPIView):
     request_body=Schema_object(Schema_add, Schema_remove),
     responses={200: ActivitySerializer()}
 ))
-class ActivityAttenderUpdateView(GenericAPIView):
+class ActivityAttenderUpdateView(APIView):
     permission_classes = (IsPresenterOrAdminOrReadOnly,)
 
     def patch(self, request: Request, id: int) -> Response:
         activity = get_object_or_404(Activity, id=id)
         self.check_object_permissions(request, activity)
 
-        add_list = request.data.pop('add', [])
-        remove_list = request.data.pop('remove', [])
-        add_user_list = list(User.objects.filter(id__in=add_list))
-        remove_user_list = list(User.objects.filter(id__in=remove_list))
-        if len(add_user_list) != len(add_list) or len(remove_user_list) != len(remove_list):  # 有 id 不存在
-            return Response({"detail": "用户不存在"}, status=status.HTTP_400_BAD_REQUEST)
-        activity.attender.add(*add_user_list)
-        activity.attender.remove(*remove_user_list)
+        try:
+            add_list = validate_user_ids(request.data.pop('add', []))
+            remove_list = validate_user_ids(request.data.pop('remove', []))
+        except serializers.ValidationError as e:
+            return Response({"detail":e.detail[0]}, status=status.HTTP_400_BAD_REQUEST)
 
+        activity.attender.add(*add_list)
+        activity.attender.remove(*remove_list)
         return Response(ActivitySerializer(activity).data, status=status.HTTP_200_OK)
 
 
 @method_decorator(name="post", decorator=swagger_auto_schema(
     operation_summary='用户签到',
     operation_description='可能会有以下情况：\n'
-                          '1. 签到成功，用户经验+50，每位演讲者经验+10，返回 200'
+                          '1. 签到成功，用户经验+50，每位演讲者经验+10，返回 200\n'
                           '2. 已经签过到了，返回 200\n'
                           '2. 活动不存在，返回 404\n'
                           '3. POST 数据不包含签到码，返回 400\n'
@@ -149,7 +151,7 @@ class ActivityCheckInView(GenericAPIView):
             return Response({"detail": "活动不存在"}, status=status.HTTP_404_NOT_FOUND)
         activity = Activity.objects.get(id=id)
         if activity.attender.filter(id=request.user.id):
-            return Response({"detail": "您已经签过到了"}, status=status.HTTP_200_OK)
+            return Response({"detail": "您已经签过到了~"}, status=status.HTTP_200_OK)
         if not compare_date(activity.datetime, now()):  #
             return Response({"detail": "非当日活动"}, status=status.HTTP_403_FORBIDDEN)
         if not activity.check_in_open:
@@ -160,4 +162,4 @@ class ActivityCheckInView(GenericAPIView):
             return Response({"detail": "签到码错误"}, status=status.HTTP_403_FORBIDDEN)
         activity.attender.add(request.user)
         # 经验系统：在做了在做了
-        return Response({"detail": "签到成功，经验+50"}, status=status.HTTP_200_OK)
+        return Response({"detail": "签到成功~"}, status=status.HTTP_200_OK)

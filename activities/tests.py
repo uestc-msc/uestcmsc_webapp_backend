@@ -264,7 +264,7 @@ class ActivityDetailTest(ActivityTestCase):
                                                           first_name="another_presenter")
         self.ids = list(map(lambda u: u.id, User.objects.all()))
 
-        tester_create_activity('First Salon', '2020-01-01T00:00:00.000Z', 'MS Shanghai', self.ids[0:2])
+        response = tester_create_activity('First Salon', '2020-01-01T00:00:00.000Z', 'MS Shanghai', self.ids[0:2])
         tester_create_activity('Second Salon', '2021-01-01T00:00', 'MS Beijing', [self.ids[2]])
         tester_create_activity('Third Salon', '2021-02-01 00:00', 'MS Suzhou', [self.ids[3]])
         Activity.objects.create(title='Fourth Salon',
@@ -328,13 +328,15 @@ class ActivityDetailTest(ActivityTestCase):
             self.assertEqual(response.status_code, 404)
 
     def test_patch_correctly(self):
-        field_and_example = {
-            "check_in_open": False,
-            "presenter": [{"id": User.objects.filter(first_name="user")[0].id}],
-            "location": "微软学生俱乐部",
-            "datetime": "2021-01-01T20:00:00+08:00",
-            "title": "中文沙龙"
-        }
+        field_and_example = [
+            ["check_in_open", False],
+            ["presenter", [{"id": User.objects.filter(first_name="user")[0].id}] ],
+            ["location", "微软学生俱乐部"],
+            ["datetime", "2021-01-01T20:00:00+08:00"],
+            ["title", "中文沙龙"],
+            ["attender", list(map(lambda id: {"id": id}, self.ids))],
+            ["attender", []],
+        ]
 
         client = Client()
         client.force_login(self.superuser)
@@ -343,11 +345,11 @@ class ActivityDetailTest(ActivityTestCase):
         response = client.get(activity_detail_url(id))
         last_json = response.json()
 
-        for field, example in field_and_example.items():
+        for field, example in field_and_example:
             response = client.patch(activity_detail_url(id),
                                     data={field: example},
                                     content_type='application/json')
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 200, f"response:{response.json()}\n\ninput {field}: {example}")
             last_json[field] = example
             activity = Activity.objects.first()
             self.assertActivityDetailEqual(last_json, activity)  # 比较更新后数据库和预期值
@@ -362,10 +364,14 @@ class ActivityDetailTest(ActivityTestCase):
             ['datetime', '2020-01-01 20:00+25:00'],
             ['datetime', '2020-01-01 20:00Y'],
             ['location', ''],
+            ['presenter', []],
             ['presenter', [{}]],
             ['presenter', 'id:1'],
             ['presenter', [{"id": 233}]],
             ['check_in_open', 2333],
+            ["attender", [{}]],
+            ['attender', 'id:1'],
+            ['attender', [{"id": 233}]],
         ]
 
         client = Client()

@@ -1,8 +1,10 @@
+from hashlib import md5
+from urllib.parse import urlencode
+
 from django.contrib.auth.models import User
 from django.db import models
-from libgravatar import Gravatar
 
-from uestcmsc_webapp_backend.settings import USER_DEFAULT_AVATAR
+from config import GRAVATAR_MIRROR, USER_DEFAULT_AVATAR
 
 # 将 django.contrib.auth.models.User 的 first_name 设为必填
 User._meta.get_field('first_name')._Blank = False
@@ -33,9 +35,14 @@ class UserProfile(models.Model):
 
     # https://libgravatar.readthedocs.io/en/latest/
     def get_avatar(self, size: int = 300) -> str:
-        return Gravatar(self.user.username).get_image(size=size,
-                                                      default=USER_DEFAULT_AVATAR,
-                                                      use_ssl=True)
+        base_url = GRAVATAR_MIRROR if GRAVATAR_MIRROR else 'https://cdn.v2ex.com/gravatar/'  # 国内镜像 yyds
+        default_avatar = USER_DEFAULT_AVATAR
+        md5_hash = md5(self.user.username.encode()).hexdigest()
+        params = urlencode({
+            'size': size,
+            'default': default_avatar,
+        })
+        return f"{base_url}{md5_hash}?{params}"
 
 
 class ResetPasswordRequest(models.Model):

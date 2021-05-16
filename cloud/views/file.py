@@ -1,11 +1,13 @@
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
+from expiringdict import ExpiringDict
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from cloud.onedrive import onedrive_temp_directory
+from cloud.onedrive.api import onedrive_drive
 from utils.permissions import IsAuthenticated
 from utils.swagger import *
 
@@ -26,10 +28,38 @@ class OnedriveFileView(APIView):
     def post(self, request: Request) -> Response:
         filename = request.data.get('filename', None)
         if filename is None:
-            return Response({"detail":"需要参数 filename"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "需要参数 filename"}, status=status.HTTP_400_BAD_REQUEST)
         user_id = request.user.id
-        # 使用 /temp/user_id/filename 作为上传路径。避免上传冲突
-        onedrive_temp_directory.create_directory(str(user_id), fail_silently=True)
-        # 先将文件上传至 temp 文件夹，在 done 时再将文件移动至对应位置
-        response = onedrive_temp_directory.find_file_by_path(f"/{user_id}/{filename}").create_upload_session('replace')
+        user_directory = f'user{user_id}'
+        # 使用 /temp/user{id}/filename 作为上传路径。避免上传冲突
+        onedrive_temp_directory.create_directory(user_directory, fail_silently=True)
+        # 要求前端先将文件上传至 temp 文件夹，完成后再发对应请求，后端将文件移动至对应位置
+        response = onedrive_temp_directory \
+            .find_file_by_path(f"/{user_directory}/{filename}") \
+            .create_upload_session('replace')
         return Response(response.content, status=status.HTTP_200_OK)
+
+
+@method_decorator(name="get", decorator=swagger_auto_schema(
+    operation_summary='获取文件下载链接',
+    operation_description='~~本 API 只是调用 Onedrive API 后的转发机器~~\n'
+                          '如果 id 对应的文件不存在，返回 404\n'
+                          '如果 id 对应的文件存在，响应报文为 `302 Found`，`Location` 为一个下载 URL。\n'
+                          '该 URL 仅在较短的一段时间 （几分钟后）内有效，不需要认证即可下载。\n'
+                          '注：为减少对 Onedrive API 的调用，本 API 对 file_id 进行 300s 的缓存，如获取内容未刷新，请稍后再试',
+    responses={302: 'Found', 200: Schema_None}
+))
+class OnedriveFileDownloadView(APIView):
+    cache_responses = ExpiringDict(max_len=100, max_age_seconds=300)
+
+    def get(self, request: Request, id: str) -> Response:
+        if self.cache_responses.get(id, None):
+            return self.cache_responses[id]
+        onedrive_response = onedrive_drive.find_file_by_id(id).get_download_link_temp(fail_silently=True)
+        if onedrive_response.status_code == 302:
+            headers = {'Location': onedrive_response.headers['Location']}
+            response = Response(status=302, headers=headers)
+            self.cache_responses[id] = response     # 只对正确报文做缓存
+        else:
+            response = Response(status=onedrive_response.status_code, data=onedrive_response.content)
+        return response

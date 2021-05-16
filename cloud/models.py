@@ -1,11 +1,10 @@
-import requests
 from django.contrib.auth.models import User, AnonymousUser
 from django.db import models
 from django.db.models import fields
+from django.utils.timezone import now
 
-from cloud.onedrive import OnedriveDriveItem, OnedriveUnavailableException
+from cloud.onedrive import OnedriveDriveItem
 from cloud.onedrive.api import onedrive_drive
-from cloud.onedrive.api.request import log_onedrive_error
 
 
 class OnedriveFile(models.Model):
@@ -13,11 +12,11 @@ class OnedriveFile(models.Model):
         abstract = True
 
     id = fields.CharField(max_length=50, primary_key=True)
-    filename = fields.CharField(max_length=256, verbose_name="文件名")
-    size = fields.IntegerField(verbose_name="文件大小")
-    thumbnail = fields.CharField(max_length=4096, verbose_name="缩略图")
-    download_link = fields.CharField(max_length=512, verbose_name="下载链接")
-    uploader = models.ForeignKey(to=User, on_delete=models.CASCADE, verbose_name="上传者")
+    filename = fields.CharField("文件名", max_length=256)
+    size = fields.IntegerField("文件大小")
+    created_datetime = models.DateTimeField('创建时间', db_index=True)
+    download_link = fields.CharField("下载链接", max_length=512)
+    uploader = models.ForeignKey(to=User, null=True, on_delete=models.SET_NULL, verbose_name="上传者")
 
     def __str__(self):
         return self.filename
@@ -27,10 +26,10 @@ class OnedriveFile(models.Model):
     def driveitem(self) -> OnedriveDriveItem:
         return onedrive_drive.find_file_by_id(self.id)
 
-    # 获取 thumbnail 和 download_link
+    # 获取 download_link 等信息
     def collect_info(self):
-        self.thumbnail = self.driveitem.get_single_thumbnail()
         self.download_link = self.driveitem.get_download_link()
+        self.created_datetime = now()
         self.save()
 
     # 根据 Onedrive 响应报文和上传者创建文件，并获取其他信息

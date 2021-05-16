@@ -16,7 +16,7 @@ from utils.swagger import *
     responses={200: Schema_object(Schema_status)}
 )
 @api_view(['GET'])
-def onedrive_status(request: Request) -> Response:
+def onedrive_status_view(request: Request) -> Response:
     access_token_available = get_access_token() is not None
     refresh_token_available = get_refresh_token() is not None
     if refresh_token_available and not access_token_available:

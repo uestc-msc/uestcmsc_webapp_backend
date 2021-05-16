@@ -24,7 +24,7 @@ from .docs import schema_view
 from .settings import API_VERSION
 
 
-def hello_world(request):
+def hello_world_view(request):
     return HttpResponse("Hello UESTC-MSCer! This is the backend of UESTC-MSC Webapp.")
 
 
@@ -34,7 +34,7 @@ def hello_world(request):
     operation_description=r'返回 `X.Y.Z`，遵循[语义化版本控制](https://semver.org/lang/zh-CN/)。'
 )
 @api_view(['GET'])
-def version(request):
+def version_view(request):
     return HttpResponse(API_VERSION)
 
 
@@ -47,8 +47,8 @@ api_urlpatterns = [
     path('activities/', include('activities.urls')),
     path('cloud/', include('cloud.urls')),
     path('users/', include('users.urls')),
-    path('', hello_world),
-    path('version/', version)
+    path('', hello_world_view),
+    path('version/', version_view)
 ]
 
 urlpatterns = [

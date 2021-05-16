@@ -35,12 +35,12 @@ class UserListView(ListAPIView):
 @method_decorator(name="get", decorator=swagger_auto_schema(
     operation_summary='获取用户信息',
     operation_description='获取一个的用户信息，成功返回 200\n'
-                          # '注：需要登录，否则返回 403',
+                          '注：非管理员获取非本人信息时，邮箱会被替换为 `***`，学号会被替换为入学年份'
 ))
 @method_decorator(name="put", decorator=swagger_auto_schema(
     operation_summary='更新用户信息',
     operation_description='应答和 PATCH 方法相同，但 PUT 要求在请求中提交所有信息',
-    ))
+))
 @method_decorator(name="patch", decorator=swagger_auto_schema(
     operation_summary='更新用户部分信息',
     operation_description='更新一个用户的信息，成功返回 200\n'
@@ -56,7 +56,7 @@ class UserListView(ListAPIView):
                           '注：需要是用户本人或管理员，否则返回 403'
 ))
 class UserDetailView(RetrieveUpdateDestroyAPIView):
-    permission_classes = (IsSelfOrAdminOrReadOnly, )
+    permission_classes = (IsSelfOrAdminOrReadOnly,)
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'id'
@@ -64,18 +64,22 @@ class UserDetailView(RetrieveUpdateDestroyAPIView):
 
 @swagger_auto_schema(
     method='PATCH',
-    operation_summary='修改密码',
-    operation_description='修改邮箱和密码，用户需要满足以下两个条件之一：\n'
-                          '1. 修改本人的邮箱密码，且需要提供旧密码 old_password\n'
-                          '2. 管理员或超级用户修改权限比自己低的用户的邮箱密码，无需提供旧密码\n\n'
-                          '若 id 不正确，返回 404\n'
-                          '若无权修改（不满足以上两个条件），返回 403\n'
-                          '若 new_password 不合法，返回 400 `{"detail": "新密码不合法"}`\n'
-                          '若 new_email 不合法或已存在，返回 400 `{"detail": "新邮箱不合法或已存在"}`\n'
+    operation_summary='修改密码及邮箱',
+    operation_description='1. 用户可以修改自己的密码及邮箱\n'
+                          '2. 管理员还可以修改普通用户的密码及邮箱\n'
+                          '3. 超级用户有权修改所有用户的密码及邮箱\n'
+                          '为确保安全，修改者需要同时提交自身当前的密码（old_password 字段）\n\n'
+                          '异常情况：'
+                          '1. 若 id 不存在，返回 404\n'
+                          '2. 若无权修改，返回 403 `{"detail": "没有权限修改"}`\n'
+                          '3. 若自身密码错误，返回 403 `{"detail": "密码错误"}`\n'
+                          '4. 若 new_password 不合法，返回 400 `{"detail": "新密码不合法"}`\n'
+                          '5. 若 new_email 不合法，返回 400 `{"detail": "新邮箱不合法"}`\n'
+                          '6. 若 new_email 已存在，返回 400 `{"detail": "新邮箱已存在"}`\n'
                           '验证正确性后，修改邮箱及密码，返回 204\n'
                           '注 1：new_email 和 new_password 可以不同时存在\n'
                           '注 2：若 new_email 和 new_password 其中一项错误，对另一项的修改也不会生效\n'
-                          '注 3：修改密码会使得已有的登录失效',
+                          '注 3：修改密码会使得已有的登录失效，如果修改本人的',
     request_body=Schema_object(Schema_old_password, Schema_new_email, Schema_new_password),
     responses={200: Schema_None}
 )
@@ -84,25 +88,27 @@ class UserDetailView(RetrieveUpdateDestroyAPIView):
 def change_password_view(request: Request, id: int) -> Response:
     user2 = get_object_or_404(User, id=id)
     # 权限判定
-    if not hasGreaterPermissions(request.user, user2):
-        if not (request.user.is_authenticated
-                and "old_password" in request.data
-                and authenticate(request, username=request.user.username, password=request.data["old_password"])):
-            return Response(status=status.HTTP_403_FORBIDDEN)
-    # 对更新数据的判定
+    if not hasGreaterPermissions(request.user, user2) and request.user != user2:
+        return Response({"detail": "没有权限修改"}, status=status.HTTP_403_FORBIDDEN)
+    if "old_password" not in request.data or \
+            not authenticate(request, username=request.user.username, password=request.data["old_password"]):
+        return Response({"detail": "密码错误"}, status=status.HTTP_403_FORBIDDEN)
+    # 对更新数据合法性的判定
     new_email = request.data.pop('new_email', None)
     new_password = request.data.pop('new_password', None)
-    if new_email and \
-            (not is_email(new_email) or User.objects.filter(username=new_email)):
-        return Response({"detail": "新邮箱不合法或已存在"}, status=status.HTTP_400_BAD_REQUEST)
+    if new_email:
+        if not is_email(new_email):
+            return Response({"detail": "新邮箱不合法"}, status=status.HTTP_400_BAD_REQUEST)
+        if User.objects.filter(username=new_email):
+            return Response({"detail": "新邮箱已存在"}, status=status.HTTP_400_BAD_REQUEST)
     if new_password and not is_valid_password(new_password):
         return Response({"detail": "新密码不合法"}, status=status.HTTP_400_BAD_REQUEST)
     # 更新数据
     if new_email:
-        request.user.username = new_email
+        user2.username = new_email
     if new_password:
-        request.user.set_password(new_password)
-    request.user.save()
+        user2.set_password(new_password)
+    user2.save()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
 

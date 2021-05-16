@@ -1,13 +1,10 @@
 from rest_framework import serializers
 
 from .models import ActivityFile
-from users.serializer import UserBriefSerializer
 
 
 class ActivityFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityFile
-        fields = ('id', 'activity_id', 'filename', 'size', 'thumbnail', 'download_link', 'uploader')
+        fields = ('id', 'activity_id', 'filename', 'size', 'created_datetime', 'download_link', 'uploader_id')
         read_only_fields = fields
-
-    uploader = UserBriefSerializer(read_only=True)

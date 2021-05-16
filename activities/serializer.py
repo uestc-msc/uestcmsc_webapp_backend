@@ -1,54 +1,54 @@
-from django.contrib.auth.models import User
+from typing import List
+
 from rest_framework import serializers
 
 from activities.models import Activity
-from activities_links.serializer import LinkSerializer
 from activities_files.serializer import ActivityFileSerializer
-from users.serializer import UserBriefSerializer
-from utils.validators import validate_user_id
+from activities_links.serializer import LinkSerializer
+from activities_photos.models import ActivityPhoto
+from utils.validators import validate_user_ids
 
 
 class ActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = Activity
-        fields = ("id", "title", "datetime", "location", "presenter", "attender", "check_in_open", "link", "file", "photo")
+        fields = ("id", "title", "datetime", "location",
+                  "presenter", "attender", "check_in_open",
+                  "link", "file", "banner_id")
         read_only_fields = ("id", "attender", "link", "file", "photo")
 
     title = serializers.CharField(max_length=150)
     location = serializers.CharField(max_length=50)
-    presenter = UserBriefSerializer(read_only=False, many=True)
-    attender = UserBriefSerializer(read_only=True, many=True)
+
+    presenter = serializers.ListField(child=serializers.IntegerField(), source='presenter_id', read_only=False)
+    # 不能通过 PATCH activity 提交 attender，否则修改名单时签到的同学会被覆盖
+    # 必须使用 PATCH /activities/{id}/attender/ 增量更新名单
+    attender = serializers.ListField(child=serializers.IntegerField(), source='attender_id', read_only=True)
     link = LinkSerializer(read_only=True, many=True)
     file = ActivityFileSerializer(read_only=True, many=True)
+    # 图片可能因为过多导致一个 activity 的 json 过大
+    # photo = ActivityPhotoSerializer(read_only=True, many=True)
+    banner_id = serializers.CharField(allow_null=True, required=False, read_only=False)
 
-    def validate_presenter(self, presenter_list):
-        if len(presenter_list) == 0:
+    def validate_presenter(self, presenter: List[int]):
+        if len(presenter) == 0:
             raise serializers.ValidationError("活动没有演讲者")
-        for presenter in presenter_list:
-            if 'id' not in presenter:
-                raise serializers.ValidationError("用户不包含 id")
-            validate_user_id(presenter['id'])
-        return presenter_list
+        validate_user_ids(presenter)
+        user = self.context['view'].request.user
+        if not (user.is_staff or user.is_superuser) and presenter != [user.id]:
+            raise serializers.ValidationError("非管理员创建活动，只能选择自己为主讲人")
+        return presenter
+
+    def validate_banner_id(self, banner_id: str):
+        if banner_id is None or ActivityPhoto.objects.filter(id=banner_id):
+            return banner_id
+        raise serializers.ValidationError("id 对应的图片不存在")
 
     def create(self, validated_data):
-        presenter_data = validated_data.pop('presenter')
-        activity = Activity.objects.create(**validated_data)
-        for presenter in presenter_data:
-            u = User.objects.get(id=presenter['id'])
-            activity.presenter.add(u)
-        activity.save()
+        presenter_id = validated_data.pop('presenter_id', [])
+        activity = super().create(validated_data)
+        activity.presenter_id = presenter_id
         return activity
-
-    def update(self, instance: Activity, validated_data):
-        if 'presenter' in validated_data:
-            presenter_data = validated_data.pop('presenter')
-            instance.presenter.clear()
-            for presenter in presenter_data:
-                u = User.objects.get(id=presenter['id'])
-                instance.presenter.add(u)
-        instance = super().update(instance, validated_data)     # 更新 title 等数据
-        instance.save()
-        return instance
 
 
 class ActivityAdminSerializer(serializers.ModelSerializer):

@@ -16,7 +16,6 @@ from config import *
 # 应用名称和版本号
 APP_NAME = "阮薇薇点名啦"
 API_VERSION = "v0.2.0 alpha"
-USER_DEFAULT_AVATAR = "https://raw.githubusercontent.com/uestc-msc/uestcmsc_webapp_backend/lyh543/static/ruanweiwei.jpg"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -204,5 +203,5 @@ CORS_ALLOW_HEADERS = (
 )
 
 # CSRF
-CSRF_USE_SESSIONS = True
+CSRF_USE_SESSIONS = False
 CSRF_TRUSTED_ORIGINS = FRONTEND_TRUSTED_ORIGINS
