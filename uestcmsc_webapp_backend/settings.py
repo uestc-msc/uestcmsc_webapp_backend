@@ -15,7 +15,7 @@ from config import *
 
 # 应用名称和版本号
 APP_NAME = "阮薇薇点名啦"
-API_VERSION = "v0.2.0 alpha"
+API_VERSION = "v0.3.0 alpha"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
