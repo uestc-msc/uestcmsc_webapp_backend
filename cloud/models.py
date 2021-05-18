@@ -1,3 +1,5 @@
+import mimetypes
+
 from django.contrib.auth.models import User, AnonymousUser
 from django.db import models
 from django.db.models import fields
@@ -25,6 +27,11 @@ class OnedriveFile(models.Model):
     @property
     def driveitem(self) -> OnedriveDriveItem:
         return onedrive_drive.find_file_by_id(self.id)
+
+    @property
+    def mimetype(self) -> str:
+        guess = mimetypes.guess_type(self.filename, False)[0]
+        return guess if guess else 'text/plain'
 
     # 获取 download_link 等信息
     def collect_info(self):
