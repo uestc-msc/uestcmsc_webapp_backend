@@ -20,6 +20,7 @@ from django.urls import path, include
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view
 
+from feed.feed import ActivityFeed
 from .docs import schema_view
 from .settings import API_VERSION
 
@@ -39,16 +40,19 @@ def version_view(request):
 
 
 api_urlpatterns = [
-    url(r'^docs(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    url(r'^docs/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('activities/', include('activities.urls')),
     path('cloud/', include('cloud.urls')),
     path('users/', include('users.urls')),
+
+    url(r'^docs(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    url(r'^docs/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+
     path('', hello_world_view),
-    path('version/', version_view)
+    path('version/', version_view),
+    path('feed', ActivityFeed()),
 ]
 
 urlpatterns = [

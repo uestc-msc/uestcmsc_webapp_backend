@@ -9,7 +9,10 @@ Restart=always
 RestartSec=1
 User=root
 WorkingDirectory=/etc/uestcmsc_webapp/backend/
-ExecStart=/usr/local/bin/gunicorn -b "127.0.0.1:8000" --access-logfile - uestcmsc_webapp_backend.wsgi
+ExecStart=/usr/local/bin/gunicorn -b "127.0.0.1:8000" \
+    --access-logfile - \
+    --access-logformat "%({X-Real-IP}i)s \"%(r)s\" %(s)s %(b)s \"%(f)s\" \"%(a)s\"" \
+    uestcmsc_webapp_backend.wsgi
 
 [Install]
 WantedBy=multi-user.target
