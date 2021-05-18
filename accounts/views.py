@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 
 from django.middleware import csrf
 from django.utils.timezone import now
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, requires_csrf_token
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -91,12 +91,12 @@ def login_view(request: Request) -> Response:
 
 
 @swagger_auto_schema(
-    method='POST',
+    method='GET',
     operation_summary='登出',
     operation_description='成功返回 204，失败（未登陆用户请求登出）返回 401。',
     responses={200: Schema_None}
 )
-@api_view(['POST'])
+@api_view(['GET'])
 @csrf_exempt
 def logout_view(request: Request) -> Response:
     logout(request)
