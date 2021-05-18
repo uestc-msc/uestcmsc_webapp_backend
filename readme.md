@@ -20,7 +20,7 @@
 
 ## 文档
 
-* API 文档：本项目的 API 文档使用 [drf-yasg](https://github.com/axnsan12/drf-yasg/) 生成。运行项目后见 `http://localhost:8000/api/docs/`
+* API 文档：本项目的 API 文档使用 [drf-yasg](https://github.com/axnsan12/drf-yasg/) 生成，见 https://api.uestc-msc.com/api/docs/
 * [数据模型文档](docs/models.md)
 
 ## TO-DO

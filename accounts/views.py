@@ -2,9 +2,8 @@ from datetime import timedelta
 
 from django.contrib.auth import authenticate, login, logout
 
-from django.middleware import csrf
 from django.utils.timezone import now
-from django.views.decorators.csrf import csrf_exempt, requires_csrf_token
+from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -15,7 +14,6 @@ from accounts.serializer import UserRegisterSerializer
 from users.models import User, ResetPasswordRequest
 from users.serializer import UserSerializer
 from utils.mail import send_reset_password_email
-from utils.permissions import login_required
 from utils.random import generate_uuid
 from utils.swagger import *
 from utils.validators import is_valid_password
@@ -64,9 +62,7 @@ def signup_view(request: Request) -> Response:
     operation_summary='登录',
     operation_description='成功返回 200\n'
                           '失败（账户或密码错误）返回 401\n'
-                          '注 1：成功返回的字段中还包含了 csrftoken，请将其按照'
-                          '[文档](https://docs.djangoproject.com/zh-hans/3.1/ref/csrf/)所示方法加入 cookie 和 header'
-                          '注 2：一个已登录的用户 A 尝试 login 账户 B 失败后，仍具有账户 A 的凭证。',
+                          '注：一个已登录的用户 A 尝试 login 账户 B 失败后，仍具有账户 A 的凭证。',
     request_body=Schema_object(Schema_email, Schema_password),
     responses={200: UserSerializer()}
 )
@@ -83,7 +79,7 @@ def login_view(request: Request) -> Response:
         return err_response
     login(request, user)
     serializer_data = UserSerializer(user).data
-    serializer_data['csrftoken'] = csrf.get_token(request)
+    # serializer_data['csrftoken'] = csrf.get_token(request)
     return Response(serializer_data, status=status.HTTP_200_OK)
 
 # TODO: GitHub 登录！
