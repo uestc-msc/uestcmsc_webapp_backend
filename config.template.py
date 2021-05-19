@@ -10,6 +10,7 @@ DJANGO_SERVER_HOSTNAME = 'api.uestc-msc.com'
 
 # 前端的 URL，用于生成签到二维码、邮箱网址等等
 FRONTEND_URL = "https://app.uestc-msc.com"
+# 前端可用的域名列表，其中第一个域名将被作为 cookie 的 domain
 FRONTEND_TRUSTED_ORIGINS = ['.uestc-msc.com']
 
 # Gravatar 镜像站，为 None 表示不使用
