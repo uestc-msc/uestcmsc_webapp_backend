@@ -7,6 +7,7 @@ from utils.tester import OnedriveTestCase
 
 onedrive_status_url = reverse('onedrive_status')
 onedrive_file_url = reverse('onedrive_file')
+onedrive_file_download_url = lambda id: reverse('onedrive_file_download', args=[id])
 
 
 class OnedriveLoginCallbackLinkTest(SimpleTestCase):
@@ -26,3 +27,10 @@ class OnedriveBasicTest(OnedriveTestCase):
         self.assertRegexpMatches(onedrive_approot.uri, '_test')
         self.assertRegexpMatches(onedrive_activity_directory.uri, '_test')
         self.assertRegexpMatches(onedrive_temp_directory.uri, '_test')
+
+
+class OnedriveDownloadFileTest(OnedriveTestCase):
+    def test(self):
+        client = Client()
+        response = client.post(onedrive_file_download_url('01XX4NZVPDPE6KSGURYNBLOC7X6YZOCACG'))
+        self.assertEqual(response.status_code, 302)

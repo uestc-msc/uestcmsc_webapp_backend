@@ -5,12 +5,12 @@ from django.core.mail import send_mail, mail_admins
 
 from config import *
 from uestcmsc_webapp_backend.settings import APP_NAME
-from utils.asynchronous import asynchronous
+from utils.asynchronous import run_in_new_thread
 
 logger = logging.getLogger(__name__)
 
 
-@asynchronous
+@run_in_new_thread
 def send_reset_password_email(receipt_email: str, name: str, token: str):
     """
     发送重置密码的邮件，成功后返回 True
@@ -35,7 +35,7 @@ def send_reset_password_email(receipt_email: str, name: str, token: str):
         logger.error(f"向 {name} ({receipt_email}) 发送邮件失败：{e}")
 
 
-@asynchronous
+@run_in_new_thread
 def send_system_alert_mail_to_managers(info: str):
     message = f"{APP_NAME}管理员：\n" \
               f"{APP_NAME}出现异常情况，详情如下：\n\n" \

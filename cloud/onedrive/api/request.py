@@ -17,7 +17,7 @@ def validate_path(path: str) -> str:
         path = path[0:-1]
     if not path.startswith('/'):
         path = '/' + path
-    return urllib.parse.quote(path)     # url encode
+    return urllib.parse.quote(path)  # url encode
 
 
 def log_onedrive_error(response: requests.Response):
@@ -35,6 +35,7 @@ def catchConnectionError(func: Callable):
             logger.error("无法连接到 Onedrive", stack_info=True)
             from cloud.onedrive.api.auth import OnedriveUnavailableException
             raise OnedriveUnavailableException
+
     return wrapper
 
 
@@ -71,9 +72,9 @@ def onedrive_http_request(uri: str,
     if json:
         kwargs['json'] = json
     for i in range(try_times):
-            response = requests.request(method=method, url=base_url + uri, headers=headers, **kwargs)
-            if response.ok or fail_silently:
-                return response
-            log_onedrive_error(response)
+        response = requests.request(method=method, url=base_url + uri, headers=headers, **kwargs)
+        if response.ok or fail_silently:
+            return response
+        log_onedrive_error(response)
 
     raise OnedriveUnavailableException

@@ -5,7 +5,7 @@
 * Ubuntu 18.04 / CentOS 7 / Windows 10, 
 * Python 3.7~3.9
 
-## Docker、MySQL 部署
+## Docker、MySQL、Memcached 部署
 
 安装 Docker：
 
@@ -19,6 +19,12 @@ bash <(curl -s https://get.docker.com)
 docker run -dit --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=testtest -e MYSQL_DATABASE=uestcmsc_webapp --restart always mysql
 ```
 
+安装 Redis：
+
+```shell
+docker run -d --name redis -p 6379:6379 -e REDIS_PASSWORD=redis --restart always redis /bin/sh -c 'redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}'
+```
+
 ## Django 运行
 
 按自己的情况修改 `config.template.py`，并保存为 `config.py`。然后安装依赖库并初始化数据库：
@@ -29,7 +35,7 @@ cd uestcmsc_webapp_backend
 sudo apt-get install libmysqlclient-dev     # Ubuntu 需要安装 libmysqlclient-dev
 sudo yum install python3-devel maria-devel  # CentOS 需要安装 python3-devel maria-devel
 pip3 install -r requirements.txt
-python3 manage.py makemigrations accounts activities activities_files activities_photos activities_link activities_comments cloud users --noinput
+python3 manage.py makemigrations accounts activities activities_files activities_photos activities_link activities_comments activities_tags cloud users --noinput
 python3 manage.py migrate --noinput
 python3 manage.py collectstatic --noinput --clear
 python manage.py createcachetable

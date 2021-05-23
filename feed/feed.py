@@ -38,7 +38,7 @@ class ActivityFeed(Feed):
     # 附件
     def item_enclosures(self, item: Activity) -> List[Enclosure]:
         def make_enclosure(file: OnedriveFile) -> Enclosure:
-            return Enclosure(file.download_link, str(file.size), file.mimetype)
+            return Enclosure(file.download_link_temp, str(file.size), file.mimetype)
         photos = item.photo.all()
         files = item.file.all()
         return [make_enclosure(f) for f in photos] + [make_enclosure(f) for f in files]

@@ -3,6 +3,7 @@ import mimetypes
 from django.contrib.auth.models import User, AnonymousUser
 from django.db import models
 from django.db.models import fields
+from django.urls import reverse
 from django.utils.timezone import now
 
 from cloud.onedrive import OnedriveDriveItem
@@ -27,6 +28,10 @@ class OnedriveFile(models.Model):
     @property
     def driveitem(self) -> OnedriveDriveItem:
         return onedrive_drive.find_file_by_id(self.id)
+
+    @property
+    def download_link_temp(self) -> str:
+        return reverse('onedrive_file_download', args=[self.id])
 
     @property
     def mimetype(self) -> str:

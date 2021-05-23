@@ -5,6 +5,10 @@ import requests
 from .request import validate_path, onedrive_http_request
 
 
+def validate_conflict_behavior(conflict_behavior: str):
+    assert conflict_behavior in ('fail', 'replace', 'rename')
+
+
 class OnedriveDriveItem:
     def __init__(self, uri: str = None):
         self.uri = uri
@@ -52,13 +56,14 @@ class OnedriveDriveItem:
     def create_directory(self,
                          dirname: str,
                          conflict_behavior: str = 'fail',
-                         fail_silently=False) -> requests.Response:
-        assert conflict_behavior in ('fail', 'replace', 'rename')
+                         fail_silently=False,
+                         **kwargs) -> requests.Response:
+        validate_conflict_behavior(conflict_behavior)
         return onedrive_http_request(self.uri + '/children', 'POST', {
             "name": dirname,
             "folder": {},
             "@microsoft.graph.conflictBehavior": conflict_behavior
-        }, fail_silently=fail_silently)
+        }, fail_silently=fail_silently, **kwargs)
 
     # 递归地创建多级文件夹
     # 成功后返回最底层文件夹的信息，见：
@@ -140,7 +145,7 @@ class OnedriveDriveItem:
                        filename: str = None,
                        conflict_behavior: str = 'fail',
                        fail_silently=False) -> requests.Response:
-        assert conflict_behavior in ('fail', 'replace', 'rename')
+
         json = {
             "@microsoft.graph.sourceUrl": source_url,
             "@microsoft.graph.conflictBehavior": conflict_behavior,
@@ -156,7 +161,7 @@ class OnedriveDriveItem:
     def create_upload_session(self,
                               conflict_behavior: str = 'fail',
                               fail_silently=False) -> requests.Response:
-        assert conflict_behavior in ('fail', 'replace', 'rename')
+        validate_conflict_behavior(conflict_behavior)
         return onedrive_http_request(self.uri + '/createUploadSession', 'POST', {
             "item": {"@microsoft.graph.conflictBehavior": conflict_behavior}
         }, fail_silently=fail_silently)
