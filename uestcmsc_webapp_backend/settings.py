@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'activities_files.apps.ActivitiesFilesConfig',
     'activities_links.apps.ActivitiesLinksConfig',
     'activities_photos.apps.ActivitiesPhotosConfig',
+    'activities_tags.apps.ActivitiesTagsConfig',
     'users.apps.UsersConfig',
 ]
 
