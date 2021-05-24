@@ -1,7 +1,6 @@
-from typing import Optional
+import asyncio
 
 from asgiref.sync import sync_to_async
-from django.core.cache import cache
 from django.http import HttpResponse
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
@@ -12,7 +11,7 @@ from rest_framework.views import APIView
 
 from cloud.onedrive import onedrive_temp_directory
 from cloud.onedrive.api import onedrive_drive
-from utils.asynchronous import thread_insensitive_sync_to_async
+from utils.cache import get_onedrive_file_temp_link_from_cache, set_onedrive_file_temp_link_to_cache
 from utils.permissions import IsAuthenticated
 from utils.swagger import *
 
@@ -44,24 +43,6 @@ class OnedriveFileView(APIView):
             .create_upload_session('replace')
         return Response(response.content, status=status.HTTP_200_OK)
 
-
-__onedrive_file_temp_link_prefix = 'onedrive__file_temp_link__'
-
-
-def get_onedrive_file_temp_link_from_cache(id: str) -> Optional[str]:
-    """
-    从缓存获取文件临时下载链接，不存在则返回 None
-    """
-    return cache.get(__onedrive_file_temp_link_prefix + id, None)
-
-
-def set_onedrive_file_temp_link_to_cache(id: str, link: str, timeout: int = None):
-    """
-    设置文件临时下载链接和缓存时限（单位：秒）
-    """
-    cache.set(__onedrive_file_temp_link_prefix + id, link, timeout=timeout)
-
-
 @swagger_auto_schema(
     operation_summary='获取文件下载链接',
     operation_description='~~本 API 只是调用 Onedrive API 后的转发机器~~\n'
@@ -71,13 +52,15 @@ def set_onedrive_file_temp_link_to_cache(id: str, link: str, timeout: int = None
                           '注：为减少对 Onedrive API 的调用，本 API 对 file_id 进行 300s 的缓存，如获取内容未刷新，请稍后再试',
     responses={302: 'Found', 200: Schema_None}
 )
-@thread_insensitive_sync_to_async
-def onedrive_file_download_view(request: Request, id: str) -> HttpResponse:
-    file_link = get_onedrive_file_temp_link_from_cache(id)
+async def onedrive_file_download_view(request: Request, id: str) -> HttpResponse:
+    """
+    TODO 报错 RuntimeError: Event loop is closed 但又不是不能用
+    """
+    file_link = await sync_to_async(get_onedrive_file_temp_link_from_cache)(id)
     if not file_link:
-        onedrive_response = onedrive_drive.find_file_by_id(id).get_download_link_temp(fail_silently=True)
-        if onedrive_response.status_code != 302:
-            return HttpResponse(onedrive_response.content, status=onedrive_response.status_code)
+        onedrive_response = await onedrive_drive.find_file_by_id(id).async_get_download_link_temp(fail_silently=True)
+        if onedrive_response.status != 302:
+            return HttpResponse(onedrive_response.content, status=onedrive_response.status)
         file_link = onedrive_response.headers['Location']
-        set_onedrive_file_temp_link_to_cache(id, file_link, 300)  # 设五分钟后过期
+        await sync_to_async(set_onedrive_file_temp_link_to_cache)(id, file_link, 300)  # 设五分钟后过期
     return HttpResponse(headers={'Location': file_link}, status=302)

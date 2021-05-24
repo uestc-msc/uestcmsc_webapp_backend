@@ -4,7 +4,7 @@ import requests
 from rest_framework.exceptions import APIException
 
 import config
-from cloud.onedrive.api.cache import get_refresh_token, set_access_token, set_refresh_token
+from utils.cache import get_refresh_token, set_access_token, set_refresh_token
 from cloud.onedrive.api.request import catchConnectionError
 from uestcmsc_webapp_backend.settings import DEBUG
 from utils.mail import send_system_alert_mail_to_managers

@@ -37,7 +37,7 @@ sudo yum install python3-devel maria-devel  # CentOS 需要安装 python3-devel 
 pip3 install -r requirements.txt
 python3 manage.py makemigrations accounts activities activities_files activities_photos activities_link activities_comments activities_tags cloud users --noinput
 python3 manage.py migrate --noinput
-python3 manage.py collectstatic --noinput --clear
+python3 manage.py collectstatic --noinput --clear --no-post-process
 python manage.py createcachetable
 ```
 

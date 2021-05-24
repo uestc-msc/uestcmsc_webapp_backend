@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import aiohttp
 import requests
 
-from .request import validate_path, onedrive_http_request
+from .request import validate_path, onedrive_http_request, async_onedrive_http_request
 
 
 def validate_conflict_behavior(conflict_behavior: str):
@@ -125,6 +126,10 @@ class OnedriveDriveItem:
     # https://docs.microsoft.com/zh-cn/graph/api/driveitem-get-content?view=graph-rest-1.0&tabs=http
     def get_download_link_temp(self, fail_silently=False) -> requests.Response:
         return onedrive_http_request(self.uri + '/content', fail_silently=fail_silently, allow_redirects=False)
+
+    # 异步获取临时的下载链接
+    async def async_get_download_link_temp(self, fail_silently=False) -> aiohttp.ClientResponse:
+        return await async_onedrive_http_request(self.uri + '/content', fail_silently=fail_silently, allow_redirects=False)
 
     # 下载文件
     # https://docs.microsoft.com/zh-cn/graph/api/driveitem-get-content?view=graph-rest-1.0&tabs=http

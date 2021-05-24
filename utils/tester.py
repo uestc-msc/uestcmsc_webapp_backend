@@ -4,7 +4,6 @@ from os import path
 from typing import Union, List, Dict
 from unittest.case import skipIf
 
-import requests
 from django.contrib.auth.models import User
 from django.test import Client, SimpleTestCase, TestCase
 from django.urls import reverse
@@ -12,7 +11,7 @@ from django.urls import reverse
 from activities.models import Activity
 from activities.serializer import ActivitySerializer
 from cloud.onedrive import *
-from cloud.onedrive.api.cache import get_access_token, get_refresh_token, set_access_token, set_refresh_token
+from utils.cache import get_access_token, get_refresh_token, set_access_token, set_refresh_token
 from uestcmsc_webapp_backend.settings import APP_NAME
 from users.serializer import UserSerializer
 
