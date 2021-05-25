@@ -22,7 +22,7 @@ from utils.swagger import *
                           '成功返回 201，沙龙或文件不存在返回 404\n'
                           '注：需要是沙龙演讲者或管理员，否则返回 403\n'
                           '注 2：需先调用“创建文件上传会话”接口，上传完文件后才可以调用该接口\n'
-                          '注 3：`file_id` 在向 Onedrive 上传完成的响应中\n'
+                          '注 3：`key` 在向 Onedrive 上传完成的响应中\n'
                           '注 4：如果文件重名，会自动重命名；最终文件名以响应报文为准',
     request_body=Schema_object(Schema_activity_id, Schema_file_id),
     responses={201:ActivityFileSerializer()}
@@ -37,9 +37,9 @@ class ActivityFileListView(GenericAPIView):
 
     def post(self, request: Request) -> Response:
         activity_id = request.data.get('activity_id', None)
-        file_id = request.data.get('file_id', None)
+        file_id = request.data.get('key', None)
         if not activity_id or not file_id:
-            return Response({"detail": "activity_id 或 file_id 参数不存在"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "activity_id 或 key 参数不存在"}, status=status.HTTP_400_BAD_REQUEST)
         # 获取活动文件夹
         folder = get_or_create_activity_folder(activity_id)
         # 将文件移动至活动文件夹（并验证有效性）
@@ -69,7 +69,7 @@ class ActivityFileListView(GenericAPIView):
 
 @method_decorator(name='delete', decorator=swagger_auto_schema(
     operation_summary='删除沙龙文件',
-    operation_description='删除 `file_id` 对应的沙龙文件\n'
+    operation_description='删除 `key` 对应的沙龙文件\n'
                           '成功返回 204，沙龙或文件不存在返回 404\n'
                           '注：需要是沙龙演讲者或管理员，否则返回 403'
 ))

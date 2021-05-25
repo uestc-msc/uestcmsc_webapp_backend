@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 
 from cloud.onedrive import onedrive_temp_directory
 from cloud.onedrive.api import onedrive_drive
-from utils.cache import get_onedrive_file_temp_link_from_cache, set_onedrive_file_temp_link_to_cache
+from utils.cache import Cache
 from utils.permissions import IsAuthenticated
 from utils.swagger import *
 
@@ -49,18 +49,18 @@ class OnedriveFileView(APIView):
                           '如果 id 对应的文件不存在，返回 404\n'
                           '如果 id 对应的文件存在，响应报文为 `302 Found`，`Location` 为一个下载 URL。\n'
                           '该 URL 仅在较短的一段时间 （几分钟后）内有效，不需要认证即可下载。\n'
-                          '注：为减少对 Onedrive API 的调用，本 API 对 file_id 进行 300s 的缓存，如获取内容未刷新，请稍后再试',
+                          '注：为减少对 Onedrive API 的调用，本 API 对 key 进行 300s 的缓存，如获取内容未刷新，请稍后再试',
     responses={302: 'Found', 200: Schema_None}
 )
 async def onedrive_file_download_view(request: Request, id: str) -> HttpResponse:
     """
     TODO 报错 RuntimeError: Event loop is closed 但又不是不能用
     """
-    file_link = await sync_to_async(get_onedrive_file_temp_link_from_cache)(id)
+    file_link = Cache.onedrive_file_temp_link[id]
     if not file_link:
         onedrive_response = await onedrive_drive.find_file_by_id(id).async_get_download_link_temp(fail_silently=True)
         if onedrive_response.status != 302:
             return HttpResponse(onedrive_response.content, status=onedrive_response.status)
         file_link = onedrive_response.headers['Location']
-        await sync_to_async(set_onedrive_file_temp_link_to_cache)(id, file_link, 300)  # 设五分钟后过期
+        Cache.onedrive_file_temp_link[id] = file_link
     return HttpResponse(headers={'Location': file_link}, status=302)

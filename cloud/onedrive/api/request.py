@@ -2,9 +2,10 @@ import functools
 import logging
 import urllib.parse
 from typing import Dict, Callable
-
 import aiohttp
 import requests
+
+from utils.cache import Cache
 
 base_url = 'https://graph.microsoft.com/v1.0'
 logger = logging.getLogger(__name__)
@@ -54,6 +55,7 @@ def catchConnectionError(func: Callable):
             logger.error("无法连接到 Onedrive", stack_info=True)
             from cloud.onedrive.api.auth import OnedriveUnavailableException
             raise OnedriveUnavailableException
+
     return wrapper
 
 
@@ -68,19 +70,18 @@ def _prepare_onedrive_http_request(
     准备请求的报头
     """
     from cloud.onedrive.api.auth import OnedriveAuthentication, OnedriveUnavailableException
-    from utils.cache import get_access_token
-    access_code = get_access_token()
-    if access_code is None:
+    access_token = Cache.onedrive_access_token
+    if access_token is None:
         # 尝试用 refresh_token 刷新 access_token
         OnedriveAuthentication.refresh_access_token()
         # 如果再次失败说明 refresh_token 失效，需要重新登录
-        access_code = get_access_token()
-        if access_code is None:
+        access_token = Cache.onedrive_access_token
+        if access_token is None:
             raise OnedriveUnavailableException
     # 准备 headers 和其他 requests 参数
     headers = extra_headers.copy() if extra_headers else {}
     headers['Content-Type'] = content_type
-    headers['Authorization'] = f'bearer {access_code}'
+    headers['Authorization'] = f'bearer {access_token}'
     if data:
         kwargs['data'] = data
     if json:

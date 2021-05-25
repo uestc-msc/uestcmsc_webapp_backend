@@ -31,7 +31,7 @@ class ActivityFileTest(OnedriveTestCase):
         client = Client()
         client.force_login(self.superuser)
         file_id = self.upload_file(self.filepath, client)
-        response = client.post(activity_file_list_url, { "file_id": file_id, "activity_id": self.activity.id })
+        response = client.post(activity_file_list_url, { "key": file_id, "activity_id": self.activity.id })
         self.assertEqual(response.status_code, 201)     # 上传成功
         self.assertEqual(self.activity.file.count(), 1)
         # 验证信息正确

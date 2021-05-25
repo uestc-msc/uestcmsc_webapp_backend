@@ -5,7 +5,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from cloud.onedrive.api.auth import OnedriveAuthentication
-from utils.cache import get_access_token, get_refresh_token
+from utils.cache import Cache
 from utils.swagger import *
 
 
@@ -17,11 +17,12 @@ from utils.swagger import *
 )
 @api_view(['GET'])
 def onedrive_status_view(request: Request) -> Response:
-    access_token_available = get_access_token() is not None
-    refresh_token_available = get_refresh_token() is not None
+    access_token_available = Cache.onedrive_access_token is not None
+    refresh_token_available = Cache.onedrive_refresh_token is not None
     if refresh_token_available and not access_token_available:
+        # 这种情况可能是 access_token 过期了，所以立即尝试获取 access_token
         OnedriveAuthentication.refresh_access_token()
-        access_token_available = get_access_token() is not None
+        access_token_available = Cache.onedrive_access_token is not None
 
     status_strings = [
         ['login_required', 'error: only access token'],    # refresh is False

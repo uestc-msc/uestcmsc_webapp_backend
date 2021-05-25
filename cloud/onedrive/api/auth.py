@@ -4,11 +4,10 @@ import requests
 from rest_framework.exceptions import APIException
 
 import config
-from utils.cache import get_refresh_token, set_access_token, set_refresh_token
 from cloud.onedrive.api.request import catchConnectionError
 from uestcmsc_webapp_backend.settings import DEBUG
+from utils.cache import Cache
 from utils.mail import send_system_alert_mail_to_managers
-
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +59,7 @@ class OnedriveAuthentication:
     @catchConnectionError
     def refresh_access_token(cls, refresh_token=None):
         if refresh_token is None:
-            refresh_token = get_refresh_token()
+            refresh_token = Cache.onedrive_refresh_token
             if refresh_token is None:
                 return  # 如果本身没有 refresh_token，就不提醒管理员了；删除 refresh_token 已经提醒过了
         response = requests.post('https://login.microsoftonline.com/common/oauth2/v2.0/token',
@@ -76,24 +75,21 @@ class OnedriveAuthentication:
             error_info = cls.generate_errormsg('刷新 Onedrive Access Token 失败', response)
             logger.error(error_info)
             send_system_alert_mail_to_managers(error_info)
-            return
 
     @classmethod
     def _save_token(cls, response: requests.Response):
         response_json = response.json()
         access_token = response_json.get('access_token', None)
-        access_token_expires_in = response_json.get('expires_in', 3600)
+        # access_token_expires_in = response_json.get('expires_in', 3600)
         refresh_token = response_json.get('refresh_token', None)
         if access_token is None or refresh_token is None:
             error_info = cls.generate_errormsg('获取的 Onedrive Access Token 或 Refresh Token 为 None', response)
             logger.error(error_info)
             send_system_alert_mail_to_managers(error_info)
-            return
         else:
-            set_access_token(access_token, timeout=access_token_expires_in)
-            set_refresh_token(refresh_token, timeout=None)
+            Cache.onedrive_access_token = access_token
+            Cache.onedrive_refresh_token = refresh_token
             logger.info('Onedrive 获取 Access Token 和 Refresh Token 成功')
-            return
 
 
 class OnedriveUnavailableException(APIException):
