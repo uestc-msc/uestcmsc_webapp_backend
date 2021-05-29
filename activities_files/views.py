@@ -40,6 +40,7 @@ class ActivityFileListView(GenericAPIView):
         file_id = request.data.get('file_id', None)
         if not activity_id or not file_id:
             return Response({"detail": "activity_id 或 file_id 参数不存在"}, status=status.HTTP_400_BAD_REQUEST)
+        # TODO: 判断活动存在以及鉴权
         # 获取活动文件夹
         folder = get_or_create_activity_folder(activity_id)
         # 将文件移动至活动文件夹（并验证有效性）
