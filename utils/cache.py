@@ -36,17 +36,17 @@ class CacheMeta(type):
         cache.set(onedrive_refresh_token_name, value, timeout=None)
 
     class __OnedriveFileLinkCache:
-        def __getitem__(self, key):
+        def __getitem__(self, file_id):
             """
             从缓存获取文件临时下载链接，不存在则返回 None
             """
-            return cache.get(onedrive_file_link_prefix + key, None)
+            return cache.get(onedrive_file_link_prefix + file_id, None)
 
-        def __setitem__(self, key, value):
+        def __setitem__(self, file_id, value):
             """
             设置文件临时下载链接和缓存时限（单位：秒）
             """
-            cache.set(onedrive_file_link_prefix + key, value, timeout=300)
+            cache.set(onedrive_file_link_prefix + file_id, value, timeout=300)
 
     onedrive_file_temp_link = __OnedriveFileLinkCache()
 

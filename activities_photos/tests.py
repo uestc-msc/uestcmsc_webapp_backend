@@ -32,8 +32,8 @@ class ActivityPhotoTest(OnedriveTestCase):
         client = Client()
         client.force_login(self.superuser)
         file_id = self.upload_file(self.filepath, client)
-        response = client.post(activity_photo_list_url, { "key": file_id, "activity_id": self.activity.id })
-        self.assertEqual(response.status_code, 201)     # 上传成功
+        response = client.post(activity_photo_list_url, {"file_id": file_id, "activity_id": self.activity.id})
+        self.assertEqual(response.status_code, 201)  # 上传成功
         self.assertEqual(self.activity.photo.count(), 1)
         # 验证信息正确
         content = response.json()
@@ -45,7 +45,7 @@ class ActivityPhotoTest(OnedriveTestCase):
         self.assertEqual(not content["download_link"], False)
         # 删除照片
         response = client.delete(activity_photo_detail_url(file_id))
-        self.assertEqual(response.status_code, 204)     # 删除成功
+        self.assertEqual(response.status_code, 204)  # 删除成功
         self.assertEqual(self.activity.photo.count(), 0)
 
     # 剩下的测试咕咕咕了

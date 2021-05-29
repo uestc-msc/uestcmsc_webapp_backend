@@ -60,7 +60,7 @@ Schema_url = {'url': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FOR
 
 # 云盘
 Schema_status = {'status': openapi.Schema(type=openapi.TYPE_STRING, description='状态')}
-Schema_file_id = {'key': openapi.Schema(type=openapi.TYPE_STRING, description='文件 id')}
+Schema_file_id = {'file_id': openapi.Schema(type=openapi.TYPE_STRING, description='文件 id')}
 Schema_filename = {'filename': openapi.Schema(type=openapi.TYPE_STRING, description='文件名')}
 
 Param_search = openapi.Parameter('search', openapi.IN_QUERY, type=openapi.TYPE_STRING, description='搜索关键字（为空时表示不搜索）')
