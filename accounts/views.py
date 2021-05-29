@@ -66,7 +66,7 @@ def signup_view(request: Request) -> Response:
                           '注 1：成功返回的字段中还包含了 csrftoken，请将其按照'
                           '[文档](https://docs.djangoproject.com/zh-hans/3.1/ref/csrf/)所示方法加入 cookie 和 header'
                           '注 2：一个已登录的用户 A 尝试 login 账户 B 失败后，仍具有账户 A 的凭证。',
-    request_body=Schema_object(Schema_email, Schema_password),
+    request_body=Schema_object(Schema_username, Schema_password),
     responses={200: UserSerializer()}
 )
 @api_view(['POST'])
@@ -110,7 +110,7 @@ def logout_view(request: Request) -> Response:
                           '若用户操作过于频繁（同 IP 1 分钟内只能发送 1 封，24 小时内只能发送 10 封），服务器拒绝服务并返回 403 `{"detail": "发送邮件过于频繁"}`\n'
                           '邮件发送失败，返回 500 `{"detail": "发送邮件失败"}`\n'
                           '注：token 24 小时有效，新 token 不会使旧 token 失效',
-    request_body=Schema_object(Schema_email),
+    request_body=Schema_object(Schema_username),
     responses={200: Schema_None}
 )
 @api_view(['POST'])
