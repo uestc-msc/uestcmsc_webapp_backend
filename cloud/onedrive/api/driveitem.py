@@ -109,7 +109,7 @@ class OnedriveDriveItem:
     # 如果发生文件冲突，会 fail
     # https://docs.microsoft.com/zh-cn/graph/api/driveitem_move
     def move(self,
-             dest_dir_id: str,
+             dest_dir_id: str = None,
              new_filename: str = None,
              fail_silently=False) -> requests.Response:
         json = {"parentReference": {"id": dest_dir_id}}
