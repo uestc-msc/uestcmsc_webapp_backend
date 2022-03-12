@@ -1,6 +1,6 @@
 #!/bin/bash
 set -xe
-cd /etc/uestcmsc_webapp/backend
+cd /home/lyh543/git/uestcmsc/backend
 # 拉取源代码
 git pull
 # 安装依赖

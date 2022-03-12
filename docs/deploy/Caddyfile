@@ -1,7 +1,7 @@
 example.com {
     handle /api/static/* {
         uri strip_prefix /api/static
-        root * /etc/uestcmsc_webapp/backend/.static
+        root * /home/lyh543/git/uestcmsc/backend/.static
         file_server
     }
 
@@ -10,7 +10,7 @@ example.com {
     }
     
     handle {
-        root * /etc/uestcmsc_webapp/frontend
+        root * /home/lyh543/git/uestcmsc/frontend
         try_files {path} /index.html
         file_server
     }
