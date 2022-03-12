@@ -17,7 +17,7 @@ bash <(curl -s https://get.docker.com)
 
 ```sh
 docker run -dit \
-  --name mysql \
+  --name uestcmsc_webapp_db \
   -p 3306:3306 \
   -v ~/git/github/uestcmsc_webapp/data/db:/var/lib/mysql \
   -e MYSQL_ROOT_PASSWORD=testtest \
@@ -30,10 +30,10 @@ docker run -dit \
 
 ```shell
 docker run -d \
-  --name redis \
+  --name uestcmsc_webapp_redis \
   -p 6379:6379 \
   -v ~/git/github/uestcmsc_webapp/data/redis:/data \
-  -e REDIS_PASSWORD=redis \
+  -e REDIS_PASSWORD=testtest \
   --restart always \
   redis \
   /bin/sh -c 'redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}'
