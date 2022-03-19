@@ -4,10 +4,10 @@
 # ignore idea setting file
 .idea/
 __pycache__/
-uestcmsc_webapp_backend.iml
+*.iml
 
 # ignore private profiles
-config.py
+.env
 
 # ignore migrations file
 migrations/

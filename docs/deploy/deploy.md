@@ -3,7 +3,7 @@
 部署环境：
 
 * Ubuntu 18.04 / CentOS 7 / Windows 10, 
-* Python 3.7~3.9
+* Docker
 
 ## Docker、MySQL、Memcached 部署
 
@@ -13,35 +13,7 @@
 bash <(curl -s https://get.docker.com)
 ```
 
-安装 MySQL：
-
-```sh
-docker run -dit \
-  --name uestcmsc_webapp_db \
-  -p 3306:3306 \
-  -v ~/git/github/uestcmsc_webapp/data/db:/var/lib/mysql \
-  -e MYSQL_ROOT_PASSWORD=testtest \
-  -e MYSQL_DATABASE=uestcmsc_webapp \
-  --restart always \
-  mysql
-```
-
-安装 Redis：
-
-```shell
-docker run -d \
-  --name uestcmsc_webapp_redis \
-  -p 6379:6379 \
-  -v ~/git/github/uestcmsc_webapp/data/redis:/data \
-  -e REDIS_PASSWORD=testtest \
-  --restart always \
-  redis \
-  /bin/sh -c 'redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}'
-```
-
-## Django 运行
-
-按自己的情况修改 `config.template.py`，并保存为 `config.py`。然后安装依赖库并初始化数据库：
+按自己的情况修改 `.env.template`，并保存为 `.env`。然后安装依赖库并初始化数据库：
 
 ```sh
 git clone https://github.com/uestc-msc/uestcmsc_webapp_backend
@@ -51,8 +23,7 @@ sudo yum install python3-devel maria-devel  # CentOS 需要安装 python3-devel 
 pip3 install -r requirements.txt
 python3 manage.py makemigrations accounts activities activities_files activities_photos activities_links activities_comments activities_tags cloud users --noinput
 python3 manage.py migrate --noinput
-python3 manage.py collectstatic --noinput --clear --no-post-process
-python manage.py createcachetable
+python3 manage.py createcachetable
 ```
 
 运行 Django Server：

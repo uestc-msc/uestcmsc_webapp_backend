@@ -1,0 +1,35 @@
+version: "3.3"
+services:
+  backend:
+    build: .
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      REDIS_HOST: redis://redis:6379/1
+  db:
+    image: mysql
+    restart: always
+    ports:
+      - "3307:3306"
+    env_file:
+      - .env
+    environment:
+      TZ: 'Asia/Shanghai'
+      MYSQL_ROOT_PASSWORD: '${MYSQL_PASSWORD}'
+#    volumes:
+#      - "../data/db:/var/lib/mysql"
+  redis:
+    image: redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    restart: always
+    ports:
+      - "6380:6379"
+    env_file:
+      - .env
+    volumes:
+      - "../data/redis:/data"
