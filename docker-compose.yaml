@@ -5,8 +5,9 @@ services:
     restart: always
     ports:
       - "8000:8000"
-    env_file:
-      - .env
+#    config.py will read .env file itself
+#    env_file:
+#      - .env
     environment:
       MYSQL_HOST: db
       MYSQL_PORT: 3306

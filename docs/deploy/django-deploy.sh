@@ -1,9 +1,9 @@
+# 需要在 pipenv 中执行
 #!/bin/bash
 set -xe
 # 拉取源代码
 git pull
 pipenv install
-pipenv shell
 python3 manage.py makemigrations accounts activities \
         activities_files activities_photos activities_links activities_comments activities_tags \
         cloud users
